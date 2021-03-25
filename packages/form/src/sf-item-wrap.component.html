@@ -1,31 +1,35 @@
-<nz-form-item [style.width.px]="ui.width">
-  <nz-col *ngIf="showTitle"
-          [nzSpan]="ui.spanLabel"
-          class="ant-form-item-label">
-    <label *ngIf="t"
-           [attr.for]="id"
-           [class.ant-form-item-required]="ui._required">
-      {{ t }}
-      <span class="optional">
+<nz-form-item [style.width.px]="ui.width" [class.ant-form-item-has-error]="showError" [class.ant-form-item-with-help]="showError">
+  <div nz-col *ngIf="_showTitle" [nzSpan]="ui.spanLabel!" class="ant-form-item-label">
+    <label *ngIf="t" [attr.for]="id" [class.ant-form-item-required]="ui._required">
+      <span class="sf__label-text">{{ t }}</span>
+      <span *ngIf="ui.optional || oh" class="sf__optional">
         {{ ui.optional }}
-        <nz-tooltip *ngIf="ui.optionalHelp"
-                    [nzTitle]="ui.optionalHelp">
-          <i nz-tooltip
-             nz-icon
-             type="question-circle"></i>
-        </nz-tooltip>
+        <i
+          *ngIf="oh"
+          nz-tooltip
+          [nzTooltipTitle]="oh.text"
+          [nzTooltipPlacement]="oh.placement"
+          [nzTooltipTrigger]="oh.trigger"
+          [nzTooltipColor]="oh.bgColor"
+          [nzTooltipOverlayClassName]="oh.overlayClassName"
+          [nzTooltipOverlayStyle]="oh.overlayStyle"
+          [nzTooltipMouseEnterDelay]="oh.mouseEnterDelay"
+          [nzTooltipMouseLeaveDelay]="oh.mouseLeaveDelay"
+          nz-icon
+          [nzType]="oh.icon!"
+        ></i>
       </span>
     </label>
-  </nz-col>
-  <nz-col class="ant-form-item-control-wrapper"
-          [nzSpan]="ui.spanControl"
-          [nzOffset]="ui.offsetControl">
-    <div class="ant-form-item-control"
-         [class.has-error]="showError">
-      <ng-content></ng-content>
-      <nz-form-extra *ngIf="schema.description"
-                     [innerHTML]="schema.description"></nz-form-extra>
-      <nz-form-explain *ngIf="!ui.onlyVisual && showError">{{error}}</nz-form-explain>
+  </div>
+  <div nz-col class="ant-form-item-control" [nzSpan]="ui.spanControl!" [nzOffset]="ui.offsetControl!">
+    <div class="ant-form-item-control-input">
+      <div class="ant-form-item-control-input-content">
+        <ng-content></ng-content>
+      </div>
     </div>
-  </nz-col>
+    <div *ngIf="!ui.onlyVisual && showError" class="ant-form-item-explain ant-form-item-explain-error">
+      <div @helpMotion>{{ error }}</div>
+    </div>
+    <div *ngIf="schema.description" class="ant-form-item-extra" [innerHTML]="schema._description"></div>
+  </div>
 </nz-form-item>

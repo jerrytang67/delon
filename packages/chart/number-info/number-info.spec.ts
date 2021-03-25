@@ -1,8 +1,7 @@
 import { Component, DebugElement, TemplateRef, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { configureTestSuite, createTestContext } from '@delon/testing';
-
+import { createTestContext } from '@delon/testing';
 import { NumberInfoComponent } from './number-info.component';
 import { NumberInfoModule } from './number-info.module';
 
@@ -11,24 +10,21 @@ describe('abc: number-info', () => {
   let dl: DebugElement;
   let context: TestComponent;
 
-  configureTestSuite(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [NumberInfoModule],
       declarations: [TestComponent],
     });
-  });
-
-  beforeEach(() => {
     ({ fixture, dl, context } = createTestContext(TestComponent));
     fixture.detectChanges();
   });
 
-  function isText(cls: string, value: string) {
+  function isText(cls: string, value: string): void {
     const el = dl.query(By.css(cls)).nativeElement as HTMLElement;
-    expect(el ? el.textContent.trim() : '').toBe(value);
+    expect(el ? el.textContent!.trim() : '').toBe(value);
   }
 
-  function isExists(cls: string, stauts: boolean = true) {
+  function isExists(cls: string, stauts: boolean = true): void {
     if (stauts) {
       expect(dl.query(By.css(cls))).not.toBeNull();
     } else {
@@ -91,7 +87,7 @@ describe('abc: number-info', () => {
     context.gap = 10;
     fixture.detectChanges();
     const el = dl.query(By.css('.number-info__value')).nativeElement as HTMLElement;
-    expect(+el.style.marginTop.replace('px', '')).toBe(10);
+    expect(+el.style.marginTop!.replace('px', '')).toBe(10);
   });
 });
 
@@ -115,15 +111,15 @@ describe('abc: number-info', () => {
   `,
 })
 class TestComponent {
-  @ViewChild('ni') comp: NumberInfoComponent;
-  @ViewChild('titleTpl') titleTpl: TemplateRef<void>;
-  @ViewChild('subTitleTpl') subTitleTpl: TemplateRef<void>;
-  @ViewChild('totalTpl') totalTpl: TemplateRef<void>;
-  @ViewChild('subTotalTpl') subTotalTpl: TemplateRef<void>;
+  @ViewChild('ni', { static: true }) comp: NumberInfoComponent;
+  @ViewChild('titleTpl', { static: true }) titleTpl: TemplateRef<void>;
+  @ViewChild('subTitleTpl', { static: true }) subTitleTpl: TemplateRef<void>;
+  @ViewChild('totalTpl', { static: true }) totalTpl: TemplateRef<void>;
+  @ViewChild('subTotalTpl', { static: true }) subTotalTpl: TemplateRef<void>;
   title: string | TemplateRef<void> = 'title';
   subTitle: string | TemplateRef<void> = 'subTitle';
-  total: string | TemplateRef<void> = 'total';
-  subTotal: string | TemplateRef<void> = 'subTotal';
+  total: string | number | TemplateRef<void> = 'total';
+  subTotal: string | number | TemplateRef<void> = 'subTotal';
   status = 'up';
   theme = 'light';
   gap = 8;

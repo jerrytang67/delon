@@ -1,11 +1,10 @@
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { DelonAuthConfig } from '../auth.config';
+import { AlainAuthConfig } from '@delon/util/config';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 import { DA_SERVICE_TOKEN, ITokenModel, ITokenService } from './interface';
 import { JWTTokenModel } from './jwt/jwt.model';
 
 describe('auth: token.service', () => {
-  let injector: Injector;
   let service: ITokenService;
   const VALUE: ITokenModel = {
     token: 'token data',
@@ -15,37 +14,24 @@ describe('auth: token.service', () => {
   } as ITokenModel;
 
   beforeEach(() => {
-    let data = {};
+    let data: { [key: string]: NzSafeAny } = {};
 
-    spyOn(localStorage, 'getItem').and.callFake(
-      (key: string): string => {
-        return data[key] || null;
-      },
-    );
-    spyOn(localStorage, 'removeItem').and.callFake(
-      (key: string): void => {
-        delete data[key];
-      },
-    );
-    spyOn(localStorage, 'setItem').and.callFake(
-      (key: string, value: string): string => {
-        return (data[key] = value as string);
-      },
-    );
+    spyOn(localStorage, 'getItem').and.callFake((key: string): string => {
+      return data[key] || null;
+    });
+    spyOn(localStorage, 'removeItem').and.callFake((key: string): void => {
+      delete data[key];
+    });
+    spyOn(localStorage, 'setItem').and.callFake((key: string, value: string): string => {
+      return (data[key] = value as string);
+    });
     spyOn(localStorage, 'clear').and.callFake(() => {
       data = {};
     });
 
-    injector = TestBed.configureTestingModule({
-      providers: [
-        {
-          provide: DelonAuthConfig,
-          useValue: { store_key: 'token', login_url: '/login' },
-        },
-      ],
-    });
+    TestBed.configureTestingModule({});
 
-    service = injector.get(DA_SERVICE_TOKEN);
+    service = TestBed.inject(DA_SERVICE_TOKEN);
   });
 
   it('#login_url', () => {
@@ -55,13 +41,13 @@ describe('auth: token.service', () => {
   it('#set', () => {
     service.set(VALUE);
     expect(service.get()).not.toBeNull();
-    expect(service.get().token).toBe(VALUE.token);
+    expect(service.get()!.token).toBe(VALUE.token);
   });
 
   it('#get', () => {
     service.set(VALUE);
     expect(service.get()).not.toBeNull();
-    expect(service.get().token).toBe(VALUE.token);
+    expect(service.get()!.token).toBe(VALUE.token);
   });
 
   it('#get, should be return JWTTokenModel', () => {
@@ -71,10 +57,22 @@ describe('auth: token.service', () => {
     expect(ret.payload).not.toBeUndefined();
   });
 
-  it('#clear', () => {
-    service.clear();
-    expect(service.get()).not.toBeNull();
-    expect(service.get().token).toBeUndefined();
+  describe('#clear', () => {
+    it('should be working', () => {
+      service.clear();
+      expect(service.get()).not.toBeNull();
+      expect(service.get()!.token).toBeUndefined();
+    });
+    it('should be only clear token data', () => {
+      service.set({ token: '1', a: 2 });
+      expect(service.get()).not.toBeNull();
+      expect(service.get()!.token).toBe(`1`);
+      expect(service.get()!.a).toBe(2);
+      service.clear({ onlyToken: true });
+      expect(service.get()).not.toBeNull();
+      expect(service.get()!.token).toBe(``);
+      expect(service.get()!.a).toBe(2);
+    });
   });
 
   it('#change', (done: () => void) => {
@@ -85,5 +83,49 @@ describe('auth: token.service', () => {
       done();
     });
     service.set(VALUE);
+  });
+
+  describe('#refresh', () => {
+    function updateConfig(config?: AlainAuthConfig): void {
+      const srvAny: NzSafeAny = service;
+      srvAny._options = { ...srvAny._options, enabledRefresh: true, ...config } as AlainAuthConfig;
+    }
+
+    beforeEach(() => updateConfig());
+
+    afterEach(() => (service as NzSafeAny).ngOnDestroy());
+
+    it('should be working', done => {
+      updateConfig({ refreshTime: 1, refreshOffset: 1 });
+      service.refresh.subscribe(() => {
+        expect(true).toBe(true);
+        done();
+      });
+      const expired = +new Date() + 20;
+      service.set({ token: 'a', expired });
+    });
+
+    it('should be working of jwt', done => {
+      updateConfig({ refreshTime: 1, refreshOffset: 1 });
+      service.refresh.subscribe(() => {
+        expect(true).toBe(true);
+        done();
+      });
+      const exp = +new Date() + 20;
+      service.set({ token: 'a', exp } as JWTTokenModel);
+    });
+
+    it('should be can not trigger refresh when expired is not present', done => {
+      updateConfig({ refreshTime: 1, refreshOffset: 1 });
+      service.refresh.subscribe(() => {
+        expect(true).toBe(false);
+        done();
+      });
+      service.set({ token: 'a', expired: 0 });
+      setTimeout(() => {
+        expect(true).toBe(true);
+        done();
+      });
+    });
   });
 });

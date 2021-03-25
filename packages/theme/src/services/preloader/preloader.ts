@@ -1,20 +1,19 @@
-export function preloaderFinished() {
-  const body = document.querySelector('body');
-  const preloader = document.querySelector('.preloader');
+export function preloaderFinished(): void {
+  const body = document.querySelector('body')!;
+  const preloader = document.querySelector('.preloader')!;
 
   body.style.overflow = 'hidden';
 
-  function remove() {
+  function remove(): void {
     // preloader value null when running --hmr
     if (!preloader) return;
-    preloader.addEventListener('transitionend', function () {
+    preloader.addEventListener('transitionend', () => {
       preloader.className = 'preloader-hidden';
     });
 
     preloader.className += ' preloader-hidden-add preloader-hidden-add-active';
   }
 
-  // tslint:disable-next-line:no-any
   (window as any).appBootstrap = () => {
     setTimeout(() => {
       remove();

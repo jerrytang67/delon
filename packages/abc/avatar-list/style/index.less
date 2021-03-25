@@ -1,4 +1,4 @@
-@import '../../../theme/styles/default.less';
+@import '../../../theme/theme-default.less';
 @avatar-list-prefix: ~'.avatar-list';
 
 @{avatar-list-prefix} {
@@ -6,15 +6,15 @@
   &__wrap {
     display: inline-block;
     margin-left: 8px;
-    font-size: 0;
     padding: 0;
+    font-size: 0;
   }
   &__item {
     display: inline-block;
-    font-size: @font-size-base;
-    margin-left: -8px;
     width: @avatar-size-base;
     height: @avatar-size-base;
+    margin-left: -8px;
+    font-size: @font-size-base;
     .@{ant-prefix}-avatar {
       border: 1px solid #fff;
       cursor: pointer;
@@ -29,12 +29,12 @@
     height: @avatar-size-sm;
   }
   &__mini {
-    width: 20px;
-    height: 20px;
+    width: @avatar-list-mini-wh;
+    height: @avatar-list-mini-wh;
     .@{ant-prefix}-avatar {
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
+      width: @avatar-list-mini-wh;
+      height: @avatar-list-mini-wh;
+      line-height: @avatar-list-mini-wh;
       &-string {
         font-size: 12px;
         line-height: 18px;
@@ -42,3 +42,5 @@
     }
   }
 }
+
+@import './rtl.less';

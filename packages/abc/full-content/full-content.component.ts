@@ -6,19 +6,18 @@ import {
   Component,
   ElementRef,
   EventEmitter,
-  HostBinding,
   Inject,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  ViewEncapsulation,
 } from '@angular/core';
 import { ActivationEnd, ActivationStart, Event, Router } from '@angular/router';
-import { InputBoolean, InputNumber } from '@delon/util';
+import { BooleanInput, InputBoolean, InputNumber, NumberInput } from '@delon/util/decorator';
 import { fromEvent, Subscription } from 'rxjs';
 import { debounceTime, filter } from 'rxjs/operators';
-
 import { FullContentService } from './full-content.service';
 
 const wrapCls = `full-content__body`;
@@ -27,44 +26,44 @@ const hideTitleCls = `full-content__hidden-title`;
 
 @Component({
   selector: 'full-content',
-  template: `
-    <ng-content></ng-content>
-  `,
-  host: { '[class.full-content]': 'true' },
+  exportAs: 'fullContent',
+  template: ` <ng-content></ng-content> `,
+  host: {
+    '[class.full-content]': 'true',
+    '[style.height.px]': '_height',
+  },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class FullContentComponent implements AfterViewInit, OnInit, OnChanges, OnDestroy {
+  static ngAcceptInputType_fullscreen: BooleanInput;
+  static ngAcceptInputType_hideTitle: BooleanInput;
+  static ngAcceptInputType_padding: NumberInput;
+
   private bodyEl: HTMLElement;
   private inited = false;
   private srv$: Subscription;
   private route$: Subscription;
-  private id = `_full-content-${Math.random()
-    .toString(36)
-    .substring(2)}`;
-  private scroll$: Subscription = null;
+  private id = `_full-content-${Math.random().toString(36).substring(2)}`;
+  private scroll$: Subscription | null = null;
 
-  @HostBinding('style.height.px')
   _height = 0;
-
-  // #region fields
 
   @Input() @InputBoolean() fullscreen: boolean;
   @Input() @InputBoolean() hideTitle = true;
   @Input() @InputNumber() padding = 24;
   @Output() readonly fullscreenChange = new EventEmitter<boolean>();
 
-  // #endregion
-
   constructor(
-    private el: ElementRef,
+    private el: ElementRef<HTMLElement>,
     private cdr: ChangeDetectorRef,
     private srv: FullContentService,
     private router: Router,
-    // tslint:disable-next-line:no-any
     @Inject(DOCUMENT) private doc: any,
   ) {}
 
-  private updateCls() {
+  private updateCls(): void {
     const clss = this.bodyEl.classList;
     if (this.fullscreen) {
       clss.add(openedCls);
@@ -79,21 +78,18 @@ export class FullContentComponent implements AfterViewInit, OnInit, OnChanges, O
     }
   }
 
-  private update() {
+  private update(): void {
     this.updateCls();
     this.updateHeight();
     this.fullscreenChange.emit(this.fullscreen);
   }
 
-  private updateHeight() {
-    this._height =
-      this.bodyEl.getBoundingClientRect().height -
-      (this.el.nativeElement as HTMLElement).getBoundingClientRect().top -
-      this.padding;
+  private updateHeight(): void {
+    this._height = this.bodyEl.getBoundingClientRect().height - this.el.nativeElement.getBoundingClientRect().top - this.padding;
     this.cdr.detectChanges();
   }
 
-  private removeInBody() {
+  private removeInBody(): void {
     this.bodyEl.classList.remove(wrapCls, openedCls, hideTitleCls);
   }
 
@@ -101,7 +97,7 @@ export class FullContentComponent implements AfterViewInit, OnInit, OnChanges, O
     this.inited = true;
     this.bodyEl = this.doc.querySelector('body');
     this.bodyEl.classList.add(wrapCls);
-    (this.el.nativeElement as HTMLElement).id = this.id;
+    this.el.nativeElement.id = this.id;
 
     this.updateCls();
 
@@ -129,13 +125,13 @@ export class FullContentComponent implements AfterViewInit, OnInit, OnChanges, O
       });
   }
 
-  toggle() {
+  toggle(): void {
     this.fullscreen = !this.fullscreen;
     this.update();
     this.updateHeight();
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     setTimeout(() => this.updateHeight());
   }
 
@@ -145,7 +141,7 @@ export class FullContentComponent implements AfterViewInit, OnInit, OnChanges, O
 
   ngOnDestroy(): void {
     this.removeInBody();
-    this.scroll$.unsubscribe();
+    this.scroll$!.unsubscribe();
     this.srv$.unsubscribe();
     this.route$.unsubscribe();
   }

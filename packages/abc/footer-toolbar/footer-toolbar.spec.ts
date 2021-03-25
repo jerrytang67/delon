@@ -1,7 +1,6 @@
 import { Component, DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-
 import { ErrorCollectModule } from '../error-collect/error-collect.module';
 import { FooterToolbarModule } from './footer-toolbar.module';
 
@@ -17,7 +16,7 @@ describe('abc: footer-toolbar', () => {
     });
   });
 
-  function create() {
+  function create(): void {
     fixture = TestBed.createComponent(TestComponent);
     dl = fixture.debugElement;
     context = fixture.componentInstance;
@@ -40,7 +39,7 @@ describe('abc: footer-toolbar', () => {
     it('with string', () => {
       create();
       const left = dl.query(By.css('.footer-toolbar__left')).nativeElement as HTMLElement;
-      expect(left.textContent.trim()).toBe(`1`);
+      expect(left.textContent!.trim()).toBe(`1`);
     });
     it('with custom template', () => {
       TestBed.overrideTemplate(
@@ -58,9 +57,7 @@ describe('abc: footer-toolbar', () => {
 });
 
 @Component({
-  template: `
-    <form><footer-toolbar [errorCollect]="errorCollect" [extra]="extra"></footer-toolbar></form>
-  `,
+  template: ` <form><footer-toolbar [errorCollect]="errorCollect" [extra]="extra"></footer-toolbar></form> `,
 })
 class TestComponent {
   errorCollect = true;

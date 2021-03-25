@@ -1,13 +1,21 @@
-// tslint:disable:no-any no-invalid-this
+// tslint:disable: only-arrow-functions typedef
 import { HttpHeaders } from '@angular/common/http';
-import { Inject, Injector } from '@angular/core';
+import { Inject, Injectable, Injector } from '@angular/core';
 import { ACLService } from '@delon/acl';
-import { throwError, Observable } from 'rxjs';
-
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
+import { Observable, throwError } from 'rxjs';
 import { _HttpClient } from './http.client';
 
+/**
+ * Every http decorator must be based on `BaseAPI`, Like this:
+ * ```ts
+ * \@Injectable()
+ * class DataService extends BaseApi {}
+ * ```
+ */
+@Injectable()
 export abstract class BaseApi {
-  constructor(@Inject(Injector) protected injector: Injector) { }
+  constructor(@Inject(Injector) protected injector: Injector) {}
 }
 
 export interface HttpOptions {
@@ -28,7 +36,7 @@ interface ParamType {
 
 const paramKey = `__api_params`;
 
-function setParam(target: any, key = paramKey) {
+function setParam(target: any, key: string = paramKey): any {
   let params = target[key];
   if (typeof params === 'undefined') {
     params = target[key] = {};
@@ -41,9 +49,7 @@ function setParam(target: any, key = paramKey) {
  * - 有效范围：类
  */
 export function BaseUrl(url: string) {
-  return function <TClass extends { new(...args: any[]): BaseApi }>(
-    target: TClass,
-  ): TClass {
+  return function <TClass extends new (...args: any[]) => BaseApi>(target: TClass): TClass {
     const params = setParam(target.prototype);
     params.baseUrl = url;
     return target;
@@ -58,12 +64,10 @@ export function BaseHeaders(
   headers:
     | HttpHeaders
     | {
-      [header: string]: string | string[];
-    },
+        [header: string]: string | string[];
+      },
 ) {
-  return function <TClass extends { new(...args: any[]): BaseApi }>(
-    target: TClass,
-  ): TClass {
+  return function <TClass extends new (...args: any[]) => BaseApi>(target: TClass): TClass {
     const params = setParam(target.prototype);
     params.baseHeaders = headers;
     return target;
@@ -71,7 +75,7 @@ export function BaseHeaders(
 }
 
 function makeParam(paramName: string) {
-  return function (key?: string, ...extraOptions: any[]) {
+  return function (key?: string) {
     return function (target: BaseApi, propertyKey: string, index: number) {
       const params = setParam(setParam(target), propertyKey);
       let tParams = params[paramName];
@@ -81,7 +85,6 @@ function makeParam(paramName: string) {
       tParams.push({
         key,
         index,
-        ...extraOptions,
       });
     };
   };
@@ -112,38 +115,55 @@ export const Body = makeParam('body')();
  */
 export const Headers = makeParam('headers');
 
-function makeMethod(method: string) {
+/**
+ * Request Payload
+ * - Supported body (like`POST`, `PUT`) as a body data, equivalent to `@Body`
+ * - Not supported body (like `GET`, `DELETE` etc) as a `QueryString`
+ */
+export const Payload = makeParam('payload')();
+
+function getValidArgs(data: any, key: string, args: any[]): {} | undefined {
+  if (!data[key] || !Array.isArray(data[key]) || data[key].length <= 0) {
+    return undefined;
+  }
+  return args[data[key][0].index];
+}
+
+function genBody(data?: any, payload?: any): any {
+  if (Array.isArray(data) || Array.isArray(payload)) {
+    // tslint:disable-next-line:prefer-object-spread
+    return Object.assign([], data, payload);
+  }
+  // tslint:disable-next-line:prefer-object-spread
+  return Object.assign({}, data, payload);
+}
+
+export type METHOD_TYPE = 'OPTIONS' | 'GET' | 'POST' | 'DELETE' | 'PUT' | 'HEAD' | 'PATCH' | 'JSONP' | 'FORM';
+
+function makeMethod(method: METHOD_TYPE) {
   return function (url: string = '', options?: HttpOptions) {
-    return (
-      target: BaseApi,
-      targetKey?: string,
-      descriptor?: PropertyDescriptor,
-    ) => {
-      descriptor.value = function (...args: any[]): Observable<any> {
+    return (_target: BaseApi, targetKey?: string, descriptor?: PropertyDescriptor) => {
+      descriptor!.value = function (...args: any[]): Observable<any> {
         options = options || {};
 
-        const http = this.injector.get(_HttpClient, null);
+        const injector = (this as NzSafeAny).injector as Injector;
+        const http = injector.get(_HttpClient, null) as _HttpClient;
         if (http == null) {
-          throw new TypeError(
-            `Not found '_HttpClient', You can import 'AlainThemeModule' && 'HttpClientModule' in your root module.`,
-          );
+          throw new TypeError(`Not found '_HttpClient', You can import 'AlainThemeModule' && 'HttpClientModule' in your root module.`);
         }
 
         const baseData = setParam(this);
         const data = setParam(baseData, targetKey);
 
         let requestUrl = url || '';
-        requestUrl = [
-          baseData.baseUrl || '',
-          requestUrl.startsWith('/') ? requestUrl.substr(1) : requestUrl,
-        ].join('/');
+        requestUrl = [baseData.baseUrl || '', requestUrl.startsWith('/') ? requestUrl.substr(1) : requestUrl].join('/');
         // fix last split
         if (requestUrl.length > 1 && requestUrl.endsWith('/')) {
           requestUrl = requestUrl.substr(0, requestUrl.length - 1);
         }
 
         if (options.acl) {
-          const aclSrv: ACLService = this.injector.get(ACLService, null);
+          const aclSrv = injector.get(ACLService, null);
           if (aclSrv && !aclSrv.can(options.acl)) {
             return throwError({
               url: requestUrl,
@@ -154,27 +174,34 @@ function makeMethod(method: string) {
           delete options.acl;
         }
 
-        (data.path || []).forEach((i: ParamType) => {
-          requestUrl = requestUrl.replace(
-            new RegExp(`:${i.key}`, 'g'),
-            encodeURIComponent(args[i.index]),
-          );
-        });
+        requestUrl = requestUrl.replace(/::/g, '^^');
+        ((data.path as ParamType[]) || [])
+          .filter(w => typeof args[w.index] !== 'undefined')
+          .forEach((i: ParamType) => {
+            requestUrl = requestUrl.replace(new RegExp(`:${i.key}`, 'g'), encodeURIComponent(args[i.index]));
+          });
+        requestUrl = requestUrl.replace(/\^\^/g, `:`);
 
-        const params = (data.query || []).reduce((p, i: ParamType) => {
+        const params = (data.query || []).reduce((p: NzSafeAny, i: ParamType) => {
           p[i.key] = args[i.index];
           return p;
         }, {});
 
-        const headers = (data.headers || []).reduce((p, i: ParamType) => {
+        const headers = (data.headers || []).reduce((p: NzSafeAny, i: ParamType) => {
           p[i.key] = args[i.index];
           return p;
         }, {});
+
+        if (method === 'FORM') {
+          headers['content-type'] = 'application/x-www-form-urlencoded';
+        }
+
+        const payload = getValidArgs(data, 'payload', args);
+        const supportedBody = method === 'POST' || method === 'PUT';
 
         return http.request(method, requestUrl, {
-          body:
-            data.body && data.body.length > 0 ? args[data.body[0].index] : null,
-          params,
+          body: supportedBody ? genBody(getValidArgs(data, 'body', args), payload) : null,
+          params: !supportedBody ? { ...params, ...payload } : params,
           headers: { ...baseData.baseHeaders, ...headers },
           ...options,
         });
@@ -232,3 +259,9 @@ export const PATCH = makeMethod('PATCH');
  * - 有效范围：方法
  */
 export const JSONP = makeMethod('JSONP');
+
+/**
+ * `FORM` 请求
+ * - 有效范围：方法
+ */
+export const FORM = makeMethod('FORM');

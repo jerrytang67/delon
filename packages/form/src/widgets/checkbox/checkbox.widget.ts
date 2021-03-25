@@ -1,65 +1,64 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { SFValue } from '../../interface';
 import { SFSchemaEnum } from '../../schema';
 import { getData } from '../../utils';
-import { ControlWidget } from '../../widget';
+import { ControlUIWidget } from '../../widget';
+import { SFCheckboxWidgetSchema } from './schema';
 
 @Component({
   selector: 'sf-checkbox',
   templateUrl: './checkbox.widget.html',
+  preserveWhitespaces: false,
+  encapsulation: ViewEncapsulation.None,
 })
-export class CheckboxWidget extends ControlWidget {
+export class CheckboxWidget extends ControlUIWidget<SFCheckboxWidgetSchema> {
   data: SFSchemaEnum[] = [];
   allChecked = false;
   indeterminate = false;
   grid_span: number;
-  labelTitle = ``;
+  labelTitle: string = ``;
   inited = false;
 
-  get l() {
-    return this.formProperty.root.widget.sfComp.locale;
-  }
-
-  reset(value: SFValue) {
+  reset(value: SFValue): void {
     this.inited = false;
-    getData(this.schema, this.ui, this.formProperty.formData).subscribe(list => {
+    getData(this.schema, this.ui, value).subscribe(list => {
       this.data = list;
       this.allChecked = false;
       this.indeterminate = false;
-      this.labelTitle = list.length === 0 ? '' : this.schema.title;
-      this.grid_span = this.ui.span && this.ui.span > 0 ? this.ui.span : 0;
+      this.labelTitle = list.length === 0 ? '' : (this.schema.title as string);
+      const { span } = this.ui;
+      this.grid_span = span && span > 0 ? span : 0;
 
       this.updateAllChecked();
       this.inited = true;
-      this.cd.detectChanges();
+      this.detectChanges();
     });
   }
 
-  _setValue(value: SFValue) {
+  _setValue(value: SFValue): void {
     this.setValue(value);
     this.detectChanges();
     this.notifyChange(value);
   }
 
-  notifySet() {
+  notifySet(): void {
     const checkList = this.data.filter(w => w.checked);
     this.updateAllChecked().setValue(checkList.map(item => item.value));
     this.notifyChange(checkList);
   }
 
-  groupInGridChange(values: SFValue[]) {
+  groupInGridChange(values: SFValue[]): void {
     this.data.forEach(item => (item.checked = values.indexOf(item.value) !== -1));
     this.notifySet();
   }
 
-  onAllChecked(e: Event) {
-    e.stopPropagation();
+  onAllChecked(): void {
     this.data.forEach(item => (item.checked = this.allChecked));
     this.notifySet();
   }
 
   updateAllChecked(): this {
-    if (this.data.every(item => item.checked === false)) {
+    if (this.data.every(item => item.checked !== true)) {
       this.allChecked = false;
       this.indeterminate = false;
     } else if (this.data.every(item => item.checked === true)) {
@@ -68,12 +67,11 @@ export class CheckboxWidget extends ControlWidget {
     } else {
       this.indeterminate = true;
     }
-    // issues: https://github.com/NG-ZORRO/ng-zorro-antd/issues/2025
-    setTimeout(() => this.detectChanges());
+    this.detectChanges();
     return this;
   }
 
-  private notifyChange(res: boolean | SFSchemaEnum[]) {
+  private notifyChange(res: boolean | SFSchemaEnum[]): void {
     if (this.ui.change) this.ui.change(res);
   }
 }

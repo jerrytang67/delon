@@ -1,31 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { deepCopy } from '@delon/util';
-import { NzFormatEmitEvent, NzTreeNode } from 'ng-zorro-antd';
-import { map } from 'rxjs/operators';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { NzFormatEmitEvent } from 'ng-zorro-antd/core/tree';
 import { SFValue } from '../../interface';
 import { SFSchemaEnum } from '../../schema';
 import { getData, toBool } from '../../utils';
-import { ControlWidget } from '../../widget';
+import { ControlUIWidget } from '../../widget';
+import { SFTreeSelectWidgetSchema } from './schema';
 
 @Component({
   selector: 'sf-tree-select',
   templateUrl: './tree-select.widget.html',
+  preserveWhitespaces: false,
+  encapsulation: ViewEncapsulation.None,
 })
-export class TreeSelectWidget extends ControlWidget implements OnInit {
-  // tslint:disable-next-line:no-any
-  i: any;
+export class TreeSelectWidget extends ControlUIWidget<SFTreeSelectWidgetSchema> implements OnInit {
+  i: SFTreeSelectWidgetSchema;
   data: SFSchemaEnum[] = [];
-
-  private dc() {
-    // Muse wait `nz-tree-select` write values
-    // https://github.com/NG-ZORRO/ng-zorro-antd/issues/2316
-    setTimeout(() => this.detectChanges(), 1000);
-  }
-
-  private tranData(list: SFSchemaEnum[]) {
-    // tslint:disable-next-line:no-any
-    return list.map(node => new NzTreeNode(deepCopy(node) as any));
-  }
+  asyncData = false;
 
   ngOnInit(): void {
     const { ui } = this;
@@ -35,38 +25,36 @@ export class TreeSelectWidget extends ControlWidget implements OnInit {
       dropdownMatchSelectWidth: toBool(ui.dropdownMatchSelectWidth, true),
       multiple: toBool(ui.multiple, false),
       checkable: toBool(ui.checkable, false),
+      showIcon: toBool(ui.showIcon, false),
       showExpand: toBool(ui.showExpand, true),
       showLine: toBool(ui.showLine, false),
-      asyncData: typeof ui.expandChange === 'function',
+      checkStrictly: toBool(ui.checkStrictly, false),
+      hideUnMatched: toBool(ui.hideUnMatched, false),
       defaultExpandAll: toBool(ui.defaultExpandAll, false),
-      defaultExpandedKeys: ui.defaultExpandedKeys || [],
-      displayWith: ui.displayWith || ((node: NzTreeNode) => node.title),
+      displayWith: ui.displayWith || ((node: any) => node.title),
     };
+    this.asyncData = typeof ui.expandChange === 'function';
   }
 
-  reset(value: SFValue) {
-    getData(this.schema, this.ui, this.formProperty.formData)
-      .pipe(map(list => this.tranData(list)))
-      .subscribe(list => {
-        this.data = list;
-        this.dc();
-      });
+  reset(value: SFValue): void {
+    getData(this.schema, this.ui, value).subscribe(list => {
+      this.data = list;
+      this.detectChanges();
+    });
   }
 
-  change(value: string[] | string) {
+  change(value: string[] | string): void {
     if (this.ui.change) this.ui.change(value);
     this.setValue(value);
   }
 
-  expandChange(e: NzFormatEmitEvent) {
+  expandChange(e: NzFormatEmitEvent): void {
     const { ui } = this;
     if (typeof ui.expandChange !== 'function') return;
-    ui.expandChange(e)
-      .pipe(map((list: SFSchemaEnum[]) => this.tranData(list)))
-      .subscribe(res => {
-        e.node.clearChildren();
-        e.node.addChildren(res);
-        this.dc();
-      });
+    ui.expandChange(e).subscribe(res => {
+      e.node!.clearChildren();
+      e.node!.addChildren(res);
+      this.detectChanges();
+    });
   }
 }

@@ -1,39 +1,28 @@
-import * as path from 'path';
 import * as fs from 'fs';
-import { parseMd } from './utils/parse-md';
+import * as path from 'path';
 import {
-  genUpperName,
-  genUrl,
-  generateDoc,
-  genComponentName,
-  genSelector,
-  includeAttributes,
-} from './utils/utils';
-import { groupFiles } from './utils/group-files';
-import { generateDemo } from './utils/generate-demo';
-import {
-  SiteConfig,
-  ModuleConfig,
-  Meta,
-  MetaTemplateData,
-  ModuleTemplateData,
-  MetaOriginal,
   ContentTemplateData,
   ExampleModules,
+  Meta,
+  MetaOriginal,
+  MetaTemplateData,
+  ModuleConfig,
+  ModuleTemplateData,
+  SiteConfig,
 } from './interfaces';
+import { generateDemo } from './utils/generate-demo';
 import { generateExampleModule } from './utils/generate-example';
+import { groupFiles } from './utils/group-files';
+import { parseMd } from './utils/parse-md';
+import { genComponentName, generateDoc, genSelector, genUpperName, genUrl, includeAttributes } from './utils/utils';
 
 const target = process.argv[2];
 const isSyncSpecific = !!target && target !== 'init';
 
-if (!target)
-  throw new Error(`Should specify the generation type, 'init' is all module`);
+if (!target) throw new Error(`Should specify the generation type, 'init' is all module`);
 
 const rootDir = path.resolve(__dirname, '../../');
-const siteConfig = require(path.join(
-  rootDir,
-  'src/site.config.js',
-)) as SiteConfig;
+const siteConfig = require(path.join(rootDir, 'src/site.config.js')) as SiteConfig;
 const defaultLang = siteConfig.defaultLang;
 
 const exampleModules: ExampleModules = {
@@ -43,6 +32,7 @@ const exampleModules: ExampleModules = {
 function generateModule(config: ModuleConfig) {
   const distPath = path.join(rootDir, config.dist);
 
+  // tslint:disable-next-line: prefer-object-spread
   const metas: Meta[] = Object.assign([], config.extraRouteMeta);
   const modules: any = {
     imports: [],
@@ -50,30 +40,15 @@ function generateModule(config: ModuleConfig) {
     routes: [],
   };
 
-  function appendToModule(
-    componentName: string,
-    name: string,
-    filename: string,
-    needRouter: boolean = true,
-  ) {
-    modules.imports.push(
-      `import { ${componentName} } from './${name}/${filename}';`,
-    );
+  function appendToModule(componentName: string, name: string, filename: string, needRouter: boolean = true) {
+    modules.imports.push(`import { ${componentName} } from './${name}/${filename}';`);
     modules.components.push(componentName);
     if (needRouter) {
       if (modules.routes.length <= 0 && config.defaultRoute) {
-        modules.routes.push(
-          `{ path: '', redirectTo: '${
-            config.defaultRoute
-          }/zh', pathMatch: 'full' }`,
-        );
+        modules.routes.push(`{ path: '', redirectTo: '${config.defaultRoute}/zh', pathMatch: 'full' }`);
       }
-      modules.routes.push(
-        `{ path: '${name}', redirectTo: '${name}/zh', pathMatch: 'full' }`,
-      );
-      modules.routes.push(
-        `{ path: '${name}/:lang', component: ${componentName} }`,
-      );
+      modules.routes.push(`{ path: '${name}', redirectTo: '${name}/zh', pathMatch: 'full' }`);
+      modules.routes.push(`{ path: '${name}/:lang', component: ${componentName} }`);
     }
   }
 
@@ -86,23 +61,15 @@ function generateModule(config: ModuleConfig) {
 
   function fixDemo(fileObject: any, demos: any) {
     const demoHTML: string[] = [];
-    demoHTML.push(`<nz-row [nzGutter]="16">`);
+    demoHTML.push(`<div nz-row [nzGutter]="16">`);
     if (demos.tpl.left.length > 0 && demos.tpl.right.length > 0) {
-      demoHTML.push(
-        `<nz-col nzSpan="12">${demos.tpl.left.join('')}</nz-col>`,
-      );
-      demoHTML.push(
-        `<nz-col nzSpan="12">${demos.tpl.right.join('')}</nz-col>`,
-      );
+      demoHTML.push(`<div nz-col nzSpan="12">${demos.tpl.left.join('')}</div>`);
+      demoHTML.push(`<div nz-col nzSpan="12">${demos.tpl.right.join('')}</div>`);
     } else {
-      demoHTML.push(
-        `<nz-col nzSpan="24">${demos.tpl.left.join(
-          '',
-        )}${demos.tpl.right.join('')}</nz-col>`,
-      );
+      demoHTML.push(`<div nz-col nzSpan="24">${demos.tpl.left.join('')}${demos.tpl.right.join('')}</div>`);
     }
 
-    demoHTML.push('</nz-row>');
+    demoHTML.push('</div>');
     fileObject.demos = demoHTML.join('');
 
     fixMDClass(fileObject);
@@ -113,31 +80,25 @@ function generateModule(config: ModuleConfig) {
     Object.keys(contentObj).forEach(lan => {
       const demoArr = contentObj[lan].content.split(/(<!--demo\([^)]+\)-->)/g);
       if (demoArr.length > 1) {
-        contentObj[lan].content = demoArr.map(html => {
-          if (html.startsWith('<!--')) return html;
-          return `<section class="markdown">${html}</section>`;
-        }).join('').replace(
-          /<!--demo\(([^)]+)\)-->/g,
-          '<example-$1-index></example-$1-index>',
-        );
+        contentObj[lan].content = demoArr
+          .map(html => {
+            if (html.startsWith('<!--')) return html;
+            return `<section class="markdown">${html}</section>`;
+          })
+          .join('')
+          .replace(/<!--demo\(([^)]+)\)-->/g, '<example-$1-index></example-$1-index>');
       } else {
         contentObj[lan].content = `<section class="markdown">${contentObj[lan].content}</section>`;
       }
     });
 
-    const newList = demos.data.filter(
-      w =>
-        w.type === 'example' &&
-        exampleModules.list.filter(ew => ew.urls === w.urls).length === 0,
-    );
+    const newList = demos.data.filter(w => w.type === 'example' && exampleModules.list.filter(ew => ew.urls === w.urls).length === 0);
 
     exampleModules.list.push(...newList);
   }
 
   config.dir.forEach(dirConfig => {
-    const tpl = fs
-      .readFileSync(path.join(rootDir, dirConfig.template.content))
-      .toString('utf8');
+    const tpl = fs.readFileSync(path.join(rootDir, dirConfig.template.content)).toString('utf8');
 
     const files = groupFiles(
       dirConfig.src.map(p => path.join(rootDir, p)),
@@ -175,14 +136,7 @@ function generateModule(config: ModuleConfig) {
       // #endregion
 
       // #region generate demo files
-      const demos = generateDemo(
-        rootDir,
-        item.key,
-        path.join(path.dirname(item.data[defaultLang]), 'demo'),
-        meta.cols,
-        config,
-        siteConfig,
-      );
+      const demos = generateDemo(rootDir, item.key, path.join(path.dirname(item.data[defaultLang]), 'demo'), meta.cols, config, siteConfig);
       // #endregion
 
       // #region generate document file
@@ -197,6 +151,7 @@ function generateModule(config: ModuleConfig) {
           urls,
           content,
           demo: isDemo,
+          // i18n: meta.i18n,
         } as any,
         demos: '',
         demo: isDemo,
@@ -225,11 +180,11 @@ function generateModule(config: ModuleConfig) {
 
   // #region generate meta file
 
-  const metaObj = Object.assign({ types: [] }, includeAttributes(config, {}));
+  const metaObj = { types: [], ...includeAttributes(config, {}) };
   metaObj.list = metas;
 
   generateDoc(
-    <MetaTemplateData>{ data: JSON.stringify(metaObj) },
+    { data: JSON.stringify(metaObj) } as MetaTemplateData,
     fs.readFileSync(path.join(rootDir, config.template.meta)).toString('utf8'),
     path.join(distPath, `meta.ts`),
   );
@@ -245,15 +200,14 @@ function generateModule(config: ModuleConfig) {
   };
   generateDoc(
     moduleObj,
-    fs
-      .readFileSync(path.join(rootDir, config.template.module))
-      .toString('utf8'),
+    fs.readFileSync(path.join(rootDir, config.template.module)).toString('utf8'),
     path.join(distPath, `${config.name}.module.ts`),
   );
   // #endregion
 }
 
 for (const m of siteConfig.modules) {
+  // if (m.module !== 'docs') continue;
   generateModule(m);
 }
 
@@ -261,4 +215,4 @@ if (exampleModules.list.length > 0) {
   generateExampleModule(rootDir, siteConfig, exampleModules);
 }
 
-console.log('site generate finished!');
+console.log(`✅ Site generated successfully`);

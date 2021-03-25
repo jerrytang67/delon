@@ -1,10 +1,9 @@
 import { DebugElement } from '@angular/core';
-import { fakeAsync, ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
-import { NzSelectComponent } from 'ng-zorro-antd';
-
 import { configureSFTestSuite, SFPage, TestFormComponent } from '../../../spec/base.spec';
 import { SFSchema } from '../../../src/schema/index';
+import { SFSelectWidgetSchema } from './schema';
 import { SelectWidget } from './select.widget';
 
 describe('form: widget: select', () => {
@@ -22,13 +21,21 @@ describe('form: widget: select', () => {
     page.cleanOverlay().prop(dl, context, fixture);
   });
 
-  function getWidget() {
+  function getWidget(): SelectWidget {
     return page.getWidget<SelectWidget>('sf-' + widget);
   }
 
-  function getSelect() {
-    return page.getWidget<NzSelectComponent>('nz-select');
-  }
+  it('#setValue', fakeAsync(() => {
+    page.newSchema({
+      properties: {
+        a: { type: 'string', ui: { widget }, enum: ['item1', 'item2'] },
+      },
+    });
+    page.setValue('/a', 'item1').dc(1);
+    expect(page.getEl('.ant-select-selection-item').textContent!.trim()).toBe('item1');
+    page.setValue('/a', 'item2').dc(1);
+    expect(page.getEl('.ant-select-selection-item').textContent!.trim()).toBe('item2');
+  }));
 
   it('should be disabled when readOnly is true', fakeAsync(() => {
     const s: SFSchema = {
@@ -49,15 +56,11 @@ describe('form: widget: select', () => {
         },
       },
     };
-    page
-      .newSchema(s)
-      .typeEvent('click', 'nz-select')
-      .checkCount('.ant-select-disabled', 1)
-      .asyncEnd();
+    page.newSchema(s).typeEvent('click', 'nz-select').checkCount('.ant-select-disabled', 1).asyncEnd();
   }));
 
   describe('#events', () => {
-    it('should be working', fakeAsync(() => {
+    it('#change', fakeAsync(() => {
       const s: SFSchema = {
         properties: {
           a: {
@@ -79,22 +82,65 @@ describe('form: widget: select', () => {
           },
         },
       };
-      page.newSchema(s).typeEvent('click', 'nz-select');
-      const el = document.querySelector(
-        '.ant-select-dropdown-menu-item:not(.ant-select-dropdown-menu-item-selected)',
-      ) as HTMLElement;
-      el.click();
-      page
-        .dc()
-        .checkValue('/a', 'TRADE_SUCCESS')
-        .asyncEnd();
-      const item = s.properties.a.ui as any;
+      page.newSchema(s);
+      const selectWidget = getWidget();
+      selectWidget.change('WAIT_BUYER_PAY');
+      const item = s.properties!.a.ui as SFSelectWidgetSchema;
       expect(item.change).toHaveBeenCalled();
+      selectWidget.openChange(true);
       expect(item.openChange).toHaveBeenCalled();
-      getWidget().scrollToBottom();
+      selectWidget.scrollToBottom();
       expect(item.scrollToBottom).toHaveBeenCalled();
-      getWidget().searchChange('a');
+      selectWidget.onSearch('1');
+      page.time(500);
       expect(item.onSearch).toHaveBeenCalled();
     }));
+    it('#change, when values is multiple', fakeAsync(() => {
+      const s: SFSchema = {
+        properties: {
+          a: {
+            type: 'string',
+            title: '状态',
+            enum: [
+              {
+                label: '待支付',
+                group: true,
+                children: [
+                  { label: '已支付', value: 'TRADE_SUCCESS' },
+                  { label: '交易完成', value: 'TRADE_FINISHED' },
+                ],
+              },
+            ],
+            ui: {
+              widget,
+              change: jasmine.createSpy(),
+            },
+          },
+        },
+      };
+      page.newSchema(s);
+      const selectWidget = getWidget();
+      selectWidget.change(['TRADE_FINISHED', 'TRADE_SUCCESS']);
+      const item = s.properties!.a.ui as SFSelectWidgetSchema;
+      expect(item.change).toHaveBeenCalled();
+    }));
   });
+
+  it('should be clean value by click icon', fakeAsync(() => {
+    const s: SFSchema = {
+      properties: {
+        a: {
+          type: 'number',
+          title: '状态',
+          enum: [1, 2],
+          default: 1,
+          ui: {
+            widget,
+            allowClear: true,
+          },
+        },
+      },
+    };
+    page.newSchema(s).checkValue('/a', 1).time().typeEvent('click', '.ant-select-close-icon').time().checkValue('/a', undefined).asyncEnd();
+  }));
 });

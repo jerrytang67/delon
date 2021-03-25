@@ -1,9 +1,5 @@
-import { Injectable } from '@angular/core';
+import { AlainACLConfig } from '@delon/util/config';
 
-@Injectable({ providedIn: 'root' })
-export class DelonACLConfig {
-  /**
-   * 路由守卫失败后跳转，默认：`/403`
-   */
-  guard_url?: string = '/403';
-}
+export const ACL_DEFAULT_CONFIG: AlainACLConfig = {
+  guard_url: `/403`,
+};

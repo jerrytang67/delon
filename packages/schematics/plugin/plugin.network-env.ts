@@ -1,4 +1,4 @@
-import { Rule, SchematicsException, SchematicContext, Tree } from '@angular-devkit/schematics';
+import { Rule, SchematicsException, Tree } from '@angular-devkit/schematics';
 import { PluginOptions } from './interface';
 
 const CONFIG = {
@@ -19,19 +19,19 @@ registry "https://registry.npm.taobao.org"`,
 };
 
 export function pluginNetworkEnv(options: PluginOptions): Rule {
-  return (host: Tree, context: SchematicContext) => {
+  return (tree: Tree) => {
     const item = CONFIG[options.packageManager || ''];
     if (item == null) {
       throw new SchematicsException(`Must be specified the "packageManager" parameter`);
     }
-    if (host.exists(item.path)) {
-      host.delete(item.path);
+    if (tree.exists(item.path)) {
+      tree.delete(item.path);
     }
 
     if (options.type === 'remove') {
       return;
     }
 
-    host.create(item.path, item.content);
+    tree.create(item.path, item.content);
   };
 }

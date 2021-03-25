@@ -1,43 +1,34 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Inject,
-  OnDestroy,
-  OnInit,
-  Output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Inject, OnDestroy, OnInit, Output } from '@angular/core';
+import { I18NService, MetaService } from '@core';
 import { ALAIN_I18N_TOKEN } from '@delon/theme';
-import { Subscription } from 'rxjs';
-import { I18NService } from '../../../core/i18n/service';
-import { MetaService } from '../../../core/meta.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'main-menu',
+  selector: 'main-menu, [main-menu]',
   templateUrl: './main-menu.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MainMenuComponent implements OnInit, OnDestroy {
-  private i18n$: Subscription;
+  private unsubscribe$ = new Subject<void>();
+  count = 0;
 
-  @Output() readonly click = new EventEmitter<string>();
+  @Output() readonly to = new EventEmitter<string>();
 
-  constructor(
-    public meta: MetaService,
-    @Inject(ALAIN_I18N_TOKEN) private i18n: I18NService,
-    private cdr: ChangeDetectorRef,
-  ) {}
-
-  to(url: string) {
-    this.click.next(url);
+  get menus(): any[] {
+    return this.meta.menus!;
   }
 
+  constructor(private meta: MetaService, @Inject(ALAIN_I18N_TOKEN) private i18n: I18NService, private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
-    this.i18n$ = this.i18n.change.subscribe(() => this.cdr.markForCheck());
+    this.i18n.change.pipe(takeUntil(this.unsubscribe$)).subscribe(() => this.cdr.markForCheck());
+    this.count = this.meta.menus?.reduce((p: number, c: any) => (p += c.list.length), 0);
   }
 
   ngOnDestroy(): void {
-    this.i18n$.unsubscribe();
+    const { unsubscribe$ } = this;
+    unsubscribe$.next();
+    unsubscribe$.complete();
   }
 }

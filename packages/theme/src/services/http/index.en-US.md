@@ -57,9 +57,9 @@ export class DelonModule {
 
 ### API
 
-| Property            | Description     | Type               | Default     |
-| ------------------- | --------------- | ------------------ | ----------- |
-| `nullValueHandling` | Null processing | `include,ignore`   | `include`   |
+| Property | Description | Type | Default |
+|----------|-------------|------|---------|
+| `nullValueHandling` | Null processing | `include,ignore` | `include` |
 | `dateValueHandling` | Time processing | `timestamp,ignore` | `timestamp` |
 
 ## Decorators
@@ -78,7 +78,20 @@ class RestService extends BaseApi {
   }
 
   @GET(':id')
-  GET(@Path('id') id: number): Observable<any> {
+  get(@Path('id') id: number): Observable<any> {
+    return;
+  }
+
+  @GET()
+  get(@Payload data: {}): Observable<any> {
+    return;
+  }
+
+  // Use `::id` to indicate escaping, and should be will be ignored when `id` value is `undefined`, like this:
+  // When `id` is `10` => 10:type
+  // When `id` is `undefined` => :id:type
+  @GET(':id::type')
+  get(@Path('id') id: number): Observable<any> {
     return;
   }
 
@@ -87,6 +100,16 @@ class RestService extends BaseApi {
     return;
   }
 
+  @POST()
+  save(@Payload data: {}): Observable<any> {
+    return;
+  }
+
+  @FORM()
+  save(@Payload data: {}): Observable<any> {
+    return;
+  }
+  
   // If authorization is invalid, will be thrown directly `401` error and will not be sent.
   @GET('', { acl: 'admin' })
   ACL(): Observable<any> {
@@ -113,13 +136,13 @@ class RestService extends BaseApi {
 
 #### HttpOptions
 
-| Property          | Description                         | Type                         | Default |
-| ----------------- | ----------------------------------- | ---------------------------- | ------- |
-| `acl`             | ACL config, depends on `@delon/acl` | `any`                        | -       |
-| `observe`         | Specify response content            | `body,events,response`       | -       |
-| `responseType`    | Specify content format              | `arraybuffer,blob,json,text` | -       |
-| `reportProgress`  | Whether monitor progress events     | `boolean`                    | -       |
-| `withCredentials` | Set withCredentials                 | `boolean`                    | -       |
+| Property | Description | Type | Default |
+|----------|-------------|------|---------|
+| `acl` | ACL config, depends on `@delon/acl` | `any` | - |
+| `observe` | Specify response content | `body,events,response` | - |
+| `responseType` | Specify content format | `arraybuffer,blob,json,text` | - |
+| `reportProgress` | Whether monitor progress events | `boolean` | - |
+| `withCredentials` | Set withCredentials | `boolean` | - |
 
 ### Parameter decorators
 
@@ -127,3 +150,6 @@ class RestService extends BaseApi {
 - `@Query(key?: string)` QueryString of URL
 - `@Body` Body of URL
 - `@Headers(key?: string)` Headers of URL
+- `@Payload` Request Payload
+  - Supported body (like`POST`, `PUT`) as a body data, equivalent to `@Body`
+  - Not supported body (like `GET`, `DELETE` etc) as a `QueryString`

@@ -1,99 +1,81 @@
-import { Component, ElementRef, HostBinding, Inject, OnDestroy, Renderer2 } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { Component, ElementRef, HostBinding, Inject, Renderer2 } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { I18NService, MetaService, MobileService } from '@core';
 import { ALAIN_I18N_TOKEN, TitleService, VERSION as VERSION_ALAIN } from '@delon/theme';
-import { VERSION as VERSION_ZORRO } from 'ng-zorro-antd';
-import { filter } from 'rxjs/operators';
-
-import { I18NService } from './core/i18n/service';
-import { MetaService } from './core/meta.service';
-import { MobileService } from './core/mobile.service';
+import { VERSION as VERSION_ZORRO } from 'ng-zorro-antd/version';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <router-outlet></router-outlet>
-  `,
+  template: ` <router-outlet></router-outlet>`,
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   @HostBinding('class.mobile')
   isMobile = false;
 
-  private query = 'only screen and (max-width: 767px)';
+  private query = 'only screen and (max-width: 1200px)';
   private prevUrl = '';
 
   constructor(
     el: ElementRef,
     renderer: Renderer2,
-    @Inject(ALAIN_I18N_TOKEN) private i18n: I18NService,
-    private meta: MetaService,
-    private title: TitleService,
-    private router: Router,
-    private mobileSrv: MobileService,
+    @Inject(ALAIN_I18N_TOKEN) i18n: I18NService,
+    meta: MetaService,
+    title: TitleService,
+    router: Router,
+    mobileSrv: MobileService,
+    breakpointObserver: BreakpointObserver,
   ) {
     renderer.setAttribute(el.nativeElement, 'ng-alain-version', VERSION_ALAIN.full);
     renderer.setAttribute(el.nativeElement, 'ng-zorro-version', VERSION_ZORRO.full);
 
-    enquire.register(this.query, {
-      match: () => {
-        this.mobileSrv.next(true);
-        this.isMobile = true;
-      },
-      unmatch: () => {
-        this.mobileSrv.next(false);
-        this.isMobile = false;
-      },
+    breakpointObserver.observe(this.query).subscribe(res => {
+      this.isMobile = res.matches;
+      mobileSrv.next(this.isMobile);
     });
 
-    this.router.events
-      .pipe(filter(evt => evt instanceof NavigationEnd))
-      .subscribe((evt: NavigationEnd) => {
-        const url = evt.url.split('#')[0].split('?')[0];
-        if (url.includes('/dev') || url.includes('/404') || this.prevUrl === url) return;
-        this.prevUrl = url;
+    router.events.subscribe(evt => {
+      if (!(evt instanceof NavigationEnd)) return;
 
-        let urlLang = url.split('/').pop() || this.i18n.zone;
-        if (urlLang && ['zh', 'en'].indexOf(urlLang) === -1) {
-          urlLang = this.i18n.zone;
+      const url = evt.url.split('#')[0].split('?')[0];
+      if (url.includes('/dev') || url.includes('/404') || this.prevUrl === url) return;
+
+      this.prevUrl = url;
+
+      let urlLang = url.split('/').pop() || i18n.zone;
+      if (urlLang && ['zh', 'en'].indexOf(urlLang) === -1) {
+        urlLang = i18n.zone;
+      }
+      const redirectArr = evt.urlAfterRedirects.split('#')[0].split('?')[0].split('/');
+      const redirectLang = redirectArr.pop();
+      if (urlLang !== redirectLang) {
+        let newUrl = '';
+        if (~evt.urlAfterRedirects.indexOf('#')) {
+          newUrl = evt.urlAfterRedirects.replace(`/${redirectLang}#`, `/${urlLang}#`);
+        } else {
+          newUrl = redirectArr.concat(urlLang).join('/');
         }
-        const redirectArr = evt.urlAfterRedirects
-          .split('#')[0]
-          .split('?')[0]
-          .split('/');
-        const redirectLang = redirectArr.pop();
-        if (urlLang !== redirectLang) {
-          let newUrl = '';
-          if (~evt.urlAfterRedirects.indexOf('#')) {
-            newUrl = evt.urlAfterRedirects.replace(`/${redirectLang}#`, `/${urlLang}#`);
-          } else {
-            newUrl = redirectArr.concat(urlLang).join('/');
-          }
-          this.router.navigateByUrl(newUrl, { replaceUrl: true });
-          return;
+        router.navigateByUrl(newUrl, { replaceUrl: true });
+        return;
+      }
+
+      if (urlLang) {
+        const lang = i18n.getFullLang(urlLang);
+
+        // update i18n
+        if (i18n.currentLang !== lang) {
+          i18n.use(lang as any);
+          meta.clearMenu();
         }
+        meta.refMenu(url);
+      }
 
-        if (urlLang) {
-          const lang = this.i18n.getFullLang(urlLang);
-
-          // update i18n
-          if (this.i18n.lang !== lang) {
-            this.i18n.use(lang as any);
-            this.meta.clearMenu();
-          }
-          this.meta.refMenu(url);
-        }
-
-        if (this.meta.set(url)) {
-          this.router.navigateByUrl('/404');
-          return;
-        }
-        const item = this.meta.getPathByUrl(url);
-        this.title.setTitle(item ? item.title || item.subtitle : '');
-        // scroll to top
-        document.body.scrollIntoView();
-      });
-  }
-
-  ngOnDestroy(): void {
-    enquire.unregister(this.query);
+      if (meta.set(url)) {
+        router.navigateByUrl('/404');
+        return;
+      }
+      const item = meta.getPathByUrl(url);
+      title.setTitle(item ? item.title || item.subtitle : '');
+    });
   }
 }

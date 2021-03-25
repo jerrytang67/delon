@@ -1,10 +1,13 @@
+// tslint:disable: no-string-literal
 import { DebugElement } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
-import format from 'date-fns/format';
+import { format } from 'date-fns';
 import { configureSFTestSuite, SFPage, TestFormComponent } from '../../../spec/base.spec';
 import { SFSchema } from '../../../src/schema/index';
 import { TimeWidget } from './time.widget';
+
+const FORMAT = 'yyyy-MM-dd HH:mm:ss';
 
 describe('form: widget: time', () => {
   let fixture: ComponentFixture<TestFormComponent>;
@@ -34,7 +37,7 @@ describe('form: widget: time', () => {
       const comp = getComp();
       const time = new Date();
       comp._change(time);
-      page.checkValue('/a', format(time, comp.format));
+      page.checkValue('/a', format(time, comp['valueFormat'] as string));
     });
 
     describe('default value', () => {
@@ -45,7 +48,7 @@ describe('form: widget: time', () => {
         };
         page.newSchema(s);
         const comp = getComp();
-        expect(format(comp.value)).toBe(format(time));
+        expect(format(comp.value, FORMAT)).toBe(format(time, FORMAT));
       });
       it('with number type', () => {
         const time = +new Date();
@@ -54,16 +57,23 @@ describe('form: widget: time', () => {
         };
         page.newSchema(s);
         const comp = getComp();
-        expect(format(comp.value)).toBe(format(time));
+        expect(format(comp.value, FORMAT)).toBe(format(time, FORMAT));
       });
       it('with number type but is string value', () => {
-        const time = (+new Date()).toString();
+        const time = +new Date();
         const s: SFSchema = {
           properties: { a: { type: 'string', ui: { widget }, default: time } },
         };
         page.newSchema(s);
         const comp = getComp();
-        expect(format(comp.value)).toBe(format(time));
+        expect(format(comp.value, FORMAT)).toBe(format(time, FORMAT));
+      });
+      it('with HH:mm', () => {
+        const time = '11:10';
+        page.newSchema({
+          properties: { a: { type: 'string', ui: { widget }, default: time } },
+        });
+        expect(format(getComp().displayValue!, 'HH:mm:ss')).toBe('11:10:00');
       });
       it('with null', () => {
         const time = null;
@@ -72,7 +82,7 @@ describe('form: widget: time', () => {
         };
         page.newSchema(s);
         const comp = getComp();
-        expect(format(comp.value, 'YYYY-MM-DD')).toBe('1970-01-01');
+        expect(comp.value).toBe(null);
       });
     });
 
@@ -98,6 +108,28 @@ describe('form: widget: time', () => {
       comp._change(val);
       const utcVal = Date.UTC(1970, 0, 1, val.getHours(), val.getMinutes(), val.getSeconds());
       expect(format(page.getValue('a'), 'HH:mm:ss')).toBe(format(utcVal, 'HH:mm:ss'));
+    });
+
+    it('should be display format [h:mm:ss a] when display format & use12Hours is true', () => {
+      page.newSchema({
+        properties: { a: { type: 'string', ui: { widget, use12Hours: true } } },
+      });
+      expect(getComp().i.displayFormat).toBe('h:mm:ss a');
+    });
+
+    describe('#format', () => {
+      it('should be used x when type is number', () => {
+        page.newSchema({
+          properties: { a: { type: 'number', ui: { widget } } },
+        });
+        expect(getComp()['valueFormat']).toBe('T');
+      });
+      it('should be used HH:mm:ss when type is not number', () => {
+        page.newSchema({
+          properties: { a: { type: 'string', ui: { widget } } },
+        });
+        expect(getComp()['valueFormat']).toBe('HH:mm:ss');
+      });
     });
   });
 });

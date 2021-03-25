@@ -1,59 +1,74 @@
-import { Tree } from '@angular-devkit/schematics';
+import { forEach, Rule, Tree } from '@angular-devkit/schematics';
 import * as fs from 'fs';
-import { join } from 'path';
+
+export function tryDelFile(tree: Tree, filePath: string): void {
+  if (tree.exists(filePath)) {
+    tree.delete(filePath);
+  }
+}
+
+export function tryAddFile(tree: Tree, filePath: string, content: string): void {
+  tryDelFile(tree, filePath);
+  tree.create(filePath, content);
+}
+
+export function readContent(tree: Tree, filePath: string): string {
+  if (!tree.exists(filePath)) return '';
+  return tree.read(filePath).toString('utf-8');
+}
+
+export interface OverWriteFileOptions {
+  tree: Tree;
+  filePath: string;
+  content?: string;
+  /** `true` is force, default: `false` */
+  overwrite?: boolean;
+  /** default: `false` */
+  contentIsString?: boolean;
+}
 
 /**
  * Overwrite files to the project
- *
- * @param [overwrite=false] `true` is force, default: `false`
  */
-export function overwriteFile(
-  host: Tree,
-  filePath: string,
-  sourcePath?: string,
-  overwrite = false,
-): Tree {
-  const isExists = host.exists(filePath);
-  if (overwrite || isExists) {
+export function overwriteFile(options: OverWriteFileOptions): Tree {
+  options = { overwrite: false, contentIsString: false, ...options };
+  const isExists = options.tree.exists(options.filePath);
+  if (options.overwrite || isExists) {
     try {
-      const buffer = fs.readFileSync(sourcePath);
-      const content = buffer ? buffer.toString('utf-8') : '';
-      if (overwrite) {
-        if (isExists) {
-          host.delete(filePath);
-        }
-        host.create(filePath, content);
+      let content = '';
+      if (options.contentIsString) {
+        content = options.content;
       } else {
-        host.overwrite(filePath, content);
+        const buffer = fs.readFileSync(options.content);
+        content = buffer ? buffer.toString('utf-8') : '';
+      }
+      if (options.overwrite) {
+        if (isExists) {
+          options.tree.delete(options.filePath);
+        }
+        options.tree.create(options.filePath, content);
+      } else {
+        options.tree.overwrite(options.filePath, content);
       }
     } catch {}
   }
-  return host;
+  return options.tree;
 }
 
-/**
- * Overwrite files to the project
- *
- * @param [overwrite=false] `true` is force, default: `false`
- */
-export function overwriteFiles(
-  host: Tree,
-  files: string[],
-  _filePath: string,
-  overwrite = false,
-): Tree {
-  files.forEach(p => overwriteFile(host, p, join(_filePath, p), overwrite));
-  return host;
+export function overwriteIfExists(tree: Tree): Rule {
+  return forEach(fileEntry => {
+    if (tree.exists(fileEntry.path)) {
+      tree.overwrite(fileEntry.path, fileEntry.content);
+      return null;
+    }
+    return fileEntry;
+  });
 }
 
-/**
- * Add files to the project
- *
- * @param [overwrite=false] `true` is force, default: `false`
- */
-export function addFiles(host: Tree, files: string[], _filePath: string, overwrite = false): Tree {
-  files
-    .filter(p => overwrite || !host.exists(p))
-    .forEach(p => overwriteFile(host, p, join(_filePath, p), true));
-  return host;
+export function writeFile(tree: Tree, filePath: string, content: string): void {
+  if (tree.exists(filePath)) {
+    tree.overwrite(filePath, content);
+  } else {
+    tree.create(filePath, content);
+  }
 }

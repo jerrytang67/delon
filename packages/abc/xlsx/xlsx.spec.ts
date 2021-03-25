@@ -3,56 +3,30 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component, DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { deepCopy, LazyService } from '@delon/util';
+import { LazyService } from '@delon/util/other';
 import * as fs from 'file-saver';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { XlsxModule } from './xlsx.module';
 import { XlsxService } from './xlsx.service';
 import { XlsxExportOptions } from './xlsx.types';
 
 class MockLazyService {
-  load() {
-    (window as any).XLSX = deepCopy(DEFAULTMOCKXLSX);
+  load(): Promise<void> {
     return Promise.resolve();
   }
 }
 
-const DEFAULTMOCKXLSX = {
-  utils: {
-    book_new: () => {
-      return {};
-    },
-    aoa_to_sheet: () => {},
-    book_append_sheet: () => {},
-    sheet_to_json: () => {
-      return {
-        A1: 1,
-        B1: 2,
-      };
-    },
-  },
-  read: () => {
-    return {
-      SheetNames: ['sheet1'],
-      Sheets: {
-        sheet1: {},
-      },
-    };
-  },
-  write: () => {},
-};
-
 let isErrorRequest = false;
 class MockHttpClient {
-  request() {
+  request(): Observable<null> {
     return isErrorRequest ? throwError(null) : of(null);
   }
 }
 
 describe('abc: xlsx', () => {
   let srv: XlsxService;
-  function genModule() {
-    const injector = TestBed.configureTestingModule({
+  function genModule(): void {
+    TestBed.configureTestingModule({
       imports: [XlsxModule, HttpClientTestingModule],
       declarations: [TestComponent],
       providers: [
@@ -60,14 +34,60 @@ describe('abc: xlsx', () => {
         { provide: LazyService, useClass: MockLazyService },
       ],
     });
-    srv = injector.get(XlsxService);
+    srv = TestBed.inject<XlsxService>(XlsxService);
   }
 
   beforeEach(() => {
+    (window as any).XLSX = {
+      utils: {
+        book_new: () => {
+          return {};
+        },
+        aoa_to_sheet: () => {},
+        book_append_sheet: () => {},
+        sheet_to_json: () => {
+          return {
+            A1: 1,
+            B1: 2,
+          };
+        },
+      },
+      read: () => {
+        return {
+          SheetNames: ['sheet1'],
+          Sheets: {
+            sheet1: {},
+          },
+        };
+      },
+      write: () => {},
+    };
+    (window as any).cptable = {
+      utils: {
+        decode: (data: any) => {
+          return data;
+        },
+      },
+    };
     isErrorRequest = false;
   });
 
+  afterEach(() => {
+    delete (window as any).XLSX;
+    delete (window as any).cptable;
+  });
+
   describe('[#import]', () => {
+    it('should be load xlsx lib when not found XLSX in window', () => {
+      delete (window as any).XLSX;
+      genModule();
+      const lazySrv: LazyService = TestBed.inject<LazyService>(LazyService);
+      spyOn(lazySrv, 'load').and.callFake(() => Promise.reject());
+      expect(lazySrv.load).not.toHaveBeenCalled();
+      srv.import('/1.xlsx').catch(() => {});
+      expect(lazySrv.load).toHaveBeenCalled();
+    });
+
     it('should be load xlsx via url', (done: () => void) => {
       genModule();
       srv.import('/1.xlsx').then(
@@ -99,7 +119,7 @@ describe('abc: xlsx', () => {
 
     it('should be load xlsx via file object', (done: () => void) => {
       genModule();
-      srv.import(new File([], '1.xlsx'), 'readAsArrayBuffer').then(
+      srv.import(new File([], '1.xlsx')).then(
         () => {
           expect(true).toBe(true);
           done();
@@ -114,7 +134,7 @@ describe('abc: xlsx', () => {
 
   describe('[#export]', () => {
     beforeEach(() => {
-      spyOn(fs.default, 'saveAs');
+      spyOn(fs, 'saveAs');
       genModule();
     });
     it('should be export xlsx via array', (done: () => void) => {
@@ -123,7 +143,8 @@ describe('abc: xlsx', () => {
           sheets: [{ data: null, name: 'asdf.xlsx' }, { data: null }],
         } as XlsxExportOptions)
         .then(() => {
-          expect(fs.default.saveAs).toHaveBeenCalled();
+          // tslint:disable-next-line: deprecation
+          expect(fs.saveAs).toHaveBeenCalled();
           done();
         });
     });
@@ -135,7 +156,8 @@ describe('abc: xlsx', () => {
           },
         } as XlsxExportOptions)
         .then(() => {
-          expect(fs.default.saveAs).toHaveBeenCalled();
+          // tslint:disable-next-line: deprecation
+          expect(fs.saveAs).toHaveBeenCalled();
           done();
         });
     });
@@ -155,17 +177,32 @@ describe('abc: xlsx', () => {
           done();
         });
     });
+    it('should catch error when XLSX process error', done => {
+      (window as any).XLSX.utils.book_new = null;
+      srv
+        .export({
+          sheets: {
+            name: 'asdf',
+          },
+        } as XlsxExportOptions)
+        .then(() => {
+          expect(true).toBe(false);
+          done();
+        })
+        .catch(() => {
+          expect(true).toBe(true);
+          done();
+        });
+    });
   });
 
   describe('[directive]', () => {
     let fixture: ComponentFixture<TestComponent>;
     let dl: DebugElement;
-    let context: TestComponent;
     beforeEach(() => {
       genModule();
       fixture = TestBed.createComponent(TestComponent);
       dl = fixture.debugElement;
-      context = fixture.componentInstance;
       fixture.detectChanges();
     });
     it('should be export via click', () => {
@@ -175,12 +212,21 @@ describe('abc: xlsx', () => {
       expect(srv.export).toHaveBeenCalled();
     });
   });
+
+  describe('[#numberToSchema]', () => {
+    beforeEach(() => genModule());
+
+    it('should be working', () => {
+      expect(srv.numberToSchema(1)).toBe('A');
+      expect(srv.numberToSchema(27)).toBe('AA');
+      expect(srv.numberToSchema(28)).toBe('AB');
+      expect(srv.numberToSchema(53)).toBe('BA');
+    });
+  });
 });
 
 @Component({
-  template: `
-    <button [xlsx]="data"></button>
-  `,
+  template: ` <button [xlsx]="data"></button> `,
 })
 class TestComponent {
   data: any = {};

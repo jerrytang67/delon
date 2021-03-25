@@ -15,9 +15,13 @@ describe('chart: mini-bar', () => {
       }));
       it('should be working', () => {
         page
-          .isDataCount('geoms', 2)
-          .newData([{ x: 1, y: 10 }, { x: 2, y: 20 }, { x: 3, y: 30 }])
-          .isDataCount('geoms', 3);
+          .isDataCount('geometries', 2)
+          .newData([
+            { x: 1, y: 10 },
+            { x: 2, y: 20 },
+            { x: 3, y: 30 },
+          ])
+          .isDataCount('geometries', 3);
       });
     });
 
@@ -55,8 +59,11 @@ describe('chart: mini-bar', () => {
   `,
 })
 class TestComponent {
-  @ViewChild('comp') comp: G2MiniBarComponent;
-  data: any[] = [{ x: 1, y: 10 }, { x: 2, y: 20 }];
+  @ViewChild('comp', { static: true }) comp: G2MiniBarComponent;
+  data: any[] = [
+    { x: 1, y: 10 },
+    { x: 2, y: 20 },
+  ];
   height = PageG2Height;
   tooltipType = 'default';
   delay = 0;

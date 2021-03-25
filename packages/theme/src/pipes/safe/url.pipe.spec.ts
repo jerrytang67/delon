@@ -23,15 +23,14 @@ describe('Pipe: url', () => {
     it(`${item.value.toString()} muse be ${item.result}`, () => {
       fixture.componentInstance.value = item.value;
       fixture.detectChanges();
-      const el = fixture.debugElement.query(By.css('#result'))
-        .nativeElement as HTMLElement;
-      expect(el.attributes.getNamedItem('href').textContent).toBe(item.result);
+      const el = fixture.debugElement.query(By.css('#result')).nativeElement as HTMLElement;
+      expect(el.attributes.getNamedItem('href')!.textContent).toBe(item.result);
     });
   });
 });
 
 @Component({
-  template: `<a id="result" [href]="value | url"></a>`,
+  template: ` <a id="result" [href]="value | url"></a> `,
 })
 class TestComponent {
   value = '';

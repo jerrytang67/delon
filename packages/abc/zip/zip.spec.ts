@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { LazyService } from '@delon/util';
+import { LazyService } from '@delon/util/other';
 import * as fs from 'file-saver';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { ZipModule } from './zip.module';
 import { ZipService } from './zip.service';
 
@@ -10,11 +10,11 @@ let isErrorRequest = false;
 let isClassZIP = false;
 let isErrorGenZip = false;
 class MockLazyService {
-  load() {
+  load(): Promise<void> {
     (window as any).JSZip = isClassZIP
       ? class JSZip {
-          file() {}
-          generateAsync() {
+          file(): void {}
+          generateAsync(): Promise<void> {
             return isErrorGenZip ? Promise.reject('') : Promise.resolve();
           }
         }
@@ -31,22 +31,22 @@ const DEFAULTMOCKJSZIP = {
 };
 
 class MockHttpClient {
-  request() {
+  request(): Observable<null> {
     return isErrorRequest ? throwError(null) : of(null);
   }
 }
 
 describe('abc: zip', () => {
   let srv: ZipService;
-  function genModule() {
-    const injector = TestBed.configureTestingModule({
+  function genModule(): void {
+    TestBed.configureTestingModule({
       imports: [ZipModule],
       providers: [
         { provide: HttpClient, useClass: MockHttpClient },
         { provide: LazyService, useClass: MockLazyService },
       ],
     });
-    srv = injector.get(ZipService);
+    srv = TestBed.inject<ZipService>(ZipService);
   }
 
   beforeEach(() => {
@@ -104,7 +104,7 @@ describe('abc: zip', () => {
     isClassZIP = true;
     genModule();
     srv.create().then(
-      res => {
+      () => {
         expect(true).toBe(true);
         done();
       },
@@ -127,7 +127,7 @@ describe('abc: zip', () => {
     });
     it('should be save zip file', (done: () => void) => {
       srv.pushUrl(zip, '1.zip', '1.zip').then(
-        res => {
+        () => {
           expect(true).toBe(true);
           done();
         },
@@ -140,7 +140,7 @@ describe('abc: zip', () => {
     it('should be reject when bad request', (done: () => void) => {
       isErrorRequest = true;
       srv.pushUrl(zip, '1.zip', '1.zip').then(
-        res => {
+        () => {
           expect(false).toBe(true);
           done();
         },
@@ -163,10 +163,11 @@ describe('abc: zip', () => {
       });
     });
     it('should be save zip file', (done: () => void) => {
-      spyOn(fs.default, 'saveAs');
+      spyOn(fs, 'saveAs');
       srv.save(zip, { filename: '123.zip' }).then(
-        res => {
-          expect(fs.default.saveAs).toHaveBeenCalled();
+        () => {
+          // tslint:disable-next-line: deprecation
+          expect(fs.saveAs).toHaveBeenCalled();
           expect(true).toBe(true);
           done();
         },
@@ -177,16 +178,17 @@ describe('abc: zip', () => {
       );
     });
     it('should be call callback', (done: () => void) => {
-      spyOn(fs.default, 'saveAs');
+      spyOn(fs, 'saveAs');
       let count = 0;
       srv
         .save(zip, {
           callback: () => ++count,
         })
         .then(
-          res => {
+          () => {
             expect(count).toBe(1);
-            expect(fs.default.saveAs).toHaveBeenCalled();
+            // tslint:disable-next-line: deprecation
+            expect(fs.saveAs).toHaveBeenCalled();
             done();
           },
           () => {
@@ -197,14 +199,15 @@ describe('abc: zip', () => {
     });
     it('should be reject when generateAsync return error', (done: () => void) => {
       isErrorGenZip = true;
-      spyOn(fs.default, 'saveAs');
+      spyOn(fs, 'saveAs');
       srv.save(zip).then(
-        res => {
+        () => {
           expect(false).toBe(true);
           done();
         },
         () => {
-          expect(fs.default.saveAs).not.toHaveBeenCalled();
+          // tslint:disable-next-line: deprecation
+          expect(fs.saveAs).not.toHaveBeenCalled();
           expect(true).toBe(true);
           done();
         },

@@ -1,11 +1,13 @@
 ---
 order: 1
-title: _currenty
+title: _currency
 subtitle: Currenty
 type: Pipe
+deprecated: 12.0.0
 ---
+**Will be removed in 12.0.0, please use [price](/util/pipes-currency/en#price) pipeline instead.**
 
-`_currency` currency formatting, simplifying the original `currency` for **Chinese currency**, the same way as `currenty`.
+`_currency` currency formatting, simplifying the original `currency` for **Chinese currency**, the same way as `currency`.
 
 ```html
 {{data.price | _currency}}

@@ -63,10 +63,17 @@
         }
       ]
     },
-    "styleext": {
-      "description": "The file extension to be used for style files.",
+    "style": {
+      "description": "The file extension or preprocessor to use for style files.",
       "type": "string",
-      "default": "css"
+      "default": "css",
+      "enum": [
+        "css",
+        "scss",
+        "sass",
+        "less",
+        "styl"
+      ]
     },
     "spec": {
       "type": "boolean",
@@ -117,8 +124,7 @@
     "target": {
       "type": "string",
       "description": "指定目标路径，支持 `bus/list` 写法 (Specifies relative path, could be set like `bus/list`.)",
-      "alias": "t",
-      "x-prompt": "Specifies relative path(could be set like `bus/list`):"
+      "alias": "t"
     }
   },
   "required": [

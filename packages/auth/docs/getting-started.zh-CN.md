@@ -2,8 +2,6 @@
 order: 1
 title: 开始使用
 type: Documents
-module: DelonAuthModule
-config: DelonAuthConfig
 ---
 
 ## 写在前面
@@ -31,6 +29,8 @@ config: DelonAuthConfig
 ### Token
 
 @delon/auth 认为请求时需要发送的加密字符串称它为 Token 值，不管是采用 JWT 的 `Authorization` 参数，还是 OAuth2 的 `access_token`，这也是每个 HTTP 请求时所携带的值。 因此，`ITokenModel` 接口用于表述认证信息，且只有一个 `token` 属性。
+
+> 注意：Token 值务必是一个字符串值。
 
 ### 认证风格
 
@@ -65,41 +65,21 @@ export class AppModule { }
 
 默认 `DelonAuthModule` 并不会注册任何HTTP拦截器，主要是因为 @delon/auth 提供了多种不同[认证风格](/auth/getting-started#认证风格)。
 
-## DelonAuthConfig
+## AlainAuthConfig
 
-| 参数名 | 类型 | 默认值 | 描述 |
-| ----- | --- | --- | --- |
-| `[store_key]` | `string` | `_token` | `localStorage` 的存储KEY值 |
-| `[token_invalid_redirect]` | `boolean` | `true` | 无效时跳转至登录页，包括：无效token值、token已过期（限JWT） |
-| `[token_exp_offset]` | `number` | `10` | JWT token过期时间偏移值（单位：秒） |
-| `[token_send_key]` | `string` | Token | 发送token参数名 |
-| `[token_send_template]` | `string` | `${token}` | 发送token模板，以 `${属性名}` 表示占位符，属性名要确保存在否则以空字符代替 |
-| `[token_send_place]` | `header,body,url` | `header` | 发送token参数位置 |
-| `[login_url]` | `string` | `/login` | 登录页路由地址 |
-| `[ignores]` | `RegExp[]` | `[ /\/login/, /assets\// ]` | 忽略 URL 地址清单 |
-| `[allow_anonymous_key]` | `string` | `_allow_anonymous` | 允许匿名登录标识号，若请求参数中带有该KEY表示忽略TOKEN |
-| `[executeOtherInterceptors]` | `boolean` | `true` | 是否校验失效时命中后继续调用后续拦截器的 `intercept` 方法 |
+| 成员 | 说明 | 类型 | 默认值 | 全局配置 |
+|----|----|----|-----|------|
+| `[store_key]` | `string` | `_token` | `localStorage` 的存储KEY值 | ✅ |
+| `[token_invalid_redirect]` | `boolean` | `true` | 无效时跳转至登录页，包括：无效token值、token已过期（限JWT） | ✅ |
+| `[token_exp_offset]` | `number` | `10` | JWT token过期时间偏移值（单位：秒） | ✅ |
+| `[token_send_key]` | `string` | Token | 发送token参数名 | ✅ |
+| `[token_send_template]` | `string` | `${token}` | 发送token模板，以 `${属性名}` 表示占位符，属性名要确保存在否则以空字符代替 | ✅ |
+| `[token_send_place]` | `header,body,url` | `header` | 发送token参数位置 | ✅ |
+| `[login_url]` | `string` | `/login` | 登录页路由地址 | ✅ |
+| `[ignores]` | `RegExp[]` | `[ /\/login/, /assets\// ]` | 忽略 URL 地址清单 | ✅ |
+| `[allow_anonymous_key]` | `string` | `_allow_anonymous` | 允许匿名登录标识号，若请求参数中带有该KEY表示忽略TOKEN校验与添加动作，同时真实请求时会移除该数据 | ✅ |
+| `[executeOtherInterceptors]` | `boolean` | `true` | 是否校验失效时命中后继续调用后续拦截器的 `intercept` 方法 | ✅ |
+| `[refreshTime]` | `number` | `3000` | 刷新时长（单位：ms） | ✅ |
+| `[refreshOffset]` | `number` | `6000` | 偏移值（单位：ms），建议根据 `refreshTime` 倍数来设置 | ✅ |
 
-你可以覆盖它们，例如：
-
-```ts
-// delon.module.ts
-import { DelonAuthConfig } from '@delon/auth';
-export function delonAuthConfig(): DelonAuthConfig {
-  return Object.assign(new DelonAuthConfig(), <DelonAuthConfig>{
-    login_url: '/passport/login'
-  });
-}
-
-@NgModule({})
-export class DelonModule {
-  static forRoot(): ModuleWithProviders {
-    return {
-      ngModule: DelonModule,
-      providers: [
-        { provide: DelonAuthConfig, useFactory: delonAuthConfig}
-      ]
-    };
-  }
-}
-```
+> 可以通过[全局配置](/docs/global-config)覆盖它们。

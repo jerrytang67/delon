@@ -33,8 +33,10 @@ export enum ReuseTabMatchMode {
   URL,
 }
 
+export type ReuseTabRouteParamMatchMode = 'strict' | 'loose';
+
 export interface ReuseTitle {
-  text: string;
+  text?: string;
   i18n?: string;
 }
 
@@ -47,19 +49,20 @@ export interface ReuseTabCached {
   closable?: boolean;
 
   /** 当前滚动条位置 */
-  position?: [number, number];
+  position?: [number, number] | null;
 
   _snapshot: ActivatedRouteSnapshot;
 
-  // tslint:disable-next-line:no-any
-  _handle: any;
+  _handle: ReuseComponentHandle;
 }
 
 export interface ReuseTabNotify {
   /** 事件类型 */
-  active: string;
-
-  // tslint:disable-next-line:no-any
+  active: 'add' | 'override' | 'title' | 'clear' | 'closable' | 'close' | 'closeRight' | 'move' | 'refresh';
+  url?: string;
+  title?: ReuseTitle;
+  item?: ReuseTabCached;
+  list?: ReuseTabCached[];
   [key: string]: any;
 }
 
@@ -79,7 +82,7 @@ export interface ReuseContextEvent {
   customContextMenu?: ReuseCustomContextMenu[];
 }
 
-export type CloseType = 'close' | 'closeOther' | 'closeRight' | 'clear' | 'custom' | null;
+export type CloseType = 'close' | 'closeOther' | 'closeRight' | 'custom' | 'refresh' | null;
 
 export interface ReuseContextCloseEvent {
   type: CloseType;
@@ -91,7 +94,7 @@ export interface ReuseContextI18n {
   close?: string;
   closeOther?: string;
   closeRight?: string;
-  clear?: string;
+  refresh?: string;
 }
 
 export interface ReuseCustomContextMenu {
@@ -99,4 +102,22 @@ export interface ReuseCustomContextMenu {
   title: string;
   fn: (item: ReuseItem, menu: ReuseCustomContextMenu) => void;
   disabled?: (item: ReuseItem) => boolean;
+}
+
+export interface ReuseComponentHandle {
+  componentRef: ReuseComponentRef;
+}
+
+export interface ReuseComponentRef {
+  instance: ReuseComponentInstance;
+}
+
+export type ReuseHookTypes = '_onReuseInit' | '_onReuseDestroy';
+
+export type ReuseHookOnReuseInitType = 'init' | 'refresh';
+
+export interface ReuseComponentInstance {
+  _onReuseInit: (type: ReuseHookOnReuseInitType) => void;
+  _onReuseDestroy: () => void;
+  destroy: () => void;
 }

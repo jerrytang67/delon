@@ -2,17 +2,12 @@ import { ConnectionPositionPair, Overlay, OverlayRef } from '@angular/cdk/overla
 import { ComponentPortal } from '@angular/cdk/portal';
 import { ElementRef, Injectable } from '@angular/core';
 import { Subject, Subscription } from 'rxjs';
-
 import { ReuseTabContextMenuComponent } from './reuse-tab-context-menu.component';
-import {
-  ReuseContextCloseEvent,
-  ReuseContextEvent,
-  ReuseContextI18n,
-} from './reuse-tab.interfaces';
+import { ReuseContextCloseEvent, ReuseContextEvent, ReuseContextI18n, ReuseCustomContextMenu } from './reuse-tab.interfaces';
 
 @Injectable()
 export class ReuseTabContextService {
-  private ref: OverlayRef;
+  private ref: OverlayRef | null;
   i18n: ReuseContextI18n;
 
   show: Subject<ReuseContextEvent> = new Subject<ReuseContextEvent>();
@@ -20,14 +15,14 @@ export class ReuseTabContextService {
 
   constructor(private overlay: Overlay) {}
 
-  remove() {
+  remove(): void {
     if (!this.ref) return;
     this.ref.detach();
     this.ref.dispose();
     this.ref = null;
   }
 
-  open(context: ReuseContextEvent) {
+  open(context: ReuseContextEvent): void {
     this.remove();
     const { event, item, customContextMenu } = context;
     const fakeElement = new ElementRef({
@@ -41,19 +36,10 @@ export class ReuseTabContextService {
       }),
     });
     const positions = [
-      new ConnectionPositionPair(
-        { originX: 'start', originY: 'bottom' },
-        { overlayX: 'start', overlayY: 'top' },
-      ),
-      new ConnectionPositionPair(
-        { originX: 'start', originY: 'top' },
-        { overlayX: 'start', overlayY: 'bottom' },
-      ),
+      new ConnectionPositionPair({ originX: 'start', originY: 'bottom' }, { overlayX: 'start', overlayY: 'top' }),
+      new ConnectionPositionPair({ originX: 'start', originY: 'top' }, { overlayX: 'start', overlayY: 'bottom' }),
     ];
-    const positionStrategy = this.overlay
-      .position()
-      .flexibleConnectedTo(fakeElement)
-      .withPositions(positions);
+    const positionStrategy = this.overlay.position().flexibleConnectedTo(fakeElement).withPositions(positions);
     this.ref = this.overlay.create({
       positionStrategy,
       panelClass: 'reuse-tab__cm',
@@ -63,7 +49,7 @@ export class ReuseTabContextService {
     const instance = comp.instance;
     instance.i18n = this.i18n;
     instance.item = { ...item };
-    instance.customContextMenu = customContextMenu;
+    instance.customContextMenu = customContextMenu as ReuseCustomContextMenu[];
     instance.event = event;
 
     const sub$ = new Subscription();

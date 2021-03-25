@@ -1,26 +1,29 @@
-import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
+import { Directive, ElementRef, EventEmitter, Input, Output } from '@angular/core';
 import { _HttpClient } from '@delon/theme';
 import { saveAs } from 'file-saver';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 
-@Directive({ selector: '[down-file]', exportAs: 'downFileDirective' })
+@Directive({
+  selector: '[down-file]',
+  exportAs: 'downFile',
+  host: {
+    '(click)': '_click($event)',
+  },
+})
 export class DownFileDirective {
-  /** URL请求参数 */
-  @Input('http-data') httpData: {};
-  /** 请求类型 */
+  private isFileSaverSupported = true;
+  @Input('http-data') httpData: any;
+  @Input('http-body') httpBody: any;
   @Input('http-method') httpMethod: string = 'get';
-  /** 下载地址 */
   @Input('http-url') httpUrl: string;
-  /** 指定文件名，若为空从服务端返回的 `header` 中获取 `filename`、`x-filename` */
-  @Input('file-name') fileName: string;
-  /** 成功回调 */
+  @Input('file-name') fileName: string | ((rep: HttpResponse<Blob>) => string);
+  @Input() pre: (ev: MouseEvent) => Promise<boolean>;
   @Output() readonly success = new EventEmitter<HttpResponse<Blob>>();
-  /** 错误回调 */
-  @Output() readonly error = new EventEmitter<{}>();
+  @Output() readonly error = new EventEmitter<any>();
 
-  private getDisposition(data: string) {
-    // tslint:disable-next-line:no-any
-    const arr: any[] = (data || '')
+  private getDisposition(data: string | null): NzSafeAny {
+    const arr: Array<{}> = (data || '')
       .split(';')
       .filter(i => i.includes('='))
       .map(v => {
@@ -30,41 +33,56 @@ export class DownFileDirective {
         if (value.startsWith(utfId)) value = value.substr(utfId.length);
         return { [strArr[0].trim()]: value };
       });
-    return arr.reduce((o, item) => item, {});
+    return arr.reduce((_o, item) => item, {});
   }
 
-  constructor(private el: ElementRef, private http: HttpClient, private _http: _HttpClient) {}
+  constructor(private el: ElementRef<HTMLButtonElement>, private _http: _HttpClient) {
+    let isFileSaverSupported = false;
+    try {
+      isFileSaverSupported = !!new Blob();
+    } catch {}
+    this.isFileSaverSupported = isFileSaverSupported;
+    if (!isFileSaverSupported) {
+      el.nativeElement.classList.add(`down-file__not-support`);
+    }
+  }
 
-  @HostListener('click')
-  _click() {
-    this.el.nativeElement.disabled = true;
+  private setDisabled(status: boolean): void {
+    const el = this.el.nativeElement;
+    el.disabled = status;
+    el.classList[status ? 'add' : 'remove'](`down-file__disabled`);
+  }
+
+  async _click(ev: MouseEvent): Promise<void> {
+    if (!this.isFileSaverSupported || (typeof this.pre === 'function' && !(await this.pre(ev)))) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      return;
+    }
+    this.setDisabled(true);
     this._http
       .request(this.httpMethod, this.httpUrl, {
         params: this.httpData || {},
         responseType: 'blob',
         observe: 'response',
+        body: this.httpBody,
       })
       .subscribe(
         (res: HttpResponse<Blob>) => {
-          if (res.status !== 200 || res.body.size <= 0) {
+          if (res.status !== 200 || res.body!.size <= 0) {
             this.error.emit(res);
             return;
           }
           const disposition = this.getDisposition(res.headers.get('content-disposition'));
-          const fileName =
-            this.fileName ||
-            disposition[`filename*`] ||
-            disposition[`filename`] ||
-            res.headers.get('filename') ||
-            res.headers.get('x-filename');
-          saveAs(res.body, decodeURI(fileName));
+          let fileName = this.fileName;
+          if (typeof fileName === 'function') fileName = fileName(res);
+          fileName =
+            fileName || disposition[`filename*`] || disposition[`filename`] || res.headers.get('filename') || res.headers.get('x-filename');
+          saveAs(res.body!, decodeURI(fileName as string));
           this.success.emit(res);
-          this.el.nativeElement.disabled = false;
         },
-        err => {
-          this.error.emit(err);
-          this.el.nativeElement.disabled = false;
-        },
+        err => this.error.emit(err),
+        () => this.setDisabled(false),
       );
   }
 }

@@ -1,24 +1,8 @@
-// tslint:disable:no-any
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  Input,
-  NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  Renderer2,
-  TemplateRef,
-  ViewChild,
-} from '@angular/core';
-import { updateHostClass, InputBoolean, InputNumber } from '@delon/util';
-import { fromEvent, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
-
-declare var G2: any;
-declare var DataSet: any;
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, TemplateRef, ViewEncapsulation } from '@angular/core';
+import { Chart, Event } from '@antv/g2';
+import { G2BaseComponent, G2InteractionType } from '@delon/chart/core';
+import { BooleanInput, InputBoolean, InputNumber, NumberInput } from '@delon/util/decorator';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 
 export interface G2PieData {
   x: any;
@@ -26,71 +10,73 @@ export interface G2PieData {
   [key: string]: any;
 }
 
+export interface G2PieClickItem {
+  item: G2PieData;
+  ev: Event;
+}
+
 @Component({
   selector: 'g2-pie',
+  exportAs: 'g2Pie',
   templateUrl: './pie.component.html',
+  host: {
+    '[class.g2-pie]': 'true',
+    '[class.g2-pie__legend-has]': 'hasLegend',
+    '[class.g2-pie__legend-block]': 'block',
+    '[class.g2-pie__mini]': 'isPercent',
+  },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class G2PieComponent implements OnInit, OnDestroy, OnChanges {
-  private resize$: Subscription;
-  @ViewChild('container') private node: ElementRef;
-  private chart: any;
-  private isPercent: boolean;
-  private percentColor: any;
-  legendData: any[] = [];
+export class G2PieComponent extends G2BaseComponent {
+  static ngAcceptInputType_height: NumberInput;
+  static ngAcceptInputType_animate: BooleanInput;
+  static ngAcceptInputType_hasLegend: BooleanInput;
+  static ngAcceptInputType_percent: NumberInput;
+  static ngAcceptInputType_tooltip: BooleanInput;
+  static ngAcceptInputType_lineWidth: NumberInput;
+  static ngAcceptInputType_blockMaxWidth: NumberInput;
+  static ngAcceptInputType_select: BooleanInput;
+
+  private percentColor: (value: string) => string;
+  legendData: NzSafeAny[] = [];
+  isPercent: boolean;
 
   // #region fields
 
-  @Input() @InputNumber() delay = 0;
   @Input() @InputBoolean() animate = true;
   @Input() color = 'rgba(24, 144, 255, 0.85)';
   @Input() subTitle: string | TemplateRef<void>;
-  @Input() total: string | TemplateRef<void>;
+  @Input() total: string | number | TemplateRef<void>;
   @Input() @InputNumber() height = 0;
   @Input() @InputBoolean() hasLegend = false;
   @Input() inner = 0.75;
-  @Input() padding: number[] = [12, 0, 12, 0];
+  @Input() padding: number | number[] | 'auto' = [12, 0, 12, 0];
   @Input() @InputNumber() percent: number;
   @Input() @InputBoolean() tooltip = true;
   @Input() @InputNumber() lineWidth = 0;
+  @Input() @InputNumber() blockMaxWidth = 380;
   @Input() @InputBoolean() select = true;
   @Input() valueFormat: (y: number) => string;
   @Input() data: G2PieData[] = [];
   @Input() colors: any[];
+  @Input() interaction: G2InteractionType = 'none';
+  @Output() clickItem = new EventEmitter<G2PieClickItem>();
 
   // #endregion
 
-  constructor(
-    private el: ElementRef,
-    private rend: Renderer2,
-    private ngZone: NgZone,
-    private cdr: ChangeDetectorRef,
-  ) {}
-
-  private setCls() {
-    const { el, rend, hasLegend, isPercent } = this;
-    const ne = el.nativeElement as HTMLElement;
-    updateHostClass(
-      ne,
-      rend,
-      {
-        'g2-pie': true,
-        'g2-pie__legend-has': hasLegend,
-        'g2-pie__legend-block': hasLegend && ne.clientWidth <= 380,
-        'g2-pie__mini': isPercent,
-      },
-      true,
-    );
+  get block(): boolean {
+    return this.hasLegend && this.el.nativeElement.clientWidth <= this.blockMaxWidth;
   }
 
-  private fixData() {
+  private fixData(): void {
     const { percent, color } = this;
     this.isPercent = percent != null;
     if (this.isPercent) {
       this.select = false;
       this.tooltip = false;
-      this.percentColor = value =>
-        value === '占比' ? color || 'rgba(24, 144, 255, 0.85)' : '#F0F2F5';
+      this.percentColor = (value: string) => (value === '占比' ? color || 'rgba(24, 144, 255, 0.85)' : '#F0F2F5');
       this.data = [
         {
           x: '占比',
@@ -104,16 +90,14 @@ export class G2PieComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  private install() {
-    this.setCls();
-
-    const { node, height, padding, animate, tooltip, inner, hasLegend } = this;
-    const chart = (this.chart = new G2.Chart({
+  install(): void {
+    const { node, height, padding, tooltip, inner, hasLegend, interaction, theme } = this;
+    const chart: Chart = (this._chart = new (window as any).G2.Chart({
       container: node.nativeElement,
-      forceFit: true,
+      autoFit: true,
       height,
       padding,
-      animate,
+      theme,
     }));
 
     if (!tooltip) {
@@ -121,126 +105,78 @@ export class G2PieComponent implements OnInit, OnDestroy, OnChanges {
     } else {
       chart.tooltip({
         showTitle: false,
-        itemTpl:
-          '<li><span style="background-color:{color};" class="g2-tooltip-marker"></span>{name}: {value} %</li>',
+        showMarkers: false,
       });
     }
-
-    chart.axis(false);
-    chart.legend(false);
-
-    chart.coord('theta', { innerRadius: inner });
-
-    chart.filter('x', (val: any, item: any) => item.checked !== false);
-
+    if (interaction !== 'none') {
+      chart.interaction(interaction);
+    }
+    chart.axis(false).legend(false).coordinate('theta', { innerRadius: inner });
+    chart.filter('x', (_val: any, item: any) => item.checked !== false);
     chart
-      .intervalStack()
+      .interval()
+      .adjust('stack')
       .position('y')
-      .tooltip('x*percent', (name, p) => ({
+      .tooltip('x*percent', (name: string, p: number) => ({
         name,
-        // 由于 hasLegend 会优先处理为百分比格式，因此无需要在 tooltip 中重新转换
-        value: hasLegend ? p : (p * 100).toFixed(2),
+        value: `${hasLegend ? p : (p * 100).toFixed(2)} %`,
       }))
-      .select(this.select);
+      .state({});
 
-    chart.render();
+    chart.on(`interval:click`, (ev: Event) => {
+      this.ngZone.run(() => this.clickItem.emit({ item: ev.data?.data, ev }));
+    });
 
     this.attachChart();
   }
 
-  private attachChart() {
-    const {
-      chart,
-      height,
-      padding,
-      animate,
-      data,
-      lineWidth,
-      isPercent,
-      percentColor,
-      colors,
-    } = this;
-    if (!chart) return;
+  attachChart(): void {
+    const { _chart, height, padding, animate, data, lineWidth, isPercent, percentColor, colors } = this;
+    if (!_chart) return;
 
-    chart.set('height', height);
-    chart.set('padding', padding);
-    chart.set('animate', animate);
-
-    chart
-      .get('geoms')[0]
-      .style({ lineWidth, stroke: '#fff' })
-      .color('x', isPercent ? percentColor : colors);
-
-    const dv = new DataSet.DataView();
-    dv.source(data).transform({
-      type: 'percent',
-      field: 'y',
-      dimension: 'x',
-      as: 'percent',
-    });
-    chart.source(dv, {
+    _chart.height = height;
+    _chart.padding = padding;
+    _chart.animate(animate);
+    _chart.geometries[0].style({ lineWidth, stroke: '#fff' }).color('x', isPercent ? percentColor : colors);
+    _chart.scale({
       x: {
         type: 'cat',
         range: [0, 1],
       },
-      y: {
-        min: 0,
-      },
     });
-    chart.repaint();
+    // 转化 percent
+    const totalSum = data.reduce((cur, item) => cur + item.y, 0);
+    for (const item of data) {
+      item.percent = totalSum === 0 ? 0 : item.y / totalSum;
+    }
+    _chart.changeData(data);
+    _chart.render();
 
     this.ngZone.run(() => this.genLegend());
   }
 
-  private genLegend() {
-    const { hasLegend, isPercent, cdr, chart } = this;
+  private genLegend(): void {
+    const { hasLegend, isPercent, cdr, _chart } = this;
     if (!hasLegend || isPercent) return;
 
-    this.legendData = chart
-      .get('geoms')[0]
-      .get('dataArray')
-      .map((item: any) => {
-        const origin = item[0]._origin;
-        origin.color = item[0].color;
-        origin.checked = true;
-        origin.percent = (origin.percent * 100).toFixed(2);
-        return origin;
-      });
+    this.legendData = _chart.geometries[0].dataArray.map((item: any) => {
+      const origin = item[0]._origin;
+      origin.color = item[0].color;
+      origin.checked = true;
+      origin.percent = (origin.percent * 100).toFixed(2);
+      return origin;
+    });
 
     cdr.detectChanges();
   }
 
-  _click(i: number) {
-    const { legendData, chart } = this;
+  _click(i: number): void {
+    const { legendData, _chart } = this;
     legendData[i].checked = !legendData[i].checked;
-    chart.repaint();
+    _chart.render();
   }
 
-  private installResizeEvent() {
-    if (this.resize$ || !this.hasLegend) return;
-
-    this.resize$ = fromEvent(window, 'resize')
-      .pipe(debounceTime(200))
-      .subscribe(() => this.setCls());
-  }
-
-  ngOnInit(): void {
-    this.ngZone.runOutsideAngular(() => setTimeout(() => this.install(), this.delay));
-  }
-
-  ngOnChanges(): void {
+  onChanges(): void {
     this.fixData();
-    this.setCls();
-    this.ngZone.runOutsideAngular(() => this.attachChart());
-    this.installResizeEvent();
-  }
-
-  ngOnDestroy(): void {
-    if (this.resize$) {
-      this.resize$.unsubscribe();
-    }
-    if (this.chart) {
-      this.ngZone.runOutsideAngular(() => this.chart.destroy());
-    }
   }
 }

@@ -2,11 +2,12 @@
 order: 10
 title: Getting Started
 type: Basic
+i18n: need-update
 ---
 
 ## Foreword
 
-ng-alain is a production-ready solution for admin interfaces. Built on the design principles developed by [Ant Design](https://ant.design/), this project introduces higher level components; we have developed templates, components, and a corresponding design kit to improve the user and development experience for admin interfaces.
+NG-ALAIN is a production-ready solution for admin interfaces. Built on the design principles developed by [Ant Design](https://ant.design/), this project introduces higher level components; we have developed templates, components, and a corresponding design kit to improve the user and development experience for admin interfaces.
 
 **How to read document**
 
@@ -27,13 +28,22 @@ You will need [node](http://nodejs.org/) and [git](https://git-scm.com/). The pr
 
 ### CLI (Recommend)
 
-Please make sure global Angular Cli is latest version via `ng version` command (Currently <img src="https://img.shields.io/npm/v/@angular/cli.svg?style= Flat-square" alt="npm">), please refer to [CLI Command Reference](https://angular.cn/cli) for how to upgrade.
+Please make sure global Angular Cli is `9.x` version via `ng version` command, please refer to [CLI Command Reference](https://angular.io/cli) for how to upgrade.
 
 ```bash
-ng new my-project --style less
+# Install the 9.x version of the global Angular Cli version
+# Via yarn
+yarn global add @angular/cli@9.x
+# Or via npm
+# npm install -g @angular/cli@9.x
+```
+
+```bash
+ng new my-project --style less --routing
 cd my-project
 ng add ng-alain
 npm start
+# Or use HMR mode by: npm run hmr
 ```
 
 > Please refer to [Schematics](/cli) for more details.
@@ -45,39 +55,42 @@ git clone --depth=1 https://github.com/ng-alain/ng-alain.git my-project
 cd my-project
 yarn
 npm start
+# Or use HMR mode by: npm run hmr
 ```
 
 > Note: Installing with the CLI is a clean scaffolding; using clone the git repository include all example pages.
 
 ## Scaffolding
 
-ng-alain is a standard Angular CLI project that includes common routes for admins and demonstrates our component library. The project layout is as follows:
+NG-ALAIN is a standard Angular CLI project that includes common routes for admins and demonstrates our component library. The project layout is as follows:
 
 ```
-├── _mock                                       # Local Mock Data
+├── _mock                                       # Mock Data rule
 ├── src
 │   ├── app
-│   │   ├── core
+│   │   ├── core                                # Core module
 │   │   │   ├── i18n
 │   │   │   ├── net
 │   │   │   │   └── default.interceptor.ts      # Default HTTP interceptor
 │   │   │   ├── services
 │   │   │   │   └── startup.service.ts          # Initialize project configuration
 │   │   │   └── core.module.ts                  # Core module file
-│   │   ├── layout                              # Layout files
+│   │   ├── layout                              # Core layout
 │   │   ├── routes
 │   │   │   ├── **                              # Business directory
-│   │   │   ├── routes.module.ts                # Business routing module
-│   │   │   └── routes-routing.module.ts
+│   │   │   ├── routes.module.ts                # Service routing module
+│   │   │   └── routes-routing.module.ts        # Service routes registration
 │   │   ├── shared                              # Shared module
-│   │   │   └── shared.module.ts
+│   │   │   ├── shared-delon.module.ts          # @Delon/* import of secondary shared modules
+│   │   │   ├── shared-zorro.module.ts          # NG-ZORRO import of secondary shared modules
+│   │   │   └── shared.module.ts                # Shared module file
 │   │   ├── app.component.ts                    # Root component
 │   │   └── app.module.ts                       # Root module
-│   │   └── delon.module.ts                     # @delon modules import
-│   ├── assets                                  # Local static files
-│   ├── environments                            # Environment configuration
-│   ├── styles                                  # Project styles
-└── └── style.less                              # Style entry
+│   │   └── global-config.module.ts             # @delon & ng-zorro global config
+│   ├── assets                                  # Local static resource
+│   ├── environments                            # Environment variable configuration
+│   ├── styles                                  # Style directory
+└── └── style.less                              # Style guide entry
 ```
 
 ## Development
@@ -86,7 +99,7 @@ ng-alain is a standard Angular CLI project that includes common routes for admin
 npm start
 ```
 
-This will automatically open http://localhost:8000. If you see the following page then you have succeeded.
+This will automatically open [http://localhost:4200](http://localhost:4200). If you see the following page then you have succeeded.
 
 ![](./assets/screenshot/desktop.png | width=700)
 
@@ -94,7 +107,7 @@ This will automatically open http://localhost:8000. If you see the following pag
 
 Please read our [CONTRIBUTING.md](/docs/contributing) first.
 
-If you'd like to help us improve ng-zorro-antd, just create a [Pull Request](https://github.com/ng-alain/ng-alain/pulls). Feel free to report bugs and issues [here](https://github.com/ng-alain/ng-alain/issues).
+If you'd like to help us improve NG-ZORRO, just create a [Pull Request](https://github.com/ng-alain/ng-alain/pulls). Feel free to report bugs and issues [here](https://github.com/ng-alain/ng-alain/issues).
 
 > If you're new to posting issues, we ask that you read [*How To Ask Questions The Smart Way*](http://www.catb.org/~esr/faqs/smart-questions.html)(This guide does not provide actual support services for this project!) and [How to Ask a Question in Open Source Community](https://github.com/seajs/seajs/issues/545) and [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) prior to posting. Well written bug reports help us help you!
 
@@ -107,4 +120,4 @@ As always, we encourage experienced users to help those who are not familiar wit
 ## DONATE
 
 If you would like to [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/cipchk)
- to ng-alain.
+ to NG-ALAIN.

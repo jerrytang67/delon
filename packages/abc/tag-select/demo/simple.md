@@ -11,11 +11,12 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-demo',
   template: `
-  <tag-select>
-    <nz-tag *ngFor="let i of categories; let idx = index" nzMode="checkable"
-        [(nzChecked)]="i.value" (nzCheckedChange)="change(i)">{{i.text}}</nz-tag>
-  </tag-select>
-  `
+    <tag-select>
+      <nz-tag *ngFor="let i of categories; let idx = index" nzMode="checkable" [(nzChecked)]="i.value" (nzCheckedChange)="change($event)">
+        {{ i.text }}
+      </nz-tag>
+    </tag-select>
+  `,
 })
 export class DemoComponent {
   categories = [
@@ -31,12 +32,14 @@ export class DemoComponent {
     { id: 9, text: '类目九', value: false },
     { id: 10, text: '类目十', value: false },
     { id: 11, text: '类目十一', value: false },
-    { id: 12, text: '类目十二', value: false }
+    { id: 12, text: '类目十二', value: false },
+    { id: 13, text: '类目十三', value: false },
+    { id: 14, text: '类目十四', value: false },
+    { id: 15, text: '类目十五', value: false },
   ];
 
-  change(res: any) {
-    if (res.id !== 0) return;
-    this.categories.forEach(i => i.value = res.value);
+  change(status: boolean): void {
+    this.categories.forEach(i => (i.value = status));
   }
 }
 ```

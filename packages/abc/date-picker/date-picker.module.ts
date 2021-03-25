@@ -1,15 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgZorroAntdModule } from 'ng-zorro-antd';
-
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { RangePickerShortcutTplComponent } from './range-shortcut.component';
 import { RangePickerComponent } from './range.component';
+import { RangePickerDirective } from './range.directive';
 
-const COMPONENTS = [RangePickerComponent];
+const COMPONENTS = [RangePickerComponent, RangePickerDirective, RangePickerShortcutTplComponent];
 
 @NgModule({
-  imports: [CommonModule, FormsModule, NgZorroAntdModule],
-  declarations: [...COMPONENTS],
-  exports: [...COMPONENTS],
+  imports: [CommonModule, FormsModule, NzDatePickerModule],
+  declarations: COMPONENTS,
+  exports: COMPONENTS,
 })
 export class DatePickerModule {}

@@ -1,132 +1,116 @@
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  HostListener,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { copy, LazyService } from '@delon/util';
-import { NzMessageService } from 'ng-zorro-antd';
+import { I18NService, MobileService } from '@core';
+import { ALAIN_I18N_TOKEN, RTLService } from '@delon/theme';
+import { copy } from '@delon/util';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { filter } from 'rxjs/operators';
-
-import { I18NService, LangType } from '../../core/i18n/service';
-import { MetaService } from '../../core/meta.service';
-import { MobileService } from '../../core/mobile.service';
-import { MetaSearchGroup, MetaSearchGroupItem } from '../../interfaces';
-
-declare const docsearch: any;
-declare const algoliasearch: any;
+import { MetaSearchGroupItem } from '../../interfaces';
+import { LayoutComponent } from '../layout.component';
+const pkg = require('../../../../package.json');
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   host: {
     '[attr.id]': '"header"',
+    '[class.clearfix]': `true`,
   },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HeaderComponent implements OnInit, AfterViewInit {
+export class HeaderComponent implements AfterViewInit {
+  private inited = false;
   isMobile: boolean;
-  useDocsearch = false;
-  oldVersionList = [`1.x`];
-  currentVersion = 'stable';
-  delon = ['theme', 'auth', 'acl', 'form', 'cache', 'chart', 'mock', 'util', 'cli'];
+  oldVersionList = [`10.x`, `9.x`, `8.x`, `1.x`];
+  currentVersion = pkg.version;
+  delonLibs: Array<{ name: string; default?: string }> = [
+    { name: 'theme' },
+    { name: 'auth' },
+    { name: 'acl' },
+    { name: 'form' },
+    { name: 'cache' },
+    { name: 'chart' },
+    { name: 'mock' },
+    { name: 'util' },
+    { name: 'cli' },
+  ];
+  menuVisible = false;
+  showGitee = false;
+  regexs = {
+    docs: { regex: /^\/docs/ },
+    components: { regex: /^\/components/ },
+    cli: { regex: /^\/cli/ },
+    delon: { regex: /^\/(theme|auth|acl|form|cache|chart|mock|util)/ },
+  };
+
+  private getWin(): Window {
+    return (this.doc as Document).defaultView || window;
+  }
 
   constructor(
-    public i18n: I18NService,
+    @Inject(ALAIN_I18N_TOKEN) public i18n: I18NService,
     private router: Router,
     private msg: NzMessageService,
     private mobileSrv: MobileService,
-    private meta: MetaService,
-    private lazy: LazyService,
+    @Inject(DOCUMENT) private doc: any,
+    private cdr: ChangeDetectorRef,
+    public rtl: RTLService,
+    private layout: LayoutComponent,
   ) {
-    router.events
-      .pipe(filter(evt => evt instanceof NavigationEnd))
-      .subscribe(() => (this.menuVisible = false));
-    this.mobileSrv.change.subscribe(res => (this.isMobile = res));
-  }
-
-  ngOnInit(): void {
-    if (!this.useDocsearch) this.changeQ('');
-  }
-
-  ngAfterViewInit() {
-    this.loadDocsearch();
-  }
-
-  toVersion(version: string) {
-    if (version !== this.currentVersion) {
-      window.location.href = `https://ng-alain.github.io/${version}-doc/`;
-    }
-  }
-
-  private loadDocsearch() {
-    if (!this.useDocsearch) return;
-    this.lazy
-      .load([
-        `https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css`,
-        `https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js`,
-        `https://cdn.jsdelivr.net/algoliasearch/3/algoliasearchLite.min.js`,
-      ])
-      .then(() => this.initDocSearch());
-  }
-
-  @ViewChild('searchInput')
-  searchInput: ElementRef<HTMLInputElement>;
-
-  @HostListener('document:keyup.s', ['$event'])
-  onKeyUp(event: KeyboardEvent) {
-    if (
-      this.useDocsearch &&
-      this.searchInput &&
-      this.searchInput.nativeElement &&
-      event.target === document.body
-    ) {
-      this.searchInput.nativeElement.focus();
-    }
-  }
-
-  private initDocSearch() {
-    docsearch({
-      appId: '2WSH9IUML3',
-      apiKey: '6356fe022dba23c6bfc63427b2042bf8',
-      indexName: 'ng-alain',
-      inputSelector: '#search-box input',
-      algoliaOptions: {
-        hitsPerPage: 5,
-        facetFilters: [`tags:${this.i18n.zone}`],
-      },
-      transformData(hits) {
-        hits.forEach(hit => {
-          hit.url = hit.url.replace('ng.ant.design', location.host);
-          hit.url = hit.url.replace('https:', location.protocol);
-        });
-        return hits;
-      },
-      debug: false,
+    router.events.pipe(filter(evt => evt instanceof NavigationEnd)).subscribe(() => {
+      this.menuVisible = false;
+    });
+    this.mobileSrv.change.subscribe(res => {
+      this.isMobile = res;
+      if (this.inited) {
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  langChange(language: LangType) {
-    this.router.navigateByUrl(`${this.i18n.getRealUrl(this.router.url)}/${language}`);
+  private updateGitee(): void {
+    this.showGitee = this.i18n.currentLang === 'zh-CN' && this.getWin().location.host.indexOf('gitee') === -1;
+    this.cdr.detectChanges();
   }
 
-  onCopy(value: string) {
+  ngAfterViewInit(): void {
+    this.inited = true;
+    this.updateGitee();
+  }
+
+  toVersion(version: string): void {
+    if (version !== this.currentVersion) {
+      this.getWin().location.href = `https://ng-alain.com/version/${version}/`;
+    }
+  }
+
+  langChange(language: 'en' | 'zh'): void {
+    this.router.navigateByUrl(`${this.i18n.getRealUrl(this.router.url)}/${language}`).then(() => {
+      this.layout.render = false;
+      setTimeout(() => {
+        this.layout.render = true;
+      }, 25);
+    });
+  }
+
+  onCopy(value: string): void {
     copy(value).then(() => this.msg.success(this.i18n.fanyi('app.demo.copied')));
   }
 
-  menuVisible = false;
-
-  q: string;
-  list: MetaSearchGroup[] = [];
-  changeQ(value: any) {
-    this.list = this.meta.search(value);
-  }
-
-  to(item: MetaSearchGroupItem) {
+  to(item: MetaSearchGroupItem): void {
     if (item.url) {
       this.router.navigateByUrl(item.url);
     }
+  }
+
+  toViaMobile(url: string): void {
+    if (url.indexOf('/') === -1) {
+      url = `/${url}/getting-started`;
+    }
+    this.router.navigateByUrl(`${url}/${this.i18n.zone}`).then(() => {
+      this.menuVisible = false;
+      this.cdr.detectChanges();
+    });
   }
 }

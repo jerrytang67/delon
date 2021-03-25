@@ -2,17 +2,14 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-
 import { DelonLocaleModule } from './locale/locale.module';
+import { ALAIN_SETTING_KEYS } from './services/settings/settings.service';
 
 // #region import
 
 import { DrawerHelper } from './services/drawer/drawer.helper';
 import { ModalHelper } from './services/modal/modal.helper';
 const HELPERS = [ModalHelper, DrawerHelper];
-
-// components
-const COMPONENTS = [];
 
 // pipes
 import { CNCurrencyPipe } from './pipes/currency/cn-currency.pipe';
@@ -28,46 +25,43 @@ const PIPES = [DatePipe, CNCurrencyPipe, KeysPipe, YNPipe, I18nPipe, HTMLPipe, U
 
 // #region all delon used icons
 
-// - zorro: https://github.com/NG-ZORRO/ng-zorro-antd/blob/master/components/icon/nz-icon.service.ts#L6
+// - zorro: https://github.com/NG-ZORRO/ng-zorro-antd/blob/master/components/icon/icons.ts
 
-import {
-  BellOutline,
-  CaretUpOutline,
-  DeleteOutline,
-  InboxOutline,
-  PlusOutline,
-} from '@ant-design/icons-angular/icons';
-import { NzIconService } from 'ng-zorro-antd';
-const ICONS = [
-  BellOutline,
-  CaretUpOutline,
-  DeleteOutline,
-  PlusOutline,
-  InboxOutline,
-];
+import { BellOutline, DeleteOutline, InboxOutline, PlusOutline } from '@ant-design/icons-angular/icons';
+import { NzI18nModule } from 'ng-zorro-antd/i18n';
+import { NzIconService } from 'ng-zorro-antd/icon';
+const ICONS = [BellOutline, DeleteOutline, PlusOutline, InboxOutline];
 
 // #endregion
 
 @NgModule({
-  imports: [CommonModule, RouterModule, OverlayModule],
-  declarations: [...COMPONENTS, ...PIPES],
-  exports: [...COMPONENTS, ...PIPES, DelonLocaleModule],
+  imports: [CommonModule, RouterModule, OverlayModule, NzI18nModule],
+  declarations: [...PIPES],
+  providers: [
+    {
+      provide: ALAIN_SETTING_KEYS,
+      useValue: {
+        layout: 'layout',
+        user: 'user',
+        app: 'app',
+      },
+    },
+  ],
+  exports: [...PIPES, DelonLocaleModule],
 })
 export class AlainThemeModule {
   constructor(iconSrv: NzIconService) {
     iconSrv.addIcon(...ICONS);
   }
 
-  static forRoot(): ModuleWithProviders {
+  static forRoot(): ModuleWithProviders<AlainThemeModule> {
     return {
       ngModule: AlainThemeModule,
-      providers: [
-        ...HELPERS,
-      ],
+      providers: [...HELPERS],
     };
   }
 
-  static forChild(): ModuleWithProviders {
+  static forChild(): ModuleWithProviders<AlainThemeModule> {
     return {
       ngModule: AlainThemeModule,
       providers: [...HELPERS],

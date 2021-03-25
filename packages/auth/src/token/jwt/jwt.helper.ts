@@ -27,12 +27,13 @@ function b64decode(str: string): string {
 
   for (
     // initialize result and counters
-    // tslint:disable:no-any no-conditional-assignment binary-expression-operand-order
+    // tslint:disable:no-conditional-assignment binary-expression-operand-order
     let bc = 0, bs: any, buffer: any, idx = 0;
     // get next character
     (buffer = str.charAt(idx++));
     // character found in table? initialize bit storage and add its ascii value;
     ~buffer &&
+    // tslint:disable-next-line: ban-comma-operator
     ((bs = bc % 4 ? bs * 64 + buffer : buffer),
     // and if not first of each 4 characters,
     // convert the first 8 bits to one ascii character
@@ -47,7 +48,7 @@ function b64decode(str: string): string {
 }
 
 // https://developer.mozilla.org/en/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem
-function b64DecodeUnicode(str: string) {
+function b64DecodeUnicode(str: string): string {
   return decodeURIComponent(
     Array.prototype.map
       .call(b64decode(str), (c: string) => {

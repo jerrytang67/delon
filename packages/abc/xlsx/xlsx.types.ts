@@ -1,4 +1,3 @@
-// tslint:disable:no-any
 export interface XlsxExportOptions {
   /**
    * worksheets in the workbook, e.g:
@@ -18,4 +17,9 @@ export interface XlsxExportSheet {
   data: any[][];
   /** sheet name */
   name?: string;
+}
+
+export interface XlsxExportResult {
+  filename: string;
+  wb: any;
 }

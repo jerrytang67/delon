@@ -7,10 +7,11 @@ export const DA_STORE_TOKEN = new InjectionToken<IStore>('AUTH_STORE_TOKEN', {
   factory: DA_STORE_TOKEN_LOCAL_FACTORY,
 });
 
+// tslint:disable-next-line: interface-name
 export interface IStore {
   get(key: string): ITokenModel;
 
   set(key: string, value: ITokenModel): boolean;
 
-  remove(key: string);
+  remove(key: string): void;
 }

@@ -1,16 +1,16 @@
-// tslint:disable:no-any
 import {
   HttpErrorResponse,
   HttpEvent,
   HttpHandler,
   HttpInterceptor,
+  HttpParams,
   HttpRequest,
   HTTP_INTERCEPTORS,
 } from '@angular/common/http';
-import { Injector, Optional } from '@angular/core';
+import { Injectable, Injector, Optional } from '@angular/core';
+import { AlainAuthConfig, AlainConfigService } from '@delon/util';
 import { Observable, Observer } from 'rxjs';
-
-import { DelonAuthConfig } from '../auth.config';
+import { mergeConfig } from '../auth.config';
 import { ToLogin } from './helper';
 import { ITokenModel } from './interface';
 
@@ -22,42 +22,56 @@ class HttpAuthInterceptorHandler implements HttpHandler {
   }
 }
 
+@Injectable()
 export abstract class BaseInterceptor implements HttpInterceptor {
   constructor(@Optional() protected injector: Injector) {}
 
   protected model: ITokenModel;
 
-  abstract isAuth(options: DelonAuthConfig): boolean;
+  abstract isAuth(options: AlainAuthConfig): boolean;
 
-  abstract setReq(req: HttpRequest<any>, options: DelonAuthConfig): HttpRequest<any>;
+  abstract setReq(req: HttpRequest<any>, options: AlainAuthConfig): HttpRequest<any>;
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const options = { ...new DelonAuthConfig(), ...this.injector.get(DelonAuthConfig, null) };
-    if (options.ignores) {
-      for (const item of options.ignores as RegExp[]) {
+    const options = mergeConfig(this.injector.get(AlainConfigService));
+    if (Array.isArray(options.ignores)) {
+      for (const item of options.ignores) {
         if (item.test(req.url)) return next.handle(req);
       }
     }
 
-    if (
-      options.allow_anonymous_key &&
-      (req.params.has(options.allow_anonymous_key) ||
-        new RegExp(`[\?|&]${options.allow_anonymous_key}=[^&]+`).test(req.urlWithParams))
-    ) {
-      return next.handle(req);
+    const ingoreKey = options.allow_anonymous_key!;
+    let ingored = false;
+    let params = req.params;
+    let url = req.url;
+    if (req.params.has(ingoreKey)) {
+      params = req.params.delete(ingoreKey);
+      ingored = true;
+    }
+    const urlArr = req.url.split('?');
+    if (urlArr.length > 1) {
+      const queryStringParams = new HttpParams({ fromString: urlArr[1] });
+      if (queryStringParams.has(ingoreKey)) {
+        const queryString = queryStringParams.delete(ingoreKey).toString();
+        url = queryString.length > 0 ? `${urlArr[0]}?${queryString}` : urlArr[0];
+        ingored = true;
+      }
+    }
+    if (ingored) {
+      return next.handle(req.clone({ params, url }));
     }
 
     if (this.isAuth(options)) {
       req = this.setReq(req, options);
     } else {
-      ToLogin(options, this.injector, req.urlWithParams);
+      ToLogin(options, this.injector);
       // Interrupt Http request, so need to generate a new Observable
       const err$ = new Observable((observer: Observer<HttpEvent<any>>) => {
         const res = new HttpErrorResponse({
           url: req.url,
           headers: req.headers,
           status: 401,
-          statusText: `From Auth Intercept --> https://ng-alain.com/docs/auth`,
+          statusText: `来自 @delon/auth 的拦截，所请求URL未授权，若是登录API可加入 [url?_allow_anonymous=true] 来表示忽略校验，更多方法请参考： https://ng-alain.com/auth/getting-started#AlainAuthConfig\nThe interception from @delon/auth, the requested URL is not authorized. If the login API can add [url?_allow_anonymous=true] to ignore the check, please refer to: https://ng-alain.com/auth/getting-started#AlainAuthConfig`,
         });
         observer.error(res);
       });
@@ -65,10 +79,9 @@ export abstract class BaseInterceptor implements HttpInterceptor {
         const interceptors = this.injector.get(HTTP_INTERCEPTORS, []);
         const lastInterceptors = interceptors.slice(interceptors.indexOf(this) + 1);
         if (lastInterceptors.length > 0) {
-          const chain = lastInterceptors.reduceRight(
-            (_next, _interceptor) => new HttpAuthInterceptorHandler(_next, _interceptor),
-            { handle: (_: HttpRequest<any>) => err$ },
-          );
+          const chain = lastInterceptors.reduceRight((_next, _interceptor) => new HttpAuthInterceptorHandler(_next, _interceptor), {
+            handle: (_: HttpRequest<any>) => err$,
+          });
           return chain.handle(req);
         }
       }

@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-
 import { HttpParams } from '@angular/common/http';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
+import { Observable } from 'rxjs';
 import { _HttpClient } from './http.client';
 import {
   BaseApi,
@@ -8,13 +8,15 @@ import {
   BaseUrl,
   Body,
   DELETE,
+  FORM,
   GET,
-  Headers,
   HEAD,
+  Headers,
   JSONP,
   OPTIONS,
-  Path,
   PATCH,
+  Path,
+  Payload,
   POST,
   PUT,
   Query,
@@ -24,83 +26,109 @@ import {
 @BaseHeaders({ bh: 'a' })
 class MockService extends BaseApi {
   @GET()
-  query(
-    @Query('pi') pi: number,
-    @Query('ps') ps: number,
-    @Headers('mh') mh: string,
-  ): Observable<any> {
-    return;
+  query(@Query('pi') _pi: number, @Query('ps') _ps: number, @Headers('mh') _mh: string): Observable<any> {
+    return null as any;
   }
 
   @GET(':id')
-  GET(@Path('id') id: number): Observable<any> {
-    return;
+  GET(@Path('id') _id: number): Observable<any> {
+    return null as any;
   }
 
   @GET(':id/:id')
-  MulitPath(@Path('id') id: number): Observable<any> {
-    return;
+  MulitPath(@Path('id') _id: number): Observable<any> {
+    return null as any;
+  }
+
+  @GET('::id/:id/::id')
+  escapePath(@Path('id') _id: number | undefined): Observable<any> {
+    return null as any;
   }
 
   @GET('')
-  arrQS(@Query('ids') ids: number[]): Observable<any> {
-    return;
+  arrQS(@Query('ids') _ids: number[]): Observable<any> {
+    return null as any;
   }
 
   @POST(':id')
-  save(@Path('id') id: number, @Body data: {}): Observable<any> {
-    return;
+  save(@Path('id') _id: number, @Body _data: {}): Observable<any> {
+    return null as any;
+  }
+
+  @POST(':id')
+  saveByArray(@Path('id') _id: number, @Body _data: string[]): Observable<any> {
+    return null as any;
+  }
+
+  @GET('')
+  payloadGet(@Payload _query: any, @Query('status') _status?: number): Observable<any> {
+    return null as any;
+  }
+
+  @POST(':id')
+  payloadPost(@Payload _body: any, @Body _body2?: {}): Observable<any> {
+    return null as any;
+  }
+
+  @POST(':id')
+  payloadPostByArray(@Payload _body: string[]): Observable<any> {
+    return null as any;
   }
 
   @DELETE()
   DELETE(): Observable<any> {
-    return;
+    return null as any;
   }
 
   @OPTIONS()
   OPTIONS(): Observable<any> {
-    return;
+    return null as any;
   }
 
   @PUT()
   PUT(): Observable<any> {
-    return;
+    return null as any;
   }
 
   @HEAD()
   HEAD(): Observable<any> {
-    return;
+    return null as any;
   }
 
   @PATCH()
   PATCH(): Observable<any> {
-    return;
+    return null as any;
   }
 
   @JSONP()
   JSONP(): Observable<any> {
-    return;
+    return null as any;
+  }
+
+  @FORM()
+  FORM(): Observable<any> {
+    return null as any;
   }
 
   @GET('', { acl: 'admin' })
   ACL_Admin(): Observable<any> {
-    return;
+    return null as any;
   }
 
   @GET('', { acl: 'user' })
   ACL_User(): Observable<any> {
-    return;
+    return null as any;
   }
 }
 
 class MockEmptyService extends BaseApi {
   @GET()
   GET(): Observable<any> {
-    return;
+    return null as any;
   }
   @GET('/a')
   A(): Observable<any> {
-    return;
+    return null as any;
   }
 }
 
@@ -111,7 +139,7 @@ describe('theme: http.decorator', () => {
   let tokens: any;
 
   class MockInjector {
-    get(token: any, notFoundValue = null) {
+    get(token: any, notFoundValue: null = null): any {
       const tokenStr = token + '';
       if (tokenStr.includes('_HttpClient')) {
         return tokens._HttpClient;
@@ -192,6 +220,20 @@ describe('theme: http.decorator', () => {
         expect(request.calls.mostRecent().args[1]).toBe('/user');
       });
     });
+
+    it('should be escaping operations', () => {
+      srv.escapePath(10);
+
+      expect(request).toHaveBeenCalled();
+      expect(request.calls.mostRecent().args[1]).toContain(`:id/10/:id`);
+    });
+
+    it('should be ingore replace param when is invalid value', () => {
+      srv.escapePath(undefined);
+
+      expect(request).toHaveBeenCalled();
+      expect(request.calls.mostRecent().args[1]).toContain(`:id/:id/:id`);
+    });
   });
 
   it('should construct a POST request', () => {
@@ -200,11 +242,65 @@ describe('theme: http.decorator', () => {
     expect(request.calls.mostRecent().args[2].body.name).toBe('cipchk');
   });
 
+  it('should construct a POST request via array body', () => {
+    srv.saveByArray(1, ['a', 'b']);
+    expect(request).toHaveBeenCalled();
+    expect(request.calls.mostRecent().args[2].body[0]).toBe('a');
+    expect(request.calls.mostRecent().args[2].body[1]).toBe('b');
+  });
+
   [`DELETE`, `OPTIONS`, `PUT`, `HEAD`, `PATCH`, `JSONP`].forEach(type => {
     it(`should construct a ${type} request`, () => {
-      srv[type]();
+      (srv as NzSafeAny)[type]();
       expect(request).toHaveBeenCalled();
       expect(request.calls.mostRecent().args[0]).toBe(type);
+    });
+  });
+
+  it(`should be include content-type is application/x-www-form-urlencoded via FORM`, () => {
+    srv.FORM();
+    expect(request).toHaveBeenCalled();
+    const arg = request.calls.mostRecent().args[2];
+    expect(arg.headers['content-type']).toBe(`application/x-www-form-urlencoded`);
+  });
+
+  describe('PAYLOAD', () => {
+    it('should be get', () => {
+      srv.payloadGet({ pi: 1, ps: 10 });
+      expect(request).toHaveBeenCalled();
+      const arg = request.calls.mostRecent().args[2];
+      expect(arg.params.pi).toBe(1);
+      expect(arg.params.ps).toBe(10);
+    });
+    it('should be merge Query & Payload when method is get', () => {
+      srv.payloadGet({ pi: 13, ps: 14 }, 520);
+      expect(request).toHaveBeenCalled();
+      const arg = request.calls.mostRecent().args[2];
+      expect(arg.params.pi).toBe(13);
+      expect(arg.params.ps).toBe(14);
+      expect(arg.params.status).toBe(520);
+    });
+    it('should be post', () => {
+      srv.payloadPost({ pi: 1, ps: 10 });
+      expect(request).toHaveBeenCalled();
+      const arg = request.calls.mostRecent().args[2];
+      expect(arg.body.pi).toBe(1);
+      expect(arg.body.ps).toBe(10);
+    });
+    it('should be post via array body', () => {
+      srv.payloadPostByArray(['a', 'b']);
+      expect(request).toHaveBeenCalled();
+      const arg = request.calls.mostRecent().args[2];
+      expect(arg.body[0]).toBe('a');
+      expect(arg.body[1]).toBe('b');
+    });
+    it('should be merge Body & Payload when method is post', () => {
+      srv.payloadPost({ pi: 13, ps: 14 }, { woc: 520 });
+      expect(request).toHaveBeenCalled();
+      const arg = request.calls.mostRecent().args[2];
+      expect(arg.body.pi).toBe(13);
+      expect(arg.body.ps).toBe(14);
+      expect(arg.body.woc).toBe(520);
     });
   });
 

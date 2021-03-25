@@ -57,9 +57,9 @@ export class DelonModule {
 
 ### API
 
-| 参数                | 说明       | 类型               | 默认值      |
-| ------------------- | ---------- | ------------------ | ----------- |
-| `nullValueHandling` | 空值处理   | `include,ignore`   | `include`   |
+| 参数 | 说明 | 类型 | 默认值 |
+|----|----|----|-----|
+| `nullValueHandling` | 空值处理 | `include,ignore` | `include` |
 | `dateValueHandling` | 时间值处理 | `timestamp,ignore` | `timestamp` |
 
 ## 使用修饰器
@@ -78,7 +78,20 @@ class RestService extends BaseApi {
   }
 
   @GET(':id')
-  GET(@Path('id') id: number): Observable<any> {
+  get(@Path('id') id: number): Observable<any> {
+    return;
+  }
+
+  @GET()
+  get(@Payload data: {}): Observable<any> {
+    return;
+  }
+
+  // 使用 `::id` 来表示转义，若 `id` 值为 `undefined` 会忽略转换，例如：
+  // 当 `id` 为 `10` 时 => 10:type
+  // 当 `id` 为 `undefined` 时 => :id:type
+  @GET(':id::type')
+  get(@Path('id') id: number): Observable<any> {
     return;
   }
 
@@ -87,6 +100,16 @@ class RestService extends BaseApi {
     return;
   }
 
+  @POST()
+  save(@Payload data: {}): Observable<any> {
+    return;
+  }
+
+  @FORM()
+  save(@Payload data: {}): Observable<any> {
+    return;
+  }
+  
   // 若请求的URL不符合授权要求，会直接抛出 `401` 错误，且不发送请求
   @GET('', { acl: 'admin' })
   ACL(): Observable<any> {
@@ -113,13 +136,13 @@ class RestService extends BaseApi {
 
 #### HttpOptions
 
-| 参数              | 说明                                                                                                | 类型                         | 默认值 |
-| ----------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- | ------ |
-| `acl`             | ACL 配置，若导入 `@delon/acl` 时自动有效，等同于 `ACLService.can(roleOrAbility: ACLCanType)` 参数值 | `any`                        | -      |
-| `observe`         | 指定响应内容                                                                                        | `body,events,response`       | -      |
-| `responseType`    | 指定内容格式                                                                                        | `arraybuffer,blob,json,text` | -      |
-| `reportProgress`  | 是否监听进度事件                                                                                    | `boolean`                    | -      |
-| `withCredentials` | 设置 withCredentials                                                                                | `boolean`                    | -      |
+| 参数 | 说明 | 类型 | 默认值 |
+|----|----|----|-----|
+| `acl` | ACL 配置，若导入 `@delon/acl` 时自动有效，等同于 `ACLService.can(roleOrAbility: ACLCanType)` 参数值 | `any` | - |
+| `observe` | 指定响应内容 | `body,events,response` | - |
+| `responseType` | 指定内容格式 | `arraybuffer,blob,json,text` | - |
+| `reportProgress` | 是否监听进度事件 | `boolean` | - |
+| `withCredentials` | 设置 withCredentials | `boolean` | - |
 
 ### 参数
 
@@ -127,3 +150,6 @@ class RestService extends BaseApi {
 - `@Query(key?: string)` URL 参数 QueryString
 - `@Body` 参数 Body
 - `@Headers(key?: string)` 参数 Headers
+- `@Payload` 请求负载
+  - 当支持 Body 时（例如：`POST`、`PUT`）为内容体等同 `@Body`
+  - 当不支持 Body 时（例如：`GET`、`DELETE` 等）为 `QueryString`

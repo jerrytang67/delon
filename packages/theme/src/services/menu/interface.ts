@@ -1,62 +1,97 @@
 export interface MenuIcon {
-  type: 'class' | 'icon' | 'img';
-  /** 值，包含：类名、图标 `type`、图像 */
-  value: string;
-  /** 图标主题风格，默认：`outline` */
+  /** Type for icon */
+  type: 'class' | 'icon' | 'iconfont' | 'img';
+  /** Value for the icon, can be set Class Name, nz-icon of `nzType`, image */
+  value?: string;
+  /** Type of the ant design icon, default: `outline` */
   theme?: 'outline' | 'twotone' | 'fill';
-  /** 是否有旋转动画，默认：`false` */
+  /** Rotate icon with animation, default: `false` */
   spin?: boolean;
-  /** 仅适用双色图标，设置双色图标的主要颜色，仅对当前 icon 生效 */
+  /** Only support the two-tone icon. Specific the primary color */
   twoToneColor?: string;
-  /** 指定来自 IconFont 的图标类型 */
+  /** Type of the icon from iconfont */
   iconfont?: string;
+  /** Rotate degrees */
+  rotate?: number;
 }
 
 export interface Menu {
-  // tslint:disable-next-line:no-any
   [key: string]: any;
-  /** 文本 */
-  text: string;
-  /** i18n主键 */
+  /** Text of menu item, can be choose one of  `text` or `i18n` (Support HTML) */
+  text?: string;
+  /** I18n key of menu item, can be choose one of  `text` or `i18n` (Support HTML) */
   i18n?: string;
-  /** 是否显示分组名，默认：`true` */
+  /** Whether to display the group name, default: `true` */
   group?: boolean;
-  /** 路由 */
+  /** Routing for the menu item, can be choose one of `link` or `externalLink` */
   link?: string;
-  /**
-   * @deprecated
-   * 路由是否精准匹配，默认：`false`，see:
-   * - [#344](https://github.com/ng-alain/ng-alain/issues/344)
-   * - [RouterLinkActive](https://angular.io/api/router/RouterLinkActive#routerLinkActiveOptions)
-   */
-  linkExact?: boolean;
-  /** 外部链接 */
+  /** External link for the menu item, can be choose one of `link` or `externalLink` */
   externalLink?: string;
-  /** 链接 target */
+  /** Specifies `externalLink` where to display the linked URL */
   target?: '_blank' | '_self' | '_parent' | '_top';
-  /** 图标 */
-  icon?: string | MenuIcon;
-  /** 徽标数，展示的数字。（注：`group:true` 无效） */
+  /** Icon for the menu item, only valid for the first level menu */
+  icon?: string | MenuIcon | null;
+  /** Badget for the menu item when `group` is `true` */
   badge?: number;
-  /** 徽标数，显示小红点 */
+  /** Whether to display a red dot instead of `badge` value */
   badgeDot?: boolean;
-  /** 徽标 Badge 颜色 （默认：error， 所有颜色值见：https://github.com/ng-alain/ng-alain/blob/master/_documents/utils.md#色彩） */
+  /** Badge [color](https://ng.ant.design/components/badge/en#nz-badge) */
   badgeStatus?: string;
-  /** 是否禁用 */
+  /** Whether disable for the menu item */
   disabled?: boolean;
-  /** 是否隐藏菜单 */
+  /** Whether hidden for the menu item */
   hide?: boolean;
-  /** 隐藏面包屑，指 `page-header` 组件的自动生成面包屑时有效 */
+  /** Whether hide in breadcrumbs, which are valid when the `page-header` component automatically generates breadcrumbs */
   hideInBreadcrumb?: boolean;
-  /** ACL配置，若导入 `@delon/acl` 时自动有效，等同于 `ACLService.can(roleOrAbility: ACLCanType)` 参数值 */
-  // tslint:disable-next-line:no-any
-  acl?: any;
-  /** 是否快捷菜单项 */
+  /** ACL configuration, it's equivalent to `ACLService.can(roleOrAbility: ACLCanType)` parameter value */
+  acl?:
+    | number
+    | number[]
+    | string
+    | string[]
+    | {
+        /**
+         * 角色
+         */
+        role?: string[];
+        /**
+         * 权限点
+         */
+        ability?: number[] | string[];
+
+        /**
+         * Validated against, default: `oneOf`
+         * - `allOf` the value validates against all the roles or abilities
+         * - `oneOf` the value validates against exactly one of the roles or abilities
+         */
+        mode?: 'allOf' | 'oneOf';
+
+        /**
+         * 是否取反，即结果为 `true` 时表示未授权
+         */
+        except?: boolean;
+      };
+  /** Whether shortcut menu item */
   shortcut?: boolean;
-  /** 快捷菜单根节点 */
+  /** Wheter shortcut menu root node */
   shortcutRoot?: boolean;
-  /** 是否允许复用，需配合 `reuse-tab` 组件 */
+  /** Whether to allow reuse, need to cooperate with the `reuse-tab` component */
   reuse?: boolean;
-  /** 二级菜单 */
+  /** Whether to expand, when `checkStrictly` is valid in `sidebar-nav` component */
+  open?: boolean;
+  /** Unique identifier of the menu item, can be used in `getItem`,` setItem` to update a menu */
+  key?: string;
+  /** Children menu of menu item */
   children?: Menu[];
+}
+
+/** @inner Just only inner type */
+export interface MenuInner extends Menu {
+  _id?: number;
+  _parent?: Menu | null;
+  _depth?: number;
+  _hidden?: boolean;
+  _selected?: boolean;
+  _open?: boolean;
+  _aclResult?: boolean;
 }

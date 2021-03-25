@@ -1,18 +1,7 @@
-// tslint:disable:no-any
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  HostBinding,
-  Input,
-  NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import { InputBoolean, InputNumber } from '@delon/util';
-
-declare var G2: any;
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
+import { Chart, Event } from '@antv/g2';
+import { G2BaseComponent, genMiniTooltipOptions } from '@delon/chart/core';
+import { BooleanInput, InputBoolean, InputNumber, NumberInput } from '@delon/util/decorator';
 
 export interface G2MiniAreaData {
   x: any;
@@ -20,42 +9,56 @@ export interface G2MiniAreaData {
   [key: string]: any;
 }
 
+export interface G2MiniAreaClickItem {
+  item: G2MiniAreaData;
+  ev: Event;
+}
+
 @Component({
   selector: 'g2-mini-area',
+  exportAs: 'g2MiniArea',
   template: ``,
+  host: {
+    '[style.height.px]': 'height',
+  },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class G2MiniAreaComponent implements OnInit, OnChanges, OnDestroy {
-  private chart: any;
+export class G2MiniAreaComponent extends G2BaseComponent {
+  static ngAcceptInputType_borderWidth: NumberInput;
+  static ngAcceptInputType_height: NumberInput;
+  static ngAcceptInputType_fit: BooleanInput;
+  static ngAcceptInputType_line: BooleanInput;
+  static ngAcceptInputType_animate: BooleanInput;
 
   // #region fields
 
-  @Input() @InputNumber() delay = 0;
   @Input() color = 'rgba(24, 144, 255, 0.2)';
   @Input() borderColor = '#1890FF';
   @Input() @InputNumber() borderWidth = 2;
-  @HostBinding('style.height.px') @Input() @InputNumber() height = 56;
+  @Input() @InputNumber() height = 56;
   @Input() @InputBoolean() fit = true;
   @Input() @InputBoolean() line = false;
   @Input() @InputBoolean() animate = true;
   @Input() xAxis: any;
   @Input() yAxis: any;
-  @Input() padding: number[] = [8, 8, 8, 8];
+  @Input() padding: number | number[] | 'auto' = [8, 8, 8, 8];
   @Input() data: G2MiniAreaData[] = [];
   @Input() yTooltipSuffix = '';
   @Input() tooltipType: 'mini' | 'default' = 'default';
+  @Output() clickItem = new EventEmitter<G2MiniAreaClickItem>();
 
   // #endregion
 
-  constructor(private el: ElementRef, private ngZone: NgZone) {}
-
-  private install() {
-    const { el, fit, height, padding, xAxis, yAxis, yTooltipSuffix, tooltipType, line } = this;
-    const chart = (this.chart = new G2.Chart({
+  install(): void {
+    const { el, fit, height, padding, xAxis, yAxis, yTooltipSuffix, tooltipType, line, theme } = this;
+    const chart: Chart = (this._chart = new (window as any).G2.Chart({
       container: el.nativeElement,
-      forceFit: fit,
+      autoFit: fit,
       height,
       padding,
+      theme,
     }));
 
     if (!xAxis && !yAxis) {
@@ -75,77 +78,46 @@ export class G2MiniAreaComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     chart.legend(false);
-    chart.tooltip({
-      type: tooltipType === 'mini' ? 'mini' : null,
-      showTitle: false,
-      hideMarkders: false,
-      'g2-tooltip': { padding: 4 },
-      'g2-tooltip-list-item': { margin: `0px 4px` },
-    });
+    chart.tooltip(genMiniTooltipOptions(tooltipType));
 
     chart
       .area()
       .position('x*y')
       .tooltip('x*y', (x, y) => ({ name: x, value: y + yTooltipSuffix }))
-      .shape('smooth')
-      .opacity(1);
+      .shape('smooth');
 
     if (line) {
-      chart
-        .line()
-        .position('x*y')
-        .shape('smooth')
-        .opacity(1)
-        .tooltip(false);
+      chart.line().position('x*y').shape('smooth').tooltip(false);
     }
+
+    chart.on(`plot:click`, (ev: Event) => {
+      const records = this._chart.getSnapRecords({ x: ev.x, y: ev.y });
+      this.ngZone.run(() => this.clickItem.emit({ item: records[0]._origin, ev }));
+    });
 
     chart.render();
 
     this.attachChart();
   }
 
-  private attachChart() {
-    const {
-      chart,
-      line,
-      fit,
-      height,
-      animate,
-      padding,
-      data,
-      color,
-      borderColor,
-      borderWidth,
-    } = this;
-    if (!chart || !data || data.length <= 0) {
+  attachChart(): void {
+    const { _chart, line, fit, height, animate, padding, data, color, borderColor, borderWidth } = this;
+    if (!_chart || !data || data.length <= 0) {
       return;
     }
 
-    const geoms = chart.get('geoms');
+    const geoms = _chart.geometries;
     geoms.forEach(g => g.color(color));
     if (line) {
       geoms[1].color(borderColor).size(borderWidth);
     }
 
-    chart.set('forceFit', fit);
-    chart.set('height', height);
-    chart.set('animate', animate);
-    chart.set('padding', padding);
+    _chart.autoFit = fit;
+    _chart.height = height;
+    _chart.animate(animate);
+    _chart.padding = padding;
 
-    chart.changeData(data);
-  }
-
-  ngOnInit() {
-    this.ngZone.runOutsideAngular(() => setTimeout(() => this.install(), this.delay));
-  }
-
-  ngOnChanges(): void {
-    this.ngZone.runOutsideAngular(() => this.attachChart());
-  }
-
-  ngOnDestroy(): void {
-    if (this.chart) {
-      this.ngZone.runOutsideAngular(() => this.chart.destroy());
-    }
+    _chart.changeData(data);
+    _chart.render();
   }
 }

@@ -1,11 +1,13 @@
 import { DebugElement } from '@angular/core';
-import { fakeAsync, ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
+import { AlainConfigService } from '@delon/util/config';
 import { of } from 'rxjs';
-
 import { configureSFTestSuite, SFPage, TestFormComponent } from '../../../spec/base.spec';
 import { SFSchema, SFSchemaEnum } from '../../../src/schema/index';
-import { AutoCompleteWidget, EMAILSUFFIX } from './autocomplete.widget';
+import { mergeConfig } from '../../config';
+import { AutoCompleteWidget } from './autocomplete.widget';
+import { SFAutoCompleteWidgetSchema } from './schema';
 
 describe('form: widget: autocomplete', () => {
   let fixture: ComponentFixture<TestFormComponent>;
@@ -20,6 +22,45 @@ describe('form: widget: autocomplete', () => {
     ({ fixture, dl, context } = createTestContext(TestFormComponent));
     page = new SFPage(context.comp);
     page.prop(dl, context, fixture);
+  });
+
+  it('#setValue', fakeAsync(() => {
+    page
+      .newSchema({
+        properties: {
+          a: { type: 'string', ui: { widget }, enum: ['aaa', 'bbb', 'ccc'] },
+        },
+      })
+      .setValue('/a', 'bbb');
+    const widgetInstance = page.getProperty('/a').widget as AutoCompleteWidget;
+    // tslint:disable-next-line: no-string-literal
+    const list = widgetInstance['fixData'] as SFSchemaEnum[];
+    const item = list.find(w => w.checked === true) as SFSchemaEnum;
+    expect(item != null).toBe(true);
+    expect(item.value).toBe('bbb');
+    page.asyncEnd();
+  }));
+
+  it('#change', () => {
+    const s: SFSchema = {
+      properties: {
+        a: {
+          type: 'string',
+          title: '状态',
+          enum: ['aaa', 'bbb', 'ccc'],
+          default: 'aaa',
+          ui: {
+            widget,
+            change: jasmine.createSpy(),
+          } as SFAutoCompleteWidgetSchema,
+        },
+      },
+    };
+    page.newSchema(s);
+    const selectWidget = page.getWidget<AutoCompleteWidget>('sf-' + widget);
+    selectWidget.updateValue({ nzLabel: 'aaa', nzValue: { value: 'aaa', label: 'aaa' } } as any);
+    const item = s.properties!.a.ui as SFAutoCompleteWidgetSchema;
+    expect(item.change).toHaveBeenCalled();
   });
 
   describe('[data source]', () => {
@@ -56,6 +97,7 @@ describe('form: widget: autocomplete', () => {
       });
     });
     it('with email of format', fakeAsync(() => {
+      const config = mergeConfig(TestBed.inject(AlainConfigService));
       const typeValue = 'a';
       page
         .newSchema({
@@ -68,9 +110,29 @@ describe('form: widget: autocomplete', () => {
         })
         .time(100)
         .typeChar(typeValue)
-        .checkCount('nz-auto-option', EMAILSUFFIX.length)
+        .checkCount('nz-auto-option', config.uiEmailSuffixes!.length)
         .click('nz-auto-option')
-        .checkValue('a', `${typeValue}@${EMAILSUFFIX[0]}`)
+        .checkValue('a', `${typeValue}@${config.uiEmailSuffixes![0]}`)
+        .asyncEnd();
+    }));
+    it('with email and custom suffix of format', fakeAsync(() => {
+      const suffixes = ['a.com', 'b.com'];
+      const typeValue = 'a';
+      page
+        .newSchema({
+          properties: {
+            a: {
+              type: 'string',
+              format: 'email',
+              enum: suffixes,
+            },
+          },
+        })
+        .time(100)
+        .typeChar(typeValue)
+        .checkCount('nz-auto-option', suffixes.length)
+        .click('nz-auto-option')
+        .checkValue('a', `${typeValue}@${suffixes[0]}`)
         .asyncEnd();
     }));
     it('should be used value to result', fakeAsync(() => {
@@ -116,7 +178,8 @@ describe('form: widget: autocomplete', () => {
               type: 'string',
               ui: {
                 widget,
-                filterOption: (input: string, option: SFSchemaEnum) => option.label === 'a11',
+                change: () => {},
+                filterOption: (_input: string, option: SFSchemaEnum) => option.label === 'a11',
               },
               enum: data,
             },

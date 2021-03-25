@@ -1,31 +1,30 @@
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostBinding,
-  Input,
-  OnDestroy,
-  Output,
-} from '@angular/core';
-import { InputNumber } from '@delon/util';
-import { fromEvent, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
+import { G2BaseComponent } from '@delon/chart/core';
+import { InputNumber, NumberInput } from '@delon/util/decorator';
+import { fromEvent } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'g2,g2-custom',
+  exportAs: 'g2Custom',
   template: `
+    <nz-skeleton *ngIf="!loaded"></nz-skeleton>
     <ng-content></ng-content>
   `,
+  host: {
+    '[style.height.px]': 'height',
+  },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class G2CustomComponent implements AfterViewInit, OnDestroy {
-  private resize$: Subscription = null;
+export class G2CustomComponent extends G2BaseComponent {
+  static ngAcceptInputType_height: NumberInput;
+  static ngAcceptInputType_resizeTime: NumberInput;
 
   // #region fields
 
-  @HostBinding('style.height.px') @Input() @InputNumber() height: number;
+  @Input() @InputNumber() height: number;
   @Input() @InputNumber() resizeTime = 0;
   @Output() readonly render = new EventEmitter<ElementRef>();
   @Output() readonly resize = new EventEmitter<ElementRef>();
@@ -33,28 +32,19 @@ export class G2CustomComponent implements AfterViewInit, OnDestroy {
 
   // #endregion
 
-  constructor(private el: ElementRef) {}
-
-  private renderChart() {
+  install(): void {
     this.el.nativeElement.innerHTML = '';
     this.render.emit(this.el);
     this.installResizeEvent();
   }
 
-  private installResizeEvent() {
-    if (this.resizeTime <= 0 || this.resize$) return;
+  attachChart(): void {}
 
-    this.resize$ = fromEvent(window, 'resize')
-      .pipe(debounceTime(Math.min(200, this.resizeTime)))
+  private installResizeEvent(): void {
+    if (this.resizeTime <= 0) return;
+
+    fromEvent(window, 'resize')
+      .pipe(takeUntil(this.destroy$), debounceTime(Math.min(200, this.resizeTime)))
       .subscribe(() => this.resize.emit(this.el));
-  }
-
-  ngAfterViewInit(): void {
-    this.renderChart();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy.emit(this.el);
-    if (this.resize$) this.resize$.unsubscribe();
   }
 }

@@ -19,8 +19,7 @@
     "utils",
     "angular"
   ],
-  "peerDependencies": {
-    "extend": "^3.0.0"
-  },
-  "sideEffects": false
+  "dependencies": {
+    "extend": "@LIB-PLACEHOLDER"
+  }
 }

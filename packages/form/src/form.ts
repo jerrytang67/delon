@@ -2,6 +2,7 @@ export * from './config';
 export * from './sf.component';
 export * from './sf-item.component';
 export * from './sf-fixed.directive';
+export * from './sf-item-wrap.component';
 export * from './module';
 
 // schemas
@@ -18,3 +19,4 @@ export * from './widget.factory';
 
 // other
 export * from './validator.factory';
+export * from './utils';

@@ -1,54 +1,44 @@
-// tslint:disable:no-any
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  Input,
-  NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import { InputNumber } from '@delon/util';
-
-declare var G2: any;
+import { ChangeDetectionStrategy, Component, Input, ViewEncapsulation } from '@angular/core';
+import { Chart } from '@antv/g2';
+import { G2BaseComponent } from '@delon/chart/core';
+import { InputNumber, NumberInput } from '@delon/util/decorator';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 
 @Component({
   selector: 'g2-gauge',
-  template: ``,
+  exportAs: 'g2Gauge',
+  template: `<nz-skeleton *ngIf="!loaded"></nz-skeleton>`,
   host: {
     '[class.g2-gauge]': 'true',
   },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class G2GaugeComponent implements OnInit, OnDestroy, OnChanges {
-  private chart: any;
+export class G2GaugeComponent extends G2BaseComponent {
+  static ngAcceptInputType_height: NumberInput;
+  static ngAcceptInputType_percent: NumberInput;
 
   // #region fields
 
-  @Input() @InputNumber() delay = 0;
   @Input() title: string;
-  @Input() @InputNumber() height;
+  @Input() @InputNumber() height: number;
   @Input() color = '#2f9cff';
-  @Input() bgColor = '#f0f2f5';
+  @Input() bgColor: string; // = '#f0f2f5';
   @Input() format: (text: string, item: {}, index: number) => string;
   @Input() @InputNumber() percent: number;
-  @Input() padding: Array<number | string> = [10, 10, 30, 10];
+  @Input() padding: number | number[] | 'auto' = [10, 10, 30, 10];
 
   // #endregion
 
-  constructor(private el: ElementRef, private ngZone: NgZone) {}
-
-  private install() {
-    const Shape = G2.Shape;
+  install(): void {
     // 自定义Shape 部分
-    Shape.registerShape('point', 'pointer', {
-      drawShape(cfg, group) {
-        const center = this.parsePoint({
-          // 获取极坐标系下画布中心点
-          x: 0,
-          y: 0,
-        });
+    (window as any).G2.registerShape('point', 'pointer', {
+      // tslint:disable-next-line: typedef
+      draw(cfg: any, container: any) {
+        const group = container.addGroup({});
+        // 获取极坐标系下画布中心点
+        const center = (this as NzSafeAny).parsePoint({ x: 0, y: 0 });
         // 绘制指针
         group.addShape('line', {
           attrs: {
@@ -61,36 +51,36 @@ export class G2GaugeComponent implements OnInit, OnDestroy, OnChanges {
             lineCap: 'round',
           },
         });
-        return group.addShape('circle', {
+        group.addShape('circle', {
           attrs: {
             x: center.x,
             y: center.y,
-            r: 9.75,
+            r: 5.75,
             stroke: cfg.color,
             lineWidth: 2,
             fill: '#fff',
           },
         });
+        return group;
       },
     });
 
-    const { el, height, padding, format } = this;
+    const { el, height, padding, format, theme } = this;
 
-    const chart = (this.chart = new G2.Chart({
+    const chart: Chart = (this._chart = new (window as any).G2.Chart({
       container: el.nativeElement,
-      animate: false,
-      forceFit: true,
+      autoFit: true,
       height,
       padding,
+      theme,
     }));
-    chart
-      .point({ generatePoints: true })
-      .position('value*1')
-      .shape('pointer')
-      .active(false);
-    chart.coord('polar', {
-      startAngle: Math.PI * -1.2,
-      endAngle: Math.PI * 0.2,
+    chart.legend(false);
+    chart.animate(false);
+    chart.tooltip(false);
+    chart.coordinate('polar', {
+      startAngle: (-9 / 8) * Math.PI,
+      endAngle: (1 / 8) * Math.PI,
+      radius: 0.75,
     });
     chart.scale('value', {
       min: 0,
@@ -99,76 +89,70 @@ export class G2GaugeComponent implements OnInit, OnDestroy, OnChanges {
       tickCount: 6,
     });
     chart.axis('1', false);
-    // 刻度值
     chart.axis('value', {
-      zIndex: 2,
       line: null,
       label: {
-        offset: -12,
+        offset: -14,
         formatter: format,
       },
       tickLine: null,
       grid: null,
     });
-    chart.legend(false);
-
-    chart.render();
+    chart.point().position('value*1').shape('pointer');
 
     this.attachChart();
   }
 
-  private attachChart() {
-    const { chart, bgColor, color, title, percent } = this;
-    if (!chart) return;
-    chart.get('geoms')[0].color(color);
-    const guide = chart.guide();
-    guide.clear();
+  attachChart(): void {
+    const { _chart, percent, color, bgColor, title } = this;
+    if (!_chart) return;
+
     const data = [{ name: title, value: percent }];
+    const val = data[0].value;
+    _chart.annotation().clear(true);
+    _chart.geometries[0].color(color);
     // 绘制仪表盘背景
-    guide.arc({
-      zIndex: 0,
+    _chart.annotation().arc({
       top: false,
       start: [0, 0.95],
       end: [100, 0.95],
       style: {
-        // 底灰色
         stroke: bgColor,
         lineWidth: 12,
+        lineDash: null,
       },
     });
-    // 绘制指标
-    guide.arc({
-      zIndex: 1,
+    _chart.annotation().arc({
       start: [0, 0.95],
       end: [data[0].value, 0.95],
       style: {
         stroke: color,
         lineWidth: 12,
+        lineDash: null,
       },
     });
-    // 绘制数字
-    guide.html({
-      position: ['50%', '95%'],
-      html: `<div class="g2-gauge__desc">
-        <div class="g2-gauge__title">${title}</div>
-        <div class="g2-gauge__percent">${data[0].value}%</div>
-      </div>`,
+
+    _chart.annotation().text({
+      position: ['50%', '85%'],
+      content: title,
+      style: {
+        fontSize: 12,
+        fill: 'rgba(0, 0, 0, 0.43)',
+        textAlign: 'center',
+      },
+    });
+    _chart.annotation().text({
+      position: ['50%', '90%'],
+      content: `${val} %`,
+      style: {
+        fontSize: 20,
+        fill: 'rgba(0, 0, 0, 0.85)',
+        textAlign: 'center',
+      },
+      offsetY: 15,
     });
 
-    chart.changeData(data);
-  }
-
-  ngOnInit(): void {
-    this.ngZone.runOutsideAngular(() => setTimeout(() => this.install(), this.delay));
-  }
-
-  ngOnChanges(): void {
-    this.ngZone.runOutsideAngular(() => this.attachChart());
-  }
-
-  ngOnDestroy(): void {
-    if (this.chart) {
-      this.ngZone.runOutsideAngular(() => this.chart.destroy());
-    }
+    _chart.changeData(data);
+    _chart.render();
   }
 }

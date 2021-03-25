@@ -1,56 +1,65 @@
+import { Direction, Directionality } from '@angular/cdk/bidi';
 import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ElementRef,
-  HostBinding,
-  HostListener,
   Inject,
   Input,
   OnDestroy,
   OnInit,
+  Optional,
+  ViewEncapsulation,
 } from '@angular/core';
-import { InputNumber } from '@delon/util';
-
-import { ErrorCollectConfig } from './error-collect.config';
+import { AlainConfigService } from '@delon/util/config';
+import { InputNumber } from '@delon/util/decorator';
+import { interval, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'error-collect, [error-collect]',
-  template: `
-    <i nz-icon type="exclamation-circle"></i>
-    <span class="pl-sm">{{ count }}</span>
-  `,
-  host: { '[class.error-collect]': 'true' },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   exportAs: 'errorCollect',
+  template: `
+    <i nz-icon nzType="exclamation-circle"></i>
+    <span class="error-collect__count">{{ count }}</span>
+  `,
+  host: {
+    '[class.error-collect]': 'true',
+    '[class.error-collect-rtl]': `dir === 'rtl'`,
+    '[class.d-none]': '_hiden',
+    '(click)': '_click()',
+  },
+  preserveWhitespaces: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class ErrorCollectComponent implements OnInit, OnDestroy {
-  private $time = null;
-  private formEl: HTMLFormElement;
+  private formEl: HTMLFormElement | null;
+  private destroy$ = new Subject<void>();
+
+  _hiden = true;
+  count = 0;
+  dir: Direction = 'ltr';
 
   @Input() @InputNumber() freq: number;
   @Input() @InputNumber() offsetTop: number;
 
-  @HostBinding('class.d-none') _hiden = true;
-
-  count = 0;
-
   constructor(
-    cog: ErrorCollectConfig,
     private el: ElementRef,
     private cdr: ChangeDetectorRef,
-    // tslint:disable-next-line:no-any
     @Inject(DOCUMENT) private doc: any,
+    configSrv: AlainConfigService,
+    @Optional() private directionality: Directionality,
   ) {
-    Object.assign(this, { ...new ErrorCollectConfig(), ...cog });
+    configSrv.attach(this, 'errorCollect', { freq: 500, offsetTop: 65 + 64 + 8 * 2 });
   }
 
-  private get errEls() {
-    return this.formEl.querySelectorAll('.has-error');
+  private get errEls(): NodeListOf<HTMLElement> {
+    return this.formEl!.querySelectorAll('.ant-form-item-has-error');
   }
 
-  private update() {
+  private update(): void {
     const count = this.errEls.length;
     if (count === this.count) return;
     this.count = count;
@@ -58,8 +67,7 @@ export class ErrorCollectComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  @HostListener('click')
-  _click() {
+  _click(): boolean {
     if (this.count === 0) return false;
     // nz-form-control
     const els = this.errEls;
@@ -67,37 +75,40 @@ export class ErrorCollectComponent implements OnInit, OnDestroy {
     formItemEl.scrollIntoView(true);
     // fix header height
     this.doc.documentElement.scrollTop -= this.offsetTop;
+    return true;
   }
 
-  private install() {
-    this.uninstall();
-    this.$time = setInterval(() => this.update(), this.freq);
+  private install(): void {
+    this.dir = this.directionality.value;
+    this.directionality.change?.pipe(takeUntil(this.destroy$)).subscribe((direction: Direction) => {
+      this.dir = direction;
+    });
+    interval(this.freq)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.update());
     this.update();
   }
 
-  private uninstall() {
-    clearInterval(this.$time);
-  }
-
-  private findParent(el: Element, selector: string) {
-    let retEl = null;
+  private findParent(el: Element, selector: string): HTMLFormElement | null {
+    let retEl: HTMLFormElement | null = null;
     while (el) {
       if (el.querySelector(selector)) {
-        retEl = el;
+        retEl = el as HTMLFormElement;
         break;
       }
-      el = el.parentElement;
+      el = el.parentElement as HTMLFormElement;
     }
     return retEl;
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.formEl = this.findParent(this.el.nativeElement, 'form');
     if (this.formEl === null) throw new Error('No found form element');
     this.install();
   }
 
-  ngOnDestroy() {
-    this.uninstall();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

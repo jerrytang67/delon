@@ -1,6 +1,5 @@
 import { DebugElement } from '@angular/core';
-import { fakeAsync, ComponentFixture } from '@angular/core/testing';
-
+import { ComponentFixture, fakeAsync } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
 import { configureSFTestSuite, SFPage, TestFormComponent } from '../../../spec/base.spec';
 import { SFSchema } from '../../../src/schema/index';
@@ -10,7 +9,6 @@ describe('form: widget: number', () => {
   let dl: DebugElement;
   let context: TestFormComponent;
   let page: SFPage;
-  const widget = 'number';
 
   configureSFTestSuite();
 
@@ -19,6 +17,17 @@ describe('form: widget: number', () => {
     page = new SFPage(context.comp);
     page.prop(dl, context, fixture);
   });
+
+  it('#setValue', fakeAsync(() => {
+    page
+      .newSchema({
+        properties: { a: { type: 'number', default: 1 } },
+      })
+      .dc(1)
+      .checkInput('.ant-input-number-input', '1')
+      .setValue('/a', 2, 1)
+      .checkInput('.ant-input-number-input', '2');
+  }));
 
   it('should be default true via schema.default', () => {
     const s: SFSchema = {
@@ -103,32 +112,37 @@ describe('form: widget: number', () => {
       const s: SFSchema = {
         properties: { a: { type: 'number', default: 1, ui: { prefix: 'a' } } },
       };
-      page.newSchema(s).typeChar(1);
+      const property = page.newSchema(s).getProperty('/a');
+      page.typeChar(1);
       const ipt = page.getEl('.ant-input-number-input') as HTMLInputElement;
       expect(ipt.value).toBe(`a 1`);
+      property.setValue(null, true);
+      page.typeChar(null);
+      expect(ipt.value).toBe(``);
     }));
 
-    it('#prefix', fakeAsync(() => {
+    it('#unit', fakeAsync(() => {
       const s: SFSchema = {
         properties: { a: { type: 'number', default: 1, ui: { unit: 'b' } } },
       };
-      page.newSchema(s).typeChar(1);
+      const property = page.newSchema(s).getProperty('/a');
       const ipt = page.getEl('.ant-input-number-input') as HTMLInputElement;
+      page.typeChar(1);
       expect(ipt.value).toBe(`1 b`);
+      property.setValue(null, true);
+      page.typeChar(null);
+      expect(ipt.value).toBe('');
     }));
 
     it('#formatter & #parser', fakeAsync(() => {
       const s: SFSchema = {
         properties: { a: { type: 'number', default: 1 } },
       };
-      const ui = (s.properties.a.ui = {
+      const ui = (s.properties!.a.ui = {
         formatter: jasmine.createSpy('formatter'),
         parser: jasmine.createSpy('parser'),
       });
-      page
-        .newSchema(s)
-        .typeChar(10)
-        .typeEvent('blur');
+      page.newSchema(s).typeChar(10).typeEvent('blur');
       expect(ui.formatter).toHaveBeenCalled();
       expect(ui.parser).toHaveBeenCalled();
     }));

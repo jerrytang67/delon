@@ -7,9 +7,7 @@ import * as fse from 'fs-extra';
 import { ModuleConfig } from '../interfaces';
 
 export function isHeading(node: any) {
-  return /h[1-6]/i.test(
-    typeof node === 'string' ? node : JsonML.getTagName(node),
-  );
+  return /h[1-6]/i.test(typeof node === 'string' ? node : JsonML.getTagName(node));
 }
 
 export function isStandalone(tagName: string) {
@@ -22,7 +20,7 @@ export function escapeHTML(str: string, escapeQuotes: boolean = false) {
   }
 
   let escaped = str
-    .replace(/&/g, '&amp;')
+    // .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
@@ -37,6 +35,10 @@ export function getCode(node: any) {
   return JsonML.getChildren(JsonML.getChildren(node)[0] || '')[0] || '';
 }
 
+export function genValidId(id: string): string {
+  return id.replace(/[() `?]*/g, '');
+}
+
 export function generateSluggedId(children: any): { id: string; text: string } {
   const headingText = children
     .map((node: any) => {
@@ -49,9 +51,8 @@ export function generateSluggedId(children: any): { id: string; text: string } {
       return node;
     })
     .join('');
-  const sluggedId = headingText.trim().replace(/\s+/g, '-');
   return {
-    id: sluggedId,
+    id: genValidId(headingText.trim()),
     text: headingText,
   };
 }
@@ -74,17 +75,13 @@ export function generateDoc(data: any, tpl: string, savePath: string) {
 
 export function genUpperName(name: string) {
   return name
-    .split('-')
+    .split(/-|\//g)
     .map(v => v.charAt(0).toUpperCase() + v.slice(1))
     .join('');
 }
 
 export function includeAttributes(config: ModuleConfig, targetMeta: any) {
-  if (
-    !config.metaIncludeAttributes ||
-    !Array.isArray(config.metaIncludeAttributes)
-  )
-    return;
+  if (!config.metaIncludeAttributes || !Array.isArray(config.metaIncludeAttributes)) return;
 
   targetMeta = targetMeta || {};
   for (const key of config.metaIncludeAttributes) {
@@ -101,6 +98,6 @@ export function genComponentName(...names) {
   return `${names.map(key => genUpperName(key)).join('')}Component`;
 }
 
-export function genSelector(...names) {
+export function genSelector(...names: string[]) {
   return `app-${names.join('-')}`;
 }

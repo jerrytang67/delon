@@ -1,21 +1,19 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import addSeconds from 'date-fns/add_seconds';
-import format from 'date-fns/format';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { addSeconds, format } from 'date-fns';
+import { CountdownComponent, CountdownConfig, CountdownEvent } from 'ngx-countdown';
 
 @Component({
   selector: 'count-down',
-  template: `
-    <countdown
-      *ngIf="config"
-      [config]="config"
-      (start)="_start()"
-      (finished)="_finished()"
-      (notify)="_notify($event)"
-    ></countdown>
-  `,
+  exportAs: 'countDown',
+  template: ` <countdown #cd *ngIf="config" [config]="config" (event)="handleEvent($event)"></countdown> `,
+  preserveWhitespaces: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class CountDownComponent {
-  @Input() config: {};
+  @ViewChild('cd', { static: false }) readonly instance: CountdownComponent;
+
+  @Input() config: CountdownConfig;
 
   /**
    * 目标时间
@@ -23,25 +21,14 @@ export class CountDownComponent {
   @Input()
   set target(value: number | Date) {
     this.config = {
-      template: `$!h!:$!m!:$!s!`,
-      stopTime:
-        typeof value === 'number' ? addSeconds(new Date(), value).valueOf() : format(value, 'x'),
+      format: `HH:mm:ss`,
+      stopTime: typeof value === 'number' ? addSeconds(new Date(), value).valueOf() : +format(value, 't'),
     };
   }
 
-  @Output() readonly begin = new EventEmitter<void>();
-  @Output() readonly notify = new EventEmitter<number>();
-  @Output() readonly end = new EventEmitter<void>();
+  @Output() readonly event = new EventEmitter<CountdownEvent>();
 
-  _start() {
-    this.begin.emit();
-  }
-
-  _notify(time: number) {
-    this.notify.emit(time);
-  }
-
-  _finished() {
-    this.end.emit();
+  handleEvent(e: CountdownEvent): void {
+    this.event.emit(e);
   }
 }

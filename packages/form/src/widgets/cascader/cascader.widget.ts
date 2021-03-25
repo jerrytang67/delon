@@ -1,61 +1,61 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { NzCascaderOption } from 'ng-zorro-antd/cascader';
 import { SFValue } from '../../interface';
 import { SFSchemaEnum } from '../../schema';
 import { getData, toBool } from '../../utils';
-import { ControlWidget } from '../../widget';
+import { ControlUIWidget } from '../../widget';
+import { SFCascaderWidgetSchema } from './schema';
 
 @Component({
   selector: 'sf-cascader',
   templateUrl: './cascader.widget.html',
+  preserveWhitespaces: false,
+  encapsulation: ViewEncapsulation.None,
 })
-export class CascaderWidget extends ControlWidget implements OnInit {
+export class CascaderWidget extends ControlUIWidget<SFCascaderWidgetSchema> implements OnInit {
   clearText: string;
   showArrow: boolean;
   showInput: boolean;
   triggerAction: string[];
   data: SFSchemaEnum[] = [];
-  // tslint:disable-next-line:no-any
-  loadData: any;
+  loadData: (node: NzCascaderOption, index: number) => PromiseLike<any>;
 
   ngOnInit(): void {
-    this.clearText = this.ui.clearText || '清除';
-    this.showArrow = toBool(this.ui.showArrow, true);
-    this.showInput = toBool(this.ui.showInput, true);
-    this.triggerAction = this.ui.triggerAction || ['click'];
-    if (!!this.ui.asyncData) {
-      // tslint:disable-next-line:no-any
-      this.loadData = (node: any, index: number) => (this.ui.asyncData as any)(node, index, this);
+    const { clearText, showArrow, showInput, triggerAction, asyncData } = this.ui;
+    this.clearText = clearText || '清除';
+    this.showArrow = toBool(showArrow, true);
+    this.showInput = toBool(showInput, true);
+    this.triggerAction = triggerAction || ['click'];
+    if (!!asyncData) {
+      this.loadData = (node: NzCascaderOption, index: number) => asyncData(node, index, this).then(() => this.detectChanges());
     }
   }
 
-  reset(value: SFValue) {
-    getData(this.schema, {}, this.formProperty.formData).subscribe(list => {
+  reset(value: SFValue): void {
+    getData(this.schema, {}, value).subscribe(list => {
       this.data = list;
       this.detectChanges();
     });
   }
 
-  _visibleChange(status: boolean) {
+  _visibleChange(status: boolean): void {
     if (this.ui.visibleChange) this.ui.visibleChange(status);
   }
 
-  _change(value: string) {
+  _change(value: any[] | null): void {
     this.setValue(value);
-    if (this.ui.change) this.ui.change(value);
+    if (this.ui.change) {
+      this.ui.change(value);
+    }
   }
 
-  // tslint:disable-next-line:no-any
-  _selectionChange(options: any) {
-    if (this.ui.selectionChange) this.ui.selectionChange(options);
+  _selectionChange(options: NzCascaderOption[]): void {
+    if (this.ui.selectionChange) {
+      this.ui.selectionChange(options);
+    }
   }
 
-  // tslint:disable-next-line:no-any
-  _select(options: any) {
-    if (this.ui.select) this.ui.select(options);
-  }
-
-  // tslint:disable-next-line:no-any
-  _clear(options: any) {
-    if (this.ui.clear) this.ui.clear(options);
+  _clear(): void {
+    if (this.ui.clear) this.ui.clear();
   }
 }

@@ -10,11 +10,13 @@ import { MenuService } from '../menu/menu.service';
 
 @Injectable({ providedIn: 'root' })
 export class TitleService implements OnDestroy {
-  private _prefix = '';
-  private _suffix = '';
-  private _separator = ' - ';
-  private _reverse = false;
+  private _prefix: string = '';
+  private _suffix: string = '';
+  private _separator: string = ' - ';
+  private _reverse: boolean = false;
   private i18n$: Subscription;
+
+  readonly DELAY_TIME = 25;
 
   constructor(
     private injector: Injector,
@@ -23,12 +25,9 @@ export class TitleService implements OnDestroy {
     @Optional()
     @Inject(ALAIN_I18N_TOKEN)
     private i18nSrv: AlainI18NService,
-    // tslint:disable-next-line:no-any
     @Inject(DOCUMENT) private doc: any,
   ) {
-    this.i18n$ = this.i18nSrv.change
-      .pipe(filter(() => !!this.i18n$))
-      .subscribe(() => this.setTitle());
+    this.i18n$ = this.i18nSrv.change.pipe(filter(() => !!this.i18n$)).subscribe(() => this.setTitle());
   }
 
   /** 设置分隔符 */
@@ -55,11 +54,15 @@ export class TitleService implements OnDestroy {
   default = `Not Page Name`;
 
   private getByElement(): string {
-    const el =
-      this.doc.querySelector('.alain-default__content-title h1') ||
-      this.doc.querySelector('.page-header__title');
+    const el = (this.doc.querySelector('.alain-default__content-title h1') || this.doc.querySelector('.page-header__title')) as HTMLElement;
     if (el) {
-      return el.firstChild.textContent.trim();
+      let text = '';
+      el.childNodes.forEach(val => {
+        if (!text && val.nodeType === 3) {
+          text = val.textContent!.trim();
+        }
+      });
+      return text || el.firstChild!.textContent!.trim();
     }
     return '';
   }
@@ -73,19 +76,16 @@ export class TitleService implements OnDestroy {
   }
 
   private getByMenu(): string {
-    const menus = this.menuSrv.getPathByUrl(this.injector.get(Router).url);
+    const menus = this.menuSrv.getPathByUrl(this.injector.get<Router>(Router).url);
     if (!menus || menus.length <= 0) return '';
 
     const item = menus[menus.length - 1];
     let title;
     if (item.i18n && this.i18nSrv) title = this.i18nSrv.fanyi(item.i18n);
-    return title || item.text;
+    return title || item.text!;
   }
 
-  /**
-   * 设置标题
-   */
-  setTitle(title?: string | string[]) {
+  private _setTitle(title?: string | string[]): void {
     if (!title) {
       title = this.getByRoute() || this.getByMenu() || this.getByElement() || this.default;
     }
@@ -93,7 +93,7 @@ export class TitleService implements OnDestroy {
       title = [title];
     }
 
-    let newTitles = [];
+    let newTitles: string[] = [];
     if (this._prefix) {
       newTitles.push(this._prefix);
     }
@@ -108,9 +108,16 @@ export class TitleService implements OnDestroy {
   }
 
   /**
-   * 设置国际化标题
+   * Set the document title, will be delay `25ms`, pls refer to [#1261](https://github.com/ng-alain/ng-alain/issues/1261)
    */
-  setTitleByI18n(key: string, params?: {}) {
+  setTitle(title?: string | string[]): void {
+    setTimeout(() => this._setTitle(title), this.DELAY_TIME);
+  }
+
+  /**
+   * Set i18n key of the document title
+   */
+  setTitleByI18n(key: string, params?: {}): void {
     this.setTitle(this.i18nSrv.fanyi(key, params));
   }
 

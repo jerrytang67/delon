@@ -1,13 +1,13 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component, DebugElement, ViewChild } from '@angular/core';
-import { discardPeriodicTasks, tick, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, discardPeriodicTasks, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { cleanCdkOverlayHtml, dispatchFakeEvent, typeInElement } from '@delon/testing';
 import { AlainThemeModule } from '@delon/theme';
-import { deepCopy, deepGet } from '@delon/util';
-
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { configureTestSuite, dispatchFakeEvent, typeInElement } from '@delon/testing';
-import { ErrorData } from '../src/errors';
+import { deepCopy, deepGet } from '@delon/util/other';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
+import { SF_SEQ } from '../src/const';
 import { SFButton } from '../src/interface';
 import { FormProperty } from '../src/model/form.property';
 import { DelonFormModule } from '../src/module';
@@ -37,12 +37,15 @@ export function builder(options?: {
   template?: string;
   ingoreAntd?: boolean;
   imports?: any[];
-}) {
+}): {
+  fixture: ComponentFixture<TestFormComponent>;
+  dl: DebugElement;
+  context: TestFormComponent;
+  page: SFPage;
+} {
   options = { detectChanges: true, ...options };
   TestBed.configureTestingModule({
-    imports: [NoopAnimationsModule, AlainThemeModule.forRoot(), DelonFormModule.forRoot()].concat(
-      options.imports || [],
-    ),
+    imports: [NoopAnimationsModule, AlainThemeModule.forRoot(), DelonFormModule.forRoot()].concat(options.imports || []),
     declarations: [TestFormComponent],
   });
   if (options.template) {
@@ -52,6 +55,7 @@ export function builder(options?: {
   dl = fixture.debugElement;
   context = fixture.componentInstance;
   spyOn(context, 'formChange');
+  spyOn(context, 'formValueChange');
   spyOn(context, 'formSubmit');
   spyOn(context, 'formReset');
   spyOn(context, 'formError');
@@ -67,15 +71,10 @@ export function builder(options?: {
   };
 }
 
-export function configureSFTestSuite() {
-  configureTestSuite(() => {
+export function configureSFTestSuite(): void {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        NoopAnimationsModule,
-        AlainThemeModule.forRoot(),
-        DelonFormModule.forRoot(),
-        HttpClientTestingModule,
-      ],
+      imports: [NoopAnimationsModule, AlainThemeModule.forRoot(), DelonFormModule.forRoot(), HttpClientTestingModule],
       declarations: [TestFormComponent],
     });
   });
@@ -84,14 +83,11 @@ export function configureSFTestSuite() {
 export class SFPage {
   constructor(private comp: SFComponent) {}
 
-  prop(
-    _dl: DebugElement,
-    _context: TestFormComponent,
-    _fixture: ComponentFixture<TestFormComponent>,
-  ) {
+  prop(_dl: DebugElement, _context: TestFormComponent, _fixture: ComponentFixture<TestFormComponent>): void {
     dl = _dl;
     context = _context;
     fixture = _fixture;
+    spyOn(context, 'formValueChange');
     spyOn(context, 'formChange');
     spyOn(context, 'formSubmit');
     spyOn(context, 'formReset');
@@ -99,11 +95,8 @@ export class SFPage {
     this.cleanOverlay();
   }
 
-  cleanOverlay() {
-    const els = document.querySelectorAll('.cdk-overlay-container');
-    if (els && els.length > 0) {
-      els.forEach(el => (el.innerHTML = ''));
-    }
+  cleanOverlay(): this {
+    cleanCdkOverlayHtml();
     return this;
   }
 
@@ -121,8 +114,8 @@ export class SFPage {
     return this.getDl(cls).componentInstance as T;
   }
 
-  private fixPath(path: string) {
-    return path.startsWith('/') ? path : '/' + path;
+  private fixPath(path: string): string {
+    return path.startsWith(SF_SEQ) ? path : SF_SEQ + path;
   }
 
   getValue(path: string): any {
@@ -130,45 +123,54 @@ export class SFPage {
     return this.comp.getValue(path);
   }
 
-  setValue(path: string, value: any): this {
+  setValue(path: string, value: any, dc: number = 0): this {
     path = this.fixPath(path);
     this.comp.setValue(path, value);
+    if (dc > 0) {
+      this.dc(dc);
+    }
     return this;
   }
 
   getProperty(path: string): FormProperty {
     path = this.fixPath(path);
-    return this.comp.getProperty(path);
+    return this.comp.getProperty(path)!;
   }
 
-  submit(result = true): this {
-    this.getEl('.ant-btn-primary').click();
-    if (result) expect(context.formSubmit).toHaveBeenCalled();
-    else expect(context.formSubmit).not.toHaveBeenCalled();
+  submit(result: boolean = true): this {
+    this.getEl('[data-type="submit"]').click();
+    if (result) {
+      expect(context.formSubmit).toHaveBeenCalled();
+    } else {
+      expect(context.formSubmit).not.toHaveBeenCalled();
+    }
     return this;
   }
 
-  reset(result = true): this {
-    this.getEl('.ant-btn-default').click();
-    if (result) expect(context.formReset).toHaveBeenCalled();
-    else expect(context.formReset).not.toHaveBeenCalled();
+  reset(result: boolean = true): this {
+    this.getEl('[data-type="reset"]').click();
+    if (result) {
+      expect(context.formReset).toHaveBeenCalled();
+    } else {
+      expect(context.formReset).not.toHaveBeenCalled();
+    }
     return this;
   }
 
-  isValid(result = true): this {
+  isValid(result: boolean = true): this {
     this.submit(result);
     expect(this.comp.valid).toBe(result);
     return this;
   }
 
   add(): this {
-    this.getEl('.add button').click();
-    return this;
+    this.getEl('.sf__array-add button').click();
+    return this.dc();
   }
   /** 下标从 `1` 开始 */
-  remove(index = 1): this {
-    this.getEl(`.sf-array-container [data-index="${index - 1}"] .remove`).click();
-    return this;
+  remove(index: number = 1): this {
+    this.getEl(`.sf__array-container [data-index="${index - 1}"] .sf__array-remove`).click();
+    return this.dc();
   }
 
   newSchema(schema: SFSchema, ui?: SFUISchema, formData?: any): this {
@@ -189,9 +191,9 @@ export class SFPage {
 
   checkSchema(path: string, propertyName: string, value: any): this {
     path = this.fixPath(path);
-    const property = this.comp.rootProperty.searchProperty(path);
+    const property = this.comp.rootProperty!.searchProperty(path);
     expect(property != null).toBe(true);
-    const item = property.schema;
+    const item = property!.schema;
     const res = deepGet(item, propertyName.split('.'), undefined);
     expect(res).toBe(value);
     return this;
@@ -199,9 +201,9 @@ export class SFPage {
 
   checkUI(path: string, propertyName: string, value: any): this {
     path = this.fixPath(path);
-    const property = this.comp.rootProperty.searchProperty(path);
+    const property = this.comp.rootProperty!.searchProperty(path);
     expect(property != null).toBe(true);
-    const item = property.ui;
+    const item = property!.ui;
     const res = deepGet(item, propertyName.split('.'), undefined);
     expect(res).toBe(value);
     return this;
@@ -209,22 +211,22 @@ export class SFPage {
 
   checkValue(path: string, value: any, propertyName?: string): this {
     path = this.fixPath(path);
-    const property = this.comp.rootProperty.searchProperty(path);
+    const property = this.comp.rootProperty!.searchProperty(path);
     expect(property != null).toBe(true);
     if (typeof propertyName !== 'undefined') {
       const res = deepGet(property, propertyName.split('.'), undefined);
       expect(res).toBe(value);
     } else {
-      expect(property.value).toBe(value);
+      expect(property!.value).toBe(value);
     }
     return this;
   }
 
-  checkCalled(path: string, propertyName: string, result = true): this {
+  checkCalled(path: string, propertyName: string, result: boolean = true): this {
     path = this.fixPath(path);
-    const property = this.comp.rootProperty.searchProperty(path);
+    const property = this.comp.rootProperty!.searchProperty(path);
     expect(property != null).toBe(true);
-    const item = property.ui;
+    const item = property!.ui;
     const res = deepGet(item, propertyName.split('.'), undefined);
     if (result) {
       expect(res).toHaveBeenCalled();
@@ -234,54 +236,55 @@ export class SFPage {
     return this;
   }
 
-  checkElText(cls: string, value: any, viaDocument = false): this {
+  checkElText(cls: string, value: any, viaDocument: boolean = false): this {
     const node = viaDocument ? document.querySelector(cls) : this.getEl(cls);
     if (value == null) {
       expect(node).toBeNull();
     } else {
-      expect(node.textContent.trim()).toBe(value);
+      expect(node!.textContent!.trim()).toBe(value);
     }
     return this;
   }
 
   checkCls(cls: string, value: string): this {
     const el = this.getEl(cls);
-    expect(el).not.toBe(null);
     expect(el.classList).toContain(value);
     return this;
   }
 
   checkStyle(cls: string, key: string, value: string): this {
     const el = this.getEl(cls);
-    expect(el).not.toBe(null);
-    expect(el.style[key]).toBe(value);
+    expect((el.style as NzSafeAny)[key]).toBe(value);
     return this;
   }
 
-  checkAttr(cls: string, key: string, value: any, required = true): this {
+  checkAttr(cls: string, key: string, value: any, required: boolean = true): this {
     const el = this.getEl(cls);
-    expect(el).not.toBe(null);
     const attr = el.attributes.getNamedItem(key);
-    if (required) expect(attr.textContent).toBe(value);
+    if (required) expect(attr!.textContent).toBe(value);
     else expect(attr).toBe(value);
     return this;
   }
 
-  checkCount(cls: string, count: number, viaDocument = false): this {
-    const len = viaDocument
-      ? document.querySelectorAll(cls).length
-      : dl.queryAll(By.css(cls)).length;
+  checkCount(cls: string, count: number, viaDocument: boolean = false): this {
+    const len = viaDocument ? document.querySelectorAll(cls).length : dl.queryAll(By.css(cls)).length;
     expect(len).toBe(count);
     return this;
   }
 
+  checkInput(cls: string, value: any, viaDocument: boolean = false): this {
+    const ipt = (viaDocument ? document.querySelector(cls) : dl.query(By.css(cls)).nativeElement) as HTMLInputElement;
+    expect(ipt.value).toBe(value);
+    return this;
+  }
+
   checkError(text: string): this {
-    const el = this.getEl('nz-form-explain');
+    const el = this.getEl('.ant-form-item-explain');
     if (text == null) {
       expect(el == null).toBe(true);
       return this;
     }
-    expect(el.textContent.trim().includes(text)).toBe(true);
+    expect(el.textContent!.trim().includes(text)).toBe(true);
     return this;
   }
 
@@ -292,30 +295,39 @@ export class SFPage {
     return this.dc();
   }
 
-  typeChar(value: any, cls = 'input'): this {
+  typeChar(value: any, cls: string = 'input'): this {
     const node = this.getEl(cls) as HTMLInputElement;
     typeInElement(value, node);
     tick();
     return this.dc();
   }
 
-  typeEvent(eventName: string, cls = 'input'): this {
+  typeEvent(eventName: string | Event, cls: string = 'input'): this {
     const node = document.querySelector(cls) as HTMLInputElement;
+    if (node == null) {
+      expect(true).toBe(false, `won't found '${cls}' class element`);
+      return this;
+    }
     dispatchFakeEvent(node, eventName);
-    return this.time().dc();
+    fixture.detectChanges();
+    return this.time(1000).dc();
   }
 
-  time(time = 0) {
+  time(time: number = 0): this {
     tick(time);
     return this;
   }
 
-  dc() {
+  dc(time: number = 0): this {
     fixture.detectChanges();
+    if (time > 0) {
+      this.time(time);
+      fixture.detectChanges();
+    }
     return this;
   }
 
-  asyncEnd(time = 500) {
+  asyncEnd(time: number = 500): this {
     this.time(time);
     discardPeriodicTasks();
     return this;
@@ -335,7 +347,12 @@ export class SFPage {
       [autocomplete]="autocomplete"
       [firstVisual]="firstVisual"
       [onlyVisual]="onlyVisual"
+      [disabled]="disabled"
+      [loading]="loading"
+      [noColon]="noColon"
+      [cleanValue]="cleanValue"
       (formChange)="formChange($event)"
+      (formValueChange)="formValueChange($event)"
       (formSubmit)="formSubmit($event)"
       (formReset)="formReset($event)"
       (formError)="formError($event)"
@@ -343,20 +360,25 @@ export class SFPage {
   `,
 })
 export class TestFormComponent {
-  @ViewChild('comp') comp: SFComponent;
+  @ViewChild('comp', { static: true }) comp: SFComponent;
   mode: 'default' | 'search' | 'edit' = 'default';
   layout = 'horizontal';
-  schema: SFSchema = SCHEMA.user;
-  ui: SFUISchema = {};
+  schema: SFSchema | null = SCHEMA.user;
+  ui: SFUISchema | null = {};
   formData: any;
-  button: SFButton | 'none' = {};
+  button: SFButton | 'none' | null | undefined = {};
   liveValidate = true;
   autocomplete: 'on' | 'off';
   firstVisual = true;
   onlyVisual = false;
+  disabled = false;
+  loading = false;
+  noColon = false;
+  cleanValue = false;
 
-  formChange(value: {}) {}
-  formSubmit(value: {}) {}
-  formReset(value: {}) {}
-  formError(value: ErrorData[]) {}
+  formChange(): void {}
+  formValueChange(): void {}
+  formSubmit(): void {}
+  formReset(): void {}
+  formError(): void {}
 }

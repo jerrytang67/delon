@@ -15,28 +15,25 @@ Simplest of usage.
 
 ```ts
 import { Component } from '@angular/core';
-import { SFSchema } from '@delon/form';
-import { NzMessageService } from 'ng-zorro-antd';
+import { SFSchema, SFUploadWidgetSchema } from '@delon/form';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
   selector: 'app-demo',
-  template: `
-    <sf [schema]="schema" (formSubmit)="submit($event)"></sf>
-  `,
+  template: ` <sf [schema]="schema" (formSubmit)="submit($event)"></sf> `,
 })
 export class DemoComponent {
   schema: SFSchema = {
     properties: {
-      avatar: {
+      file: {
         type: 'string',
-        title: '头像',
+        title: '单个文件',
         enum: [
           {
             uid: -1,
             name: 'xxx.png',
             status: 'done',
-            url:
-              'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
+            url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
             response: {
               resource_id: 1,
             },
@@ -46,7 +43,19 @@ export class DemoComponent {
           widget: 'upload',
           action: '/upload',
           resReName: 'resource_id',
-        },
+          urlReName: 'url',
+        } as SFUploadWidgetSchema,
+      },
+      mulit: {
+        type: 'string',
+        title: '多个文件',
+        ui: {
+          widget: 'upload',
+          action: '/upload',
+          resReName: 'resource_id',
+          urlReName: 'url',
+          multiple: true,
+        } as SFUploadWidgetSchema,
       },
       // 拖动模式
       drag: {
@@ -56,13 +65,16 @@ export class DemoComponent {
           widget: 'upload',
           action: '/upload',
           resReName: 'resource_id',
+          urlReName: 'url',
           type: 'drag',
-        },
+        } as SFUploadWidgetSchema,
       },
     },
   };
-  constructor(public msg: NzMessageService) {}
-  submit(value: any) {
+
+  constructor(private msg: NzMessageService) {}
+
+  submit(value: {}): void {
     this.msg.success(JSON.stringify(value));
   }
 }

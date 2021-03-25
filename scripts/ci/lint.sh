@@ -3,7 +3,6 @@
 set -e
 
 readonly thisDir=$(cd $(dirname $0); pwd)
-source ${thisDir}/_travis-fold.sh
 
 cd $(dirname $0)/../..
 
@@ -22,14 +21,10 @@ for ARG in "$@"; do
 done
 
 if [[ ${TS} == true ]]; then
-  travisFoldStart "lint.ts"
-    $(npm bin)/tslint -p tsconfig.json -c tslint.json 'packages/**/*.ts'
-  travisFoldEnd "lint.ts"
+  $(npm bin)/ng lint
 fi
 
 if [[ ${LESS} == true ]]; then
-  travisFoldStart "lint.less"
-    $(npm bin)/stylelint 'packages/**/*.less' --syntax less
-  travisFoldEnd "lint.less"
+  $(npm bin)/stylelint 'packages/**/*.less' --syntax less
 fi
 

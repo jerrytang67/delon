@@ -4,6 +4,7 @@
   "deleteDestPath": true,
   "lib": {
     "flatModuleFile": "acl",
-    "entryFile": "public_api.ts"
-  }
+    "entryFile": "index.ts"
+  },
+  "allowedNonPeerDependencies": ["@delon/util"]
 }

@@ -1,24 +1,25 @@
-@import '../../../theme/styles/default.less';
+@import '../../../theme/theme-default.less';
+@tag-select-prefix: ~'.tag-select';
 
-.tag-select {
-  user-select: none;
-  margin-left: -8px;
+@{tag-select-prefix} {
   position: relative;
-  overflow: hidden;
-  max-height: @form-component-max-height - 0.0001px;
-  line-height: @form-component-max-height - 0.0001px;
-  transition: all 0.3s;
   display: block;
+  max-height: 24px;
+  margin-left: -8px;
+  overflow: hidden;
+  line-height: @line-height-base;
+  transition: all 0.3s;
+  user-select: none;
   &__expanded {
-    transition: all 0.3s;
     max-height: 200px;
+    transition: all 0.3s;
   }
   &__has-expand {
     padding-right: 50px;
   }
   .@{ant-prefix}-tag {
-    padding: 0 8px;
     margin-right: 24px;
+    padding: 0 8px;
   }
   &__trigger {
     position: absolute;
@@ -30,3 +31,5 @@
     }
   }
 }
+
+@import './rtl.less';

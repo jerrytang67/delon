@@ -15,32 +15,60 @@ A simple start & end date range, **Note: ** `end` still needs define in schema, 
 
 ```ts
 import { Component } from '@angular/core';
-import { NzMessageService } from 'ng-zorro-antd';
-import { SFSchema } from '@delon/form';
+import { SFDateWidgetSchema, SFSchema } from '@delon/form';
+import { subWeeks } from 'date-fns';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
   selector: 'app-demo',
-  template: `<sf [schema]="schema" (formSubmit)="submit($event)"></sf>`,
+  template: ` <sf [schema]="schema" (formSubmit)="submit($event)"></sf> `,
 })
 export class DemoComponent {
   schema: SFSchema = {
     properties: {
       start: {
         type: 'string',
-        ui: { widget: 'date', end: 'end' },
-        default: new Date
+        ui: { widget: 'date', end: 'end' } as SFDateWidgetSchema,
+        default: new Date(),
       },
       end: {
         type: 'string',
-        default: '2119-1-1',
+        default: subWeeks(new Date(), 6),
+      },
+      startWeek: {
+        type: 'string',
+        ui: { widget: 'date', rangeMode: 'week', end: 'endWeek' } as SFDateWidgetSchema,
+        default: new Date(),
+      },
+      endWeek: {
+        type: 'string',
+        default: subWeeks(new Date(), 6),
+      },
+      startMonth: {
+        type: 'string',
+        ui: { widget: 'date', rangeMode: 'month', end: 'endMonth' } as SFDateWidgetSchema,
+        default: new Date(),
+      },
+      endMonth: {
+        type: 'string',
+        default: subWeeks(new Date(), 6),
+      },
+      startYear: {
+        type: 'string',
+        ui: { widget: 'date', rangeMode: 'year', end: 'endYear' } as SFDateWidgetSchema,
+        default: new Date(),
+      },
+      endYear: {
+        type: 'string',
+        default: subWeeks(new Date(), 6),
       },
     },
-    required: [ 'start' ]
+    required: ['start'],
   };
 
   constructor(private msg: NzMessageService) {}
 
-  submit(value: any) {
+  submit(value: {}): void {
     this.msg.success(JSON.stringify(value));
   }
 }

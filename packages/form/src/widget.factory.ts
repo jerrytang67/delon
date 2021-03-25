@@ -1,34 +1,32 @@
-import {
-  ComponentFactoryResolver,
-  ComponentRef,
-  Injectable,
-  ViewContainerRef,
-} from '@angular/core';
+import { ComponentFactoryResolver, ComponentRef, Injectable, ViewContainerRef } from '@angular/core';
 import { FormProperty } from './model/form.property';
+import { SFUISchemaItem } from './schema/ui';
 import { Widget } from './widget';
 
 export class WidgetRegistry {
-  private widgets: { [type: string]: Widget<FormProperty> } = {};
+  private _widgets: { [type: string]: Widget<FormProperty, SFUISchemaItem> } = {};
 
-  private defaultWidget: Widget<FormProperty>;
+  private defaultWidget: Widget<FormProperty, SFUISchemaItem>;
 
-  // tslint:disable-next-line:no-any
-  setDefault(widget: any) {
+  get widgets(): { [type: string]: Widget<FormProperty, SFUISchemaItem> } {
+    return this._widgets;
+  }
+
+  setDefault(widget: any): void {
     this.defaultWidget = widget;
   }
 
-  // tslint:disable-next-line:no-any
-  register(type: string, widget: any) {
-    this.widgets[type] = widget;
+  register(type: string, widget: any): void {
+    this._widgets[type] = widget;
   }
 
-  has(type: string) {
-    return this.widgets.hasOwnProperty(type);
+  has(type: string): boolean {
+    return this._widgets.hasOwnProperty(type);
   }
 
-  getType(type: string): Widget<FormProperty> {
+  getType(type: string): Widget<FormProperty, SFUISchemaItem> {
     if (this.has(type)) {
-      return this.widgets[type];
+      return this._widgets[type];
     }
     return this.defaultWidget;
   }
@@ -38,16 +36,13 @@ export class WidgetRegistry {
 export class WidgetFactory {
   constructor(private registry: WidgetRegistry, private resolver: ComponentFactoryResolver) {}
 
-  createWidget(container: ViewContainerRef, type: string): ComponentRef<Widget<FormProperty>> {
+  createWidget(container: ViewContainerRef, type: string): ComponentRef<Widget<FormProperty, SFUISchemaItem>> {
     if (!this.registry.has(type)) {
       console.warn(`No widget for type "${type}"`);
     }
 
-    // tslint:disable-next-line:no-any
     const componentClass = this.registry.getType(type) as any;
-    const componentFactory = this.resolver.resolveComponentFactory<Widget<FormProperty>>(
-      componentClass,
-    );
+    const componentFactory = this.resolver.resolveComponentFactory<Widget<FormProperty, SFUISchemaItem>>(componentClass);
     return container.createComponent(componentFactory);
   }
 }

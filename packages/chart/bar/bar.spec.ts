@@ -1,5 +1,5 @@
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import { fakeAsync, tick } from '@angular/core/testing';
+import { fakeAsync } from '@angular/core/testing';
 import { checkDelay, PageG2, PageG2DataCount, PageG2Height } from '@delon/testing';
 import { G2BarComponent } from './bar.component';
 import { G2BarModule } from './bar.module';
@@ -22,7 +22,8 @@ describe('chart: bar', () => {
       it('with null', () => {
         page.context.title = null;
         page.context.height = 100;
-        page.dc().checkOptions('height', 100);
+        page.dc();
+        page.checkOptions('height', 100);
       });
       it('with string', () => {
         page.context.height = 100;
@@ -42,7 +43,7 @@ describe('chart: bar', () => {
       const color = '#f50';
       page.context.color = color;
       page.dc();
-      page.checkAttrOptions('geoms', 'color', color);
+      expect((page.chart.geometries[0] as any).attributeOption.color.callback(1, 1)).toBe(color);
     });
 
     it('#padding', () => {
@@ -55,13 +56,13 @@ describe('chart: bar', () => {
     it('should be update label when window resize and autoLabel is true', fakeAsync(() => {
       page.context.autoLabel = true;
       page.dc();
-      spyOn(page.chart, 'repaint');
+      spyOn(page.chart, 'render');
       window.dispatchEvent(new Event('resize'));
       page.end();
-      expect(page.chart.repaint).toHaveBeenCalled();
+      expect(page.chart.render).toHaveBeenCalled();
     }));
 
-    it('tooltip', () => page.checkTooltip('1月', { x: 50, y: 50 }));
+    it('tooltip', () => page.checkTooltip('1月'));
   });
 
   it('#delay', fakeAsync(() => checkDelay(G2BarModule, TestComponent)));
@@ -79,27 +80,28 @@ describe('chart: bar', () => {
       [padding]="padding"
       [data]="data"
       [autoLabel]="autoLabel"
+      (clickItem)="clickItem($event)"
     ></g2-bar>
     <ng-template #titleTpl><p id="titleTpl">titleTpl</p></ng-template>
   `,
 })
 class TestComponent implements OnInit {
-  @ViewChild('comp') comp: G2BarComponent;
-  // tslint:disable-next-line:no-any
+  @ViewChild('comp', { static: true }) comp: G2BarComponent;
   data: any[] = [];
-  ngOnInit(): void {
-    for (let i = 0; i < PageG2DataCount; i += 1) {
-      this.data.push({
-        x: `${i + 1}月`,
-        y: Math.floor(Math.random() * 1000) + 200,
-      });
-    }
-  }
   delay = 0;
-  @ViewChild('titleTpl') titleTpl: TemplateRef<void>;
-  title: string | TemplateRef<void> = 'title';
+  @ViewChild('titleTpl', { static: true }) titleTpl: TemplateRef<void>;
+  title: string | TemplateRef<void> | null = 'title';
   height = PageG2Height;
   padding: number[];
   autoLabel = false;
   color = 'rgba(24, 144, 255, 0.85)';
+  clickItem(): void {}
+  ngOnInit(): void {
+    for (let i = 0; i < PageG2DataCount; i += 1) {
+      this.data.push({
+        x: `${i + 1}月`,
+        y: i === 0 ? 10 : Math.floor(Math.random() * 1000) + 200,
+      });
+    }
+  }
 }

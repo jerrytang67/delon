@@ -1,30 +1,49 @@
+import { Platform } from '@angular/cdk/platform';
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   EventEmitter,
-  HostBinding,
   Input,
   OnChanges,
+  OnDestroy,
   Output,
+  ViewEncapsulation,
 } from '@angular/core';
-import { InputNumber } from '@delon/util';
-
-import { QRConfig } from './qr.config';
-import { QRService } from './qr.service';
+import { AlainConfigService, AlainQRConfig } from '@delon/util/config';
+import { InputNumber, NumberInput } from '@delon/util/decorator';
+import { LazyService } from '@delon/util/other';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
+import { QR_DEFULAT_CONFIG } from './qr.config';
+import { QROptions } from './qr.types';
 
 @Component({
   selector: 'qr',
-  template: `
-    <img class="qr__img" src="{{ dataURL }}" />
-  `,
-  host: { '[class.qr]': 'true' },
+  exportAs: 'qr',
+  template: ` <img *ngIf="dataURL" style="max-width: 100%; max-height: 100%;" [src]="dataURL" /> `,
+  host: {
+    '[style.display]': `'inline-block'`,
+    '[style.height.px]': 'size',
+    '[style.width.px]': 'size',
+  },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class QRComponent implements OnChanges {
-  dataURL: string;
+export class QRComponent implements OnChanges, AfterViewInit, OnDestroy {
+  static ngAcceptInputType_padding: NumberInput;
+  static ngAcceptInputType_size: NumberInput;
+  static ngAcceptInputType_delay: NumberInput;
 
-  // #region fields
+  private lazy$: Subscription;
+  private qr: any;
+  private cog: AlainQRConfig;
+  private option: QROptions;
+  private inited = false;
+
+  dataURL: string;
 
   @Input() background: string;
   @Input() backgroundAlpha: number;
@@ -33,33 +52,83 @@ export class QRComponent implements OnChanges {
   @Input() level: string;
   @Input() mime: string;
   @Input() @InputNumber() padding: number;
-  @HostBinding('style.height.px')
-  @HostBinding('style.width.px')
-  @Input()
-  @InputNumber()
-  size: number;
-  @Input() value: string;
+  @Input() @InputNumber() size: number;
+  @Input() value = '';
+  @Input() @InputNumber() delay: number;
   @Output() readonly change = new EventEmitter<string>();
 
-  // #endregion
+  constructor(private cdr: ChangeDetectorRef, configSrv: AlainConfigService, private lazySrv: LazyService, private platform: Platform) {
+    this.cog = configSrv.merge('qr', QR_DEFULAT_CONFIG)!;
+    Object.assign(this, this.cog);
+  }
 
-  constructor(cog: QRConfig, private srv: QRService, private cdr: ChangeDetectorRef) {
-    Object.assign(this, { ...new QRConfig(), ...cog });
+  private init(): void {
+    if (!this.inited) {
+      return;
+    }
+
+    if (this.qr == null) {
+      this.qr = new (window as any).QRious();
+    }
+    this.qr.set(this.option);
+    this.dataURL = this.qr.toDataURL();
+    this.change.emit(this.dataURL);
+    this.cdr.detectChanges();
+  }
+
+  private initDelay(): void {
+    this.inited = true;
+    setTimeout(() => this.init(), this.delay);
+  }
+
+  ngAfterViewInit(): void {
+    if (!this.platform.isBrowser) {
+      return;
+    }
+    if ((window as any).QRious) {
+      this.initDelay();
+      return;
+    }
+    const url = this.cog.lib!;
+    this.lazy$ = this.lazySrv.change
+      .pipe(filter(ls => ls.length === 1 && ls[0].path === url && ls[0].status === 'ok'))
+      .subscribe(() => this.initDelay());
+    this.lazySrv.load(url);
   }
 
   ngOnChanges(): void {
-    this.dataURL = this.srv.refresh({
+    const option: QROptions = {
       background: this.background,
       backgroundAlpha: this.backgroundAlpha,
       foreground: this.foreground,
       foregroundAlpha: this.foregroundAlpha,
-      level: this.level,
+      level: this.level as any,
       mime: this.mime,
       padding: this.padding,
       size: this.size,
-      value: this.value,
-    });
-    this.cdr.detectChanges();
-    this.change.emit(this.dataURL);
+      value: this.toUtf8ByteArray(this.value),
+    };
+    this.option = option;
+    this.init();
+  }
+
+  private toUtf8ByteArray(str: string): string {
+    str = encodeURI(str);
+    const result: number[] = [];
+    for (let i = 0; i < str.length; i++) {
+      if (str.charAt(i) !== '%') {
+        result.push(str.charCodeAt(i));
+      } else {
+        result.push(parseInt(str.substr(i + 1, 2), 16));
+        i += 2;
+      }
+    }
+    return result.map(v => String.fromCharCode(v)).join('');
+  }
+
+  ngOnDestroy(): void {
+    if (this.lazy$) {
+      this.lazy$.unsubscribe();
+    }
   }
 }

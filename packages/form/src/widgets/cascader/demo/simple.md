@@ -15,12 +15,12 @@ Simplest of usage.
 
 ```ts
 import { Component } from '@angular/core';
-import { CascaderWidget, SFSchema } from '@delon/form';
-import { CascaderOption, NzMessageService } from 'ng-zorro-antd';
+import { SFCascaderWidgetSchema, SFSchema } from '@delon/form';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
   selector: 'app-demo',
-  template: `<sf [schema]="schema" (formSubmit)="submit($event)"></sf>`
+  template: ` <sf [schema]="schema" (formSubmit)="submit($event)"></sf> `,
 })
 export class DemoComponent {
   schema: SFSchema = {
@@ -64,11 +64,7 @@ export class DemoComponent {
         title: 'RealTime',
         ui: {
           widget: 'cascader',
-          asyncData: ((
-            node: CascaderOption,
-            index: number,
-            me: CascaderWidget,
-          ) => {
+          asyncData: (node, index) => {
             return new Promise(resolve => {
               setTimeout(() => {
                 (node as any).children = [
@@ -85,17 +81,18 @@ export class DemoComponent {
                   return w.parent === (node.value || 0);
                 });
                 resolve();
-                me.detectChanges(true);
               }, 300);
             });
-          }) as any,
-        },
+          },
+        } as SFCascaderWidgetSchema,
         default: [110000, 110100, 110105],
       },
     },
   };
-  constructor(public msg: NzMessageService) {}
-  submit(value: any) {
+
+  constructor(private msg: NzMessageService) {}
+
+  submit(value: {}): void {
     this.msg.success(JSON.stringify(value));
   }
 }

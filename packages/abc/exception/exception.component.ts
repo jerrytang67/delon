@@ -1,31 +1,53 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Direction, Directionality } from '@angular/cdk/bidi';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  OnInit,
+  Optional,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
+import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
+import { DelonLocaleService, LocaleData } from '@delon/theme';
+import { isEmpty } from '@delon/util/browser';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-import { DelonLocaleService } from '@delon/theme';
-import { isEmpty } from '@delon/util';
+export type ExceptionType = 403 | 404 | 500;
 
 @Component({
   selector: 'exception',
+  exportAs: 'exception',
   templateUrl: './exception.component.html',
-  host: { '[class.exception]': 'true' },
+  host: {
+    '[class.exception]': 'true',
+    '[class.exception-rtl]': `dir === 'rtl'`,
+  },
+  preserveWhitespaces: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class ExceptionComponent implements OnInit, OnDestroy {
-  private i18n$: Subscription;
-  @ViewChild('conTpl')
-  private conTpl: ElementRef;
+  static ngAcceptInputType_type: ExceptionType | string;
 
-  _type: number;
-  // tslint:disable-next-line:no-any
-  locale: any = {};
+  private destroy$ = new Subject<void>();
+  @ViewChild('conTpl', { static: true }) private conTpl: ElementRef;
+
+  _type: ExceptionType;
+  locale: LocaleData = {};
   hasCon = false;
+  dir: Direction = 'ltr';
 
-  _img = '';
-  _title = '';
-  _desc = '';
+  _img: SafeUrl = '';
+  _title: SafeHtml = '';
+  _desc: SafeHtml = '';
 
   @Input()
-  set type(value: 403 | 404 | 500) {
-    const item = {
+  set type(value: ExceptionType) {
+    const item: { img: string; title: string } = {
       403: {
         img: 'https://gw.alipayobjects.com/zos/rmsportal/wZcnGqRDyhPOEYFcZDnb.svg',
         title: '403',
@@ -42,36 +64,48 @@ export class ExceptionComponent implements OnInit, OnDestroy {
 
     if (!item) return;
 
+    this.fixImg(item.img);
     this._type = value;
-    this._img = item.img;
     this._title = item.title;
+    this._desc = '';
+  }
+
+  private fixImg(src: string): void {
+    this._img = this.dom.bypassSecurityTrustStyle(`url('${src}')`);
   }
 
   @Input()
-  set img(value) {
-    this._img = value;
-  }
-  @Input()
-  set title(value) {
-    this._title = value;
-  }
-  @Input()
-  set desc(value) {
-    this._desc = value;
+  set img(value: string) {
+    this.fixImg(value);
   }
 
-  checkContent() {
+  @Input()
+  set title(value: string) {
+    this._title = this.dom.bypassSecurityTrustHtml(value);
+  }
+
+  @Input()
+  set desc(value: string) {
+    this._desc = this.dom.bypassSecurityTrustHtml(value);
+  }
+
+  checkContent(): void {
     this.hasCon = !isEmpty(this.conTpl.nativeElement);
   }
 
-  constructor(private i18n: DelonLocaleService) {}
+  constructor(private i18n: DelonLocaleService, private dom: DomSanitizer, @Optional() private directionality: Directionality) {}
 
-  ngOnInit() {
-    this.i18n$ = this.i18n.change.subscribe(() => (this.locale = this.i18n.getData('exception')));
+  ngOnInit(): void {
+    this.dir = this.directionality.value;
+    this.directionality.change?.pipe(takeUntil(this.destroy$)).subscribe((direction: Direction) => {
+      this.dir = direction;
+    });
+    this.i18n.change.pipe(takeUntil(this.destroy$)).subscribe(() => (this.locale = this.i18n.getData('exception')));
     this.checkContent();
   }
 
-  ngOnDestroy() {
-    this.i18n$.unsubscribe();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

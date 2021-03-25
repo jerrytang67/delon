@@ -12,7 +12,7 @@ Delon
 
   Delon is a set of essential modules for [ng-alain](https://ng-alain.com).
 
-  [![Build Status](https://img.shields.io/travis/ng-alain/delon/master.svg?style=flat-square)](https://travis-ci.org/ng-alain/delon)
+  [![Build Status](https://dev.azure.com/ng-alain/delon/_apis/build/status/delon-CI?branchName=master)](https://dev.azure.com/ng-alain/delon/_build/latest?definitionId=1&branchName=master)
   [![Codecov](https://img.shields.io/codecov/c/github/ng-alain/delon.svg?style=flat-square)](https://codecov.io/gh/ng-alain/delon)
   [![Dependency Status](https://david-dm.org/ng-alain/ng-alain/status.svg?style=flat-square)](https://david-dm.org/ng-alain/ng-alain)
   [![GitHub Release Date](https://img.shields.io/github/release-date/ng-alain/ng-alain.svg?style=flat-square)](https://github.com/ng-alain/ng-alain/releases)
@@ -20,15 +20,15 @@ Delon
   [![prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://prettier.io/)
   [![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](https://github.com/ng-alain/ng-alain/blob/master/LICENSE)
   [![Gitter](https://img.shields.io/gitter/room/ng-alain/ng-alain.svg?style=flat-square)](https://gitter.im/ng-alain/ng-alain)
-  [![ng-zorro-vscode](https://img.shields.io/badge/ng--zorro-VSCODE-brightgreen.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=cipchk.ng-zorro-vscode)
   [![ng-alain-vscode](https://img.shields.io/badge/ng--alain-VSCODE-brightgreen.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=cipchk.ng-alain-vscode)
 
 </div>
 
 ## Links
 
-+ [Document](https://ng-alain.com)
-+ [DEMO](https://ng-alain.github.io/ng-alain/)
++ [Document](https://ng-alain.com) ([Surge Mirror](https://ng-alain-doc.surge.sh) - [国内镜像](https://ng-alain.gitee.io/delon/))
++ [@delon Source](https://github.com/ng-alain/delon)
++ [DEMO](https://ng-alain.surge.sh) ([国内镜像](https://ng-alain.gitee.io/))
 
 ## Architecture
 

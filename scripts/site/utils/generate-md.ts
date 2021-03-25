@@ -1,52 +1,43 @@
-import {
-  escapeHTML,
-  genAttr,
-  isStandalone,
-  isHeading,
-  generateSluggedId,
-} from './utils';
 import { highlight } from '../converters/highlight';
+import { escapeHTML, genAttr, generateSluggedId, isHeading, isStandalone } from './utils';
 const JsonML = require('jsonml.js/lib/utils');
 
 let headingList: any[] = [];
 const converters = [highlight()].concat([
   [
     (node: any) => typeof node === 'string',
-    (node: any) => {
-      if (node === '(deprecated)') {
-        return `<i class="deprecated" title="已过期(Deprecated)"></i>`;
+    (node: string) => {
+      if (node.includes('(deprecated)')) {
+        node = node.replace('(deprecated)', `<i class="deprecated" title="已过期(Deprecated)"></i>`);
       }
       return node;
     },
   ],
   [
     (node: any) => JsonML.isElement(node) && isHeading(node),
-    (node: any, index: number) => {
-      const tagName = JsonML.getTagName(node);
+    (node: any) => {
+      const tagName = JsonML.getTagName(node) as string;
       const children = JsonML.getChildren(node);
       const sluggedId = generateSluggedId(children).id;
       // <a href="#${sluggedId}" class="anchor">#</a>
-      return `<${tagName} id="${sluggedId}">${children
-        .map(toHtml)
-        .join(
-          '',
-        )}<a onclick="window.location.hash = '${sluggedId}'" class="anchor">#</a></${tagName}>`;
+      const childrenHtml = children.map(toHtml).join('');
+      // const goTo = tagName === 'h2' ? `<a onclick="window.location.hash = '${sluggedId}'" class="anchor">#</a>` : '';
+      const copy =
+        /h[0-9]{1}/g.test(tagName) && +tagName.substr(1) > 1 ? `<a class="lake-link"><i data-anchor="${sluggedId}"></i></a>` : ``;
+      return `<${tagName} id="${sluggedId}">${copy}${childrenHtml}</${tagName}>`;
     },
   ],
   [
     (node: any) => JsonML.isElement(node) && JsonML.getTagName(node) === 'img',
-    (node: any, index: number) => {
+    (node: any) => {
       const attrs = JsonML.getAttributes(node);
       const ret: any[] = [];
       if (attrs) {
-        // tslint:disable-next-line:forin
+        // tslint:disable-next-line: forin
         for (const key in attrs) {
           let value = attrs[key];
           if (key === 'src' && ~value.indexOf(' | ')) {
-            const imgWH = value
-              .split(' | ')[1]
-              .trim()
-              .split('=');
+            const imgWH = value.split(' | ')[1].trim().split('=');
             for (let i = 0; i < imgWH.length; i += 2) {
               ret.push(`${imgWH[i]}=${imgWH[i + 1]}`);
             }
@@ -61,17 +52,10 @@ const converters = [highlight()].concat([
   [
     (node: any) => JsonML.isElement(node) && JsonML.getTagName(node) === 'a',
     (node: any, index: number) => {
-      const attrs = Object.assign({}, JsonML.getAttributes(node));
-      let target =
-        attrs.href.startsWith('//') || attrs.href.startsWith('http')
-          ? ' target="_blank"'
-          : '';
+      const attrs = { ...JsonML.getAttributes(node) };
+      let target = attrs.href.startsWith('//') || attrs.href.startsWith('http') ? ' target="_blank"' : '';
       if (~attrs.href.indexOf('ng-alain.com')) target = '';
-      return `<a${target} href="${attrs.href}" data-url="${
-        attrs.href
-      }">${JsonML.getChildren(node)
-        .map(toHtml)
-        .join('')}</a>`;
+      return `<a${target} href="${attrs.href}" data-url="${attrs.href}">${JsonML.getChildren(node).map(toHtml).join('')}</a>`;
     },
   ],
   [
@@ -79,36 +63,37 @@ const converters = [highlight()].concat([
     (node: any, index: number) => {
       if (!node.url) return '';
       return `<!--${node.url}-->`;
-    }
+    },
   ],
   [
     () => true,
     (node: any) => {
       const tagName = JsonML.getTagName(node);
-      const attrs = genAttr(Object.assign({}, JsonML.getAttributes(node)));
+      const attrs = genAttr({ ...JsonML.getAttributes(node) });
       return `${tagName ? `<${tagName}${attrs ? ' ' + attrs : ''}>` : ''}${
-        isStandalone(tagName)
-          ? ''
-          : JsonML.getChildren(node)
-              .map(toHtml)
-              .join('') + (tagName ? `</${tagName}>` : '')
+        isStandalone(tagName) ? '' : JsonML.getChildren(node).map(toHtml).join('') + (tagName ? `</${tagName}>` : '')
       }`;
     },
   ],
 ]);
 
-export function toHtml(markdownData: any, codeEscape: boolean = true) {
+export function toHtml(markdownData: any[], codeEscape: boolean = true) {
   const pair: any = converters.filter((converter: any) => {
     return converter[0](markdownData);
   })[0];
   const ret: string = pair[1](markdownData);
   if (codeEscape) {
     return ret.replace(
-      /<pre class="hljs language-([html|ts|typescript|diff]+)"><code>([\s\S]*)<\/code><\/pre>/g,
-      (fullWord: any, lang: any, code: any) => {
-        return `<pre class="hljs language-$1"><code>${escapeHTML(
-          code,
-        )}</code></pre>`;
+      /<pre class="hljs language-([a-zA-Z0-9]+)"><code>([\s\S]+)<\/code><\/pre>/g,
+      (_fullWord: string, lang: string, code: string) => {
+        if (lang === 'html') {
+          code = code.includes(`&lt;`) && code.includes(`&gt;`) ? code : escapeHTML(code);
+        } else if ((lang === 'ts' || lang === 'typescript') && code.includes(`template: `)) {
+          code = code.replace(/template: `([^`]+)`/g, (_tFullword: string, tHtml: string) => {
+            return 'template: `' + escapeHTML(tHtml) + '`';
+          });
+        }
+        return `<pre class="hljs language-${lang}"><code>${code}</code></pre>`;
       },
     );
   } else {
@@ -126,14 +111,13 @@ export function toHtml(markdownData: any, codeEscape: boolean = true) {
 }
 
 function fixAngular(html: string): string {
-  return html.replace(
-    /<code>(.*?)<\/code>/gim,
-    (fullWord: string, content: string) => {
-      return ~content.indexOf(`</a>`)
-        ? fullWord
-        : `<code>${content.replace(`<`, `&lt;`)}</code>`;
-    },
-  );
+  let res = html.replace(/<code>(.*?)<\/code>/gim, (fullWord: string, content: string) => {
+    return ~content.indexOf(`</a>`) ? fullWord : `<code>${content.replace(`<`, `&lt;`)}</code>`;
+  });
+  if (res.startsWith('<article>') && res.endsWith('</article>')) {
+    res = res.substr(9, res.length - 19);
+  }
+  return res;
 }
 
 export function generateMd(markdownData: any) {
@@ -144,9 +128,7 @@ export function generateMd(markdownData: any) {
     .map(arr => arr[1]);
 
   const apiStartIndex = contentChildren.findIndex(
-    (node: any) =>
-      JsonML.getTagName(node) === 'h2' &&
-      /^API/.test(JsonML.getChildren(node)[0]),
+    (node: any) => JsonML.getTagName(node) === 'h2' && /^API/.test(JsonML.getChildren(node)[0]),
   );
 
   const ret: any = {};

@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { fakeAsync } from '@angular/core/testing';
-import { checkDelay, configureTestSuite, PageG2 } from '@delon/testing';
+import { checkDelay, PageG2 } from '@delon/testing';
 import { G2WaterWaveComponent } from './water-wave.component';
 import { G2WaterWaveModule } from './water-wave.module';
 
@@ -8,25 +8,22 @@ describe('chart: water-wave', () => {
   describe('defualt', () => {
     let page: PageG2<TestComponent>;
 
-    configureTestSuite(() => {
+    beforeEach(() => {
       page = new PageG2<TestComponent>().genModule(G2WaterWaveModule, TestComponent);
+      page.genComp(TestComponent);
     });
-
-    beforeEach(() => page.genComp(TestComponent));
 
     afterEach(() => page.context.comp.ngOnDestroy());
 
     it('should be working', fakeAsync(() => {
-      page
-        .dcFirst()
-        .isCanvas()
-        .isText('.g2-water-wave__desc-title', page.context.title);
+      page.dcFirst().isCanvas().isText('.g2-water-wave__desc-title', page.context.title);
       page.context.percent = 30;
       page.dc().isText('.g2-water-wave__desc-percent', '30%');
     }));
 
     it('should be scale scaling when height is gt; container width', fakeAsync(() => {
       const styleSpy = spyOn(page.comp.renderer, 'setStyle');
+      page.context.animate = false;
       page.context.height = 100;
       spyOnProperty(page.comp.el.nativeElement.parentNode, 'offsetWidth').and.returnValue(50);
       page.dcFirst();
@@ -54,15 +51,16 @@ describe('chart: water-wave', () => {
       [height]="height"
       [percent]="percent"
       [delay]="delay"
-    >
-    </g2-water-wave>
+      [animate]="animate"
+    ></g2-water-wave>
   `,
 })
 class TestComponent {
-  @ViewChild('comp') comp: G2WaterWaveComponent;
+  @ViewChild('comp', { static: true }) comp: G2WaterWaveComponent;
   title = 'title';
   color = '#1890FF';
   height = 100;
   percent = 10;
   delay = 0;
+  animate = true;
 }

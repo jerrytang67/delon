@@ -70,6 +70,10 @@ module.exports = {
           'zh-CN': '业务',
           'en-US': 'Business',
         },
+        {
+          'zh-CN': '其它',
+          'en-US': 'Other',
+        },
       ],
       extraRouteMeta: [
         {
@@ -214,7 +218,7 @@ module.exports = {
         },
       ],
       module: '@delon/abc',
-      defaultRoute: 'view',
+      defaultRoute: 'sv',
       metaIncludeAttributes: ['name', 'types', 'github', 'module'],
       template: {
         meta: './src/templates/meta.ts',
@@ -353,16 +357,16 @@ module.exports = {
           'en-US': 'Documents',
         },
         {
-          'zh-CN': '类型',
-          'en-US': 'Type',
+          'zh-CN': '工具类',
+          'en-US': 'Tools',
         },
         {
-          'zh-CN': '模板',
-          'en-US': 'Template',
+          'zh-CN': '管道',
+          'en-US': 'Pipes',
         },
       ],
       module: '@delon/util',
-      defaultRoute: 'getting-started',
+      defaultRoute: 'array',
       extraRouteMeta: [],
       metaIncludeAttributes: ['name', 'types', 'github', 'module'],
       template: {
@@ -378,8 +382,8 @@ module.exports = {
           hasSubDir: false,
         },
         {
-          src: ['./packages/util/src'],
-          // ignores: [ 'README.md' ],
+          src: ['./packages/util'],
+          ignores: ['docs'],
           template: {
             content: './src/templates/content.ts',
           },
@@ -490,6 +494,7 @@ module.exports = {
           template: {
             content: './src/templates/content.ts',
           },
+          ignores: ['docs'],
           hasSubDir: true,
         },
       ],
@@ -561,11 +566,20 @@ module.exports = {
           hasSubDir: false,
         },
         {
-          src: ['./packages/theme/styles/layout'],
+          src: ['./packages/theme/layout-default'],
           template: {
             content: './src/templates/content.ts',
           },
-          hasSubDir: true,
+          reName: 'layout-default',
+          hasSubDir: false,
+        },
+        {
+          src: ['./packages/theme/layout-blank'],
+          template: {
+            content: './src/templates/content.ts',
+          },
+          reName: 'layout-blank',
+          hasSubDir: false,
         },
         {
           src: ['./packages/theme/src/pipes'],

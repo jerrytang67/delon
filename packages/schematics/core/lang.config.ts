@@ -17,20 +17,24 @@ export const LANGS_CONFIG = [
   { langs: ['en'], zorro: 'en_US', delon: 'en_US', fileName: 'en-US.json' },
   { langs: ['tr'], zorro: 'tr_TR', delon: 'tr_TR', fileName: 'tr-TR.json' },
   { langs: ['pl'], zorro: 'pl_PL', delon: 'pl_PL', fileName: 'pl-PL.json' },
+  { langs: ['el'], zorro: 'el_GR', delon: 'el_GR', fileName: 'el-GR.json' },
+  { langs: ['ko'], zorro: 'ko_KR', delon: 'ko_KR', fileName: 'ko-KR.json' },
+  { langs: ['hr'], zorro: 'hr_HR', delon: 'hr_HR', fileName: 'hr-HR.json' },
+  { langs: ['ja'], zorro: 'ja_JP', delon: 'ja_JP' },
+  { langs: ['sl'], zorro: 'sl_SI', delon: 'sl_SI', fileName: 'sl-SI.json' },
+  { langs: ['fr'], zorro: 'fr_FR', delon: 'fr_FR', fileName: 'fr-FR.json' },
+  { langs: ['es'], zorro: 'es_ES', delon: 'es_ES', fileName: 'es-ES.json' },
 ];
 
-// tslint:disable-next-line:no-any
 export function getLangConfig(lang: string): any {
   return LANGS_CONFIG.find(w => w.langs.includes(lang));
 }
 
-export function getLangData(lang: string) {
+export function getLangData(lang: string): any {
   let langCog = getLangConfig(lang);
   if (!langCog || !langCog.fileName) {
     langCog = getLangConfig('zh');
   }
-
-  console.log(`Currently using translation files: ${langCog.fileName}`);
 
   const langFilePath = path.join(__dirname, `../application/files/i18n/${langCog.fileName}`);
   if (!fs.existsSync(langFilePath)) {

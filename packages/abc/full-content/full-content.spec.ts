@@ -1,32 +1,24 @@
 import { APP_BASE_HREF, DOCUMENT } from '@angular/common';
-import {
-  Component,
-  CUSTOM_ELEMENTS_SCHEMA,
-  DebugElement,
-  Injector,
-  ViewChild,
-} from '@angular/core';
-import { fakeAsync, tick, ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, DebugElement, ViewChild } from '@angular/core';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivationEnd, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
-
 import { FullContentComponent } from './full-content.component';
 import { FullContentModule } from './full-content.module';
 import { FullContentService } from './full-content.service';
 
 describe('abc: full-content', () => {
-  let injector: Injector;
   let fixture: ComponentFixture<TestComponent>;
   let dl: DebugElement;
   let context: TestComponent;
   let doc: Document;
   let el: HTMLElement;
-  let bodyEl: HTMLElement;
+  let bodyEl: HTMLBodyElement;
 
   beforeEach(() => {
-    injector = TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [FullContentModule, RouterTestingModule.withRoutes([])],
       declarations: [TestComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -34,13 +26,13 @@ describe('abc: full-content', () => {
     });
   });
 
-  function createComp() {
+  function createComp(): void {
     fixture = TestBed.createComponent(TestComponent);
     dl = fixture.debugElement;
     context = fixture.componentInstance;
     fixture.detectChanges();
-    doc = injector.get(DOCUMENT);
-    bodyEl = document.querySelector('body');
+    doc = TestBed.inject(DOCUMENT);
+    bodyEl = document.querySelector('body') as HTMLBodyElement;
     el = dl.query(By.css('full-content')).nativeElement as HTMLElement;
   }
 
@@ -103,7 +95,7 @@ describe('abc: full-content', () => {
     });
     it('should be switch fullscreen via service', () => {
       createComp();
-      const srv = injector.get(FullContentService);
+      const srv = TestBed.inject(FullContentService);
       expect(context.fullscreen).toBe(false);
       srv.toggle();
       fixture.detectChanges();
@@ -117,15 +109,13 @@ describe('abc: full-content', () => {
       const bodyHeight = 10;
       spyOn(bodyEl, 'getBoundingClientRect').and.returnValue({
         height: bodyHeight,
-      });
+      } as any);
       expect(bodyEl.getBoundingClientRect).not.toHaveBeenCalled();
       window.dispatchEvent(new Event('resize'));
       fixture.detectChanges();
       tick(210);
       expect(bodyEl.getBoundingClientRect).toHaveBeenCalled();
-      expect(context.comp._height).toBe(
-        bodyHeight - el.getBoundingClientRect().top - context.padding,
-      );
+      expect(context.comp._height).toBe(bodyHeight - el.getBoundingClientRect().top - context.padding);
     }));
     it('should be clear class when go to other route', () => {
       const eventsSub = new BehaviorSubject<any>(null);
@@ -142,7 +132,7 @@ describe('abc: full-content', () => {
       // mock component destroy
       (dl.nativeElement as HTMLElement).innerHTML = ``;
 
-      eventsSub.next(new ActivationEnd(null));
+      eventsSub.next(new ActivationEnd(null!));
       eventsSub.complete();
       expect(bodyEl.classList.contains('full-content')).toBe(false);
     });
@@ -161,7 +151,7 @@ describe('abc: full-content', () => {
 
       bodyEl.classList.remove('full-content__body');
 
-      eventsSub.next(new ActivationEnd(null));
+      eventsSub.next(new ActivationEnd(null!));
       eventsSub.complete();
 
       expect(bodyEl.classList.contains('full-content__body')).toBe(true);
@@ -171,21 +161,15 @@ describe('abc: full-content', () => {
 
 @Component({
   template: `
-    <full-content
-      #comp
-      [(fullscreen)]="fullscreen"
-      [hideTitle]="hideTitle"
-      [padding]="padding"
-      (fullscreenChange)="change()"
-    >
+    <full-content #comp [(fullscreen)]="fullscreen" [hideTitle]="hideTitle" [padding]="padding" (fullscreenChange)="change()">
       <button full-toggle>Full</button>
     </full-content>
   `,
 })
 class TestComponent {
-  @ViewChild('comp') comp: FullContentComponent;
+  @ViewChild('comp', { static: true }) comp: FullContentComponent;
   fullscreen: boolean = false;
   hideTitle: boolean;
   padding = 24;
-  change() {}
+  change(): void {}
 }

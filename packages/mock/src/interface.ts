@@ -1,5 +1,8 @@
-// tslint:disable:no-any
 import { HttpRequest } from '@angular/common/http';
+
+export class MockOptions {
+  data?: any;
+}
 
 export interface MockCachedRule {
   [key: string]: any;
@@ -8,7 +11,7 @@ export interface MockCachedRule {
 
   url: string;
 
-  martcher: RegExp;
+  martcher: RegExp | null;
 
   segments: string[];
 

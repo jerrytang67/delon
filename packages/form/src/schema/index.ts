@@ -1,4 +1,3 @@
-// tslint:disable:no-any
 import { SFUISchemaItem } from './ui';
 
 export interface SFSchemaDefinition {
@@ -35,9 +34,13 @@ export interface SFSchemaEnum {
    */
   group?: boolean;
 
+  isLeaf?: boolean;
+
   /** 组对应的子类 */
   children?: SFSchemaEnum[];
 }
+
+export type SFSchemaType = 'number' | 'integer' | 'string' | 'boolean' | 'object' | 'array';
 
 export type SFSchemaEnumType = SFSchemaEnum | number | string | boolean;
 
@@ -47,6 +50,7 @@ export type SFSchemaEnumType = SFSchemaEnum | number | string | boolean;
  * **注意：** 所有结构都以标准为基准，除了 `ui` 属性为非标准单纯只是为了更好的开发
  */
 export interface SFSchema {
+  [key: string]: any;
   //////////// Any /////////////
   /**
    * 数据类型，支持 JavaScript 基础类型；注意项：
@@ -56,7 +60,7 @@ export interface SFSchema {
    * - 指定 `format` 标准参数可以自动适配渲染小部件
    * - 指定 `widget` 参数强制渲染小部件
    */
-  type?: 'number' | 'integer' | 'string' | 'boolean' | 'object' | 'array';
+  type?: SFSchemaType;
   /**
    * 枚举，静态数据源，例如：`radio`、`checkbox` 等
    *
@@ -213,9 +217,9 @@ export interface SFSchema {
    * - 当值为 `null`、`undefined` 时使用 `key` 替代
    * - 当值为 `''` 空字符串表示不展示 `label` 部分，例如：`checkbox` 可能需要
    */
-  title?: string;
+  title?: string | null;
   /**
-   * 属性目的性解释，采用 `nz-form-extra` 渲染
+   * 属性目的性解释
    */
   description?: string;
   /**

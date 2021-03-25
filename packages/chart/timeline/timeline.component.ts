@@ -1,206 +1,201 @@
-// tslint:disable:no-any
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  Input,
-  NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  TemplateRef,
-  ViewChild,
-} from '@angular/core';
-import { InputBoolean, InputNumber } from '@delon/util';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, TemplateRef, ViewEncapsulation } from '@angular/core';
+import { Chart, Event, Types } from '@antv/g2';
+import { G2BaseComponent, G2Time } from '@delon/chart/core';
+import { toDate } from '@delon/util/date-time';
+import { BooleanInput, InputBoolean, InputNumber, NumberInput } from '@delon/util/decorator';
+import { format } from 'date-fns';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 
-declare var G2: any;
-declare var DataSet: any;
-declare var Slider: any;
-
-export class G2TimelineData {
-  /** 非 `Date` 格式，自动使用 `new Date` 转换，因此，支持时间格式字符串、数字型时间戳 */
-  x: Date | string | number;
+export interface G2TimelineData {
+  /**
+   * 时间值
+   */
+  time?: G2Time;
   /** 指标1数据 */
   y1: number;
   /** 指标2数据 */
   y2: number;
+  /** 指标3数据 */
+  y3?: number;
+  /** 指标4数据 */
+  y4?: number;
+  /** 指标5数据 */
+  y5?: number;
   [key: string]: any;
+}
+
+export interface G2TimelineMap {
+  /** 指标1 */
+  y1: string;
+  /** 指标 */
+  y2: string;
+  /** 指标3 */
+  y3?: string;
+  /** 指标4 */
+  y4?: string;
+  /** 指标5 */
+  y5?: string;
+
+  [key: string]: string | undefined;
+}
+
+export interface G2TimelineClickItem {
+  item: G2TimelineData;
+  ev: Event;
 }
 
 @Component({
   selector: 'g2-timeline',
-  templateUrl: './timeline.component.html',
+  exportAs: 'g2Timeline',
+  template: `
+    <ng-container *nzStringTemplateOutlet="title">
+      <h4>{{ title }}</h4>
+    </ng-container>
+    <nz-skeleton *ngIf="!loaded"></nz-skeleton>
+    <div #container></div>
+  `,
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class G2TimelineComponent implements OnInit, OnDestroy, OnChanges {
-  @ViewChild('container') private node: ElementRef;
-  @ViewChild('sliderContainer') private sliderNode: ElementRef;
-  private chart: any;
-  private _slider: any;
+export class G2TimelineComponent extends G2BaseComponent {
+  static ngAcceptInputType_height: NumberInput;
+  static ngAcceptInputType_maxAxis: NumberInput;
+  static ngAcceptInputType_borderWidth: NumberInput;
+  static ngAcceptInputType_slider: BooleanInput;
 
   // #region fields
 
-  @Input() @InputNumber() delay = 0;
   @Input() title: string | TemplateRef<void>;
+  @Input() @InputNumber() maxAxis = 2;
   @Input() data: G2TimelineData[] = [];
-  @Input() titleMap: { y1: string; y2: string };
-  @Input() colorMap: { y1: string; y2: string } = { y1: '#1890FF', y2: '#2FC25B' };
+  @Input() titleMap: G2TimelineMap;
+  @Input() colorMap: G2TimelineMap = { y1: '#5B8FF9', y2: '#5AD8A6', y3: '#5D7092', y4: '#F6BD16', y5: '#E86452' };
   @Input() mask: string = 'HH:mm';
+  @Input() maskSlider: string = 'HH:mm';
   @Input() position: 'top' | 'right' | 'bottom' | 'left' = 'top';
-  @Input() @InputNumber() height = 400;
-  @Input() padding: number[] = [60, 20, 40, 40];
+  @Input() @InputNumber() height = 450;
+  @Input() padding: number[] = [40, 8, 64, 40];
   @Input() @InputNumber() borderWidth = 2;
   @Input() @InputBoolean() slider = true;
+  @Output() clickItem = new EventEmitter<G2TimelineClickItem>();
 
   // #endregion
 
-  constructor(private ngZone: NgZone) {}
-
-  ngOnInit(): void {
-    this.ngZone.runOutsideAngular(() => setTimeout(() => this.install(), this.delay));
-  }
-
-  private install() {
-    const { node, sliderNode, height, padding, mask, slider } = this;
-    const chart = (this.chart = new G2.Chart({
+  install(): void {
+    const { node, height, padding, slider, maxAxis, theme, maskSlider } = this;
+    const chart: Chart = (this._chart = new (window as any).G2.Chart({
       container: node.nativeElement,
-      forceFit: true,
+      autoFit: true,
       height,
       padding,
+      theme,
     }));
-    chart.axis('x', { title: false });
-    chart.axis('y1', { title: false });
-    chart.axis('y2', false);
+    chart.axis('time', { title: null });
+    chart.axis('y1', { title: null });
+    for (let i = 2; i <= maxAxis; i++) {
+      chart.axis(`y${i}`, false);
+    }
 
-    chart.line().position('x*y1');
-    chart.line().position('x*y2');
+    chart.line().position('time*y1');
+    for (let i = 2; i <= maxAxis; i++) {
+      chart.line().position(`time*y${i}`);
+    }
 
-    chart.render();
+    chart.tooltip({
+      showCrosshairs: true,
+      shared: true,
+    });
 
     const sliderPadding = { ...[], ...padding };
     sliderPadding[0] = 0;
     if (slider) {
-      const _slider = (this._slider = new Slider({
-        container: sliderNode.nativeElement,
-        width: 'auto',
+      chart.option('slider', {
         height: 26,
-        padding: sliderPadding,
-        scales: {
-          x: {
-            type: 'time',
-            tickInterval: 60 * 60 * 1000,
-            range: [0, 1],
-            mask,
-          },
+        start: 0,
+        end: 1,
+        trendCfg: {
+          isArea: false,
         },
-        backgroundChart: {
-          type: 'line',
-        },
-        xAxis: 'x',
-        yAxis: 'y1',
-        data: [],
-      }));
-
-      _slider.render();
+        minLimit: 2,
+        formatter: (val: Date) => format(val, maskSlider),
+      });
     }
+
+    chart.on(`plot:click`, (ev: Event) => {
+      const records = this._chart.getSnapRecords({ x: ev.x, y: ev.y });
+      this.ngZone.run(() => this.clickItem.emit({ item: records[0]._origin, ev }));
+    });
+
+    chart.on(`legend-item:click`, (ev: Event) => {
+      const item = ev?.target?.get('delegateObject').item;
+      const id = item?.id;
+      const line = chart.geometries.find(w => w.getAttribute('position').getFields()[1] === id);
+      if (line) {
+        line.changeVisible(!item.unchecked);
+      }
+    });
 
     this.attachChart();
   }
 
-  private attachChart() {
-    const {
-      chart,
-      _slider,
-      slider,
-      height,
-      padding,
-      data,
-      mask,
-      titleMap,
-      position,
-      colorMap,
-      borderWidth,
-    } = this;
-    if (!chart || !data || data.length <= 0) return;
+  attachChart(): void {
+    const { _chart, height, padding, mask, titleMap, position, colorMap, borderWidth, maxAxis } = this;
+    let data = [...this.data];
+    if (!_chart || !data || data.length <= 0) return;
 
-    chart.legend({
+    const arrAxis = [...Array(maxAxis)].map((_, index) => index + 1);
+
+    _chart.legend({
       position,
       custom: true,
-      clickable: false,
-      items: [{ value: titleMap.y1, fill: colorMap.y1 }, { value: titleMap.y2, fill: colorMap.y2 }],
+      items: arrAxis.map(id => {
+        const key = `y${id}`;
+        return { id: key, name: titleMap[key], value: key, marker: { style: { fill: colorMap[key] } } } as Types.LegendItem;
+      }),
     });
 
     // border
-    chart.get('geoms').forEach((v, idx) => {
-      v.color(colorMap[`y${idx + 1}`]).size(borderWidth);
+    _chart.geometries.forEach((v, idx: number) => {
+      v.color((colorMap as NzSafeAny)[`y${idx + 1}`]).size(borderWidth);
     });
-    chart.set('height', height);
-    chart.set('padding', padding);
+    _chart.height = height;
+    _chart.padding = padding;
 
-    data
-      .filter(v => !(v.x instanceof Number))
-      .forEach(v => {
-        v.x = +new Date(v.x);
-      });
-    data.sort((a, b) => +a.x - +b.x);
-    const max = Math.max(
-      [...data].sort((a, b) => b.y1 - a.y1)[0].y1,
-      [...data].sort((a, b) => b.y2 - a.y2)[0].y2,
-    );
-    const ds = new DataSet({
-      state: {
-        start: data[0].x,
-        end: data[data.length - 1].x,
-      },
+    // 转换成日期类型
+    data = data
+      .map(item => {
+        item.time = toDate(item.time!);
+        item._time = +item.time;
+        return item;
+      })
+      .sort((a, b) => a._time - b._time);
+
+    const max = Math.max(...arrAxis.map(id => [...data].sort((a, b) => b[`y${id}`] - a[`y${id}`])[0][`y${id}`]));
+    const scaleOptions: Record<string, Types.ScaleOption> = {};
+    arrAxis.forEach(id => {
+      const key = `y${id}`;
+      scaleOptions[key] = {
+        alias: titleMap[key],
+        max,
+        min: 0,
+      };
     });
-    const dv = ds.createView();
-    dv.source(data).transform({
-      type: 'filter',
-      callback: (val: G2TimelineData) => {
-        const time = +val.x;
-        return time >= ds.state.start && time <= ds.state.end;
-      },
-    });
-    chart.source(dv, {
-      x: {
-        type: 'timeCat',
+    _chart.scale({
+      time: {
+        type: 'time',
         mask,
         range: [0, 1],
       },
-      y1: {
-        alias: titleMap.y1,
-        max,
-        min: 0,
-      },
-      y2: {
-        alias: titleMap.y2,
-        max,
-        min: 0,
-      },
+      ...scaleOptions,
     });
-    chart.repaint();
 
-    if (slider) {
-      _slider.start = ds.state.start;
-      _slider.end = ds.state.end;
-      _slider.onChange = ({ startValue, endValue }) => {
-        ds.setState('start', startValue);
-        ds.setState('end', endValue);
-      };
-      _slider.changeData(data);
-    }
-  }
-
-  ngOnChanges(): void {
-    this.ngZone.runOutsideAngular(() => this.attachChart());
-  }
-
-  ngOnDestroy(): void {
-    if (this.chart) {
-      this.ngZone.runOutsideAngular(() => this.chart.destroy());
-    }
-    if (this._slider) {
-      this.ngZone.runOutsideAngular(() => this._slider.destroy());
-    }
+    const initialRange = {
+      start: data[0]._time,
+      end: data[data.length - 1]._time,
+    };
+    const filterData = data.filter(val => val._time >= initialRange.start && val._time <= initialRange.end);
+    _chart.changeData(filterData);
+    _chart.render();
   }
 }

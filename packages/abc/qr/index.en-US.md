@@ -4,42 +4,31 @@ order: 3
 title: qr
 subtitle: QR
 cols: 1
-module: QRModule
-config: QRConfig
+module: import { QRModule } from '@delon/abc/qr';
 ---
 
-Generate a QR code based on [qrious](https://neocotic.com/qrious).
+Generate a QR code based on [qrious](https://github.com/neocotic/qrious).
 
-## Notice
 
-The default `QRModule` don't mandatory dependence `qrious`, so you need to additionally reference it in the `scripts` of `angular.json`, like this:
-
-```bash
-npm i --save qrious
-```
-
-```ts
-"scripts": [
-  "node_modules/qrious/dist/qrious.min.js"
-]
-```
+Qr libary is lazy loading by default，you can change the default CDN path (or use the local path) via [Global Configuration](/docs/global-config). By default: `https://cdn.bootcdn.net/ajax/libs/qrious/4.0.2/qrious.min.js`. Or install dependence via `npm i --save qrious`, and import script path in `angular.json`.
 
 ## API
 
 ### qr
 
-Property | Description | Type | Default
-----|------|-----|------
-`[value]` | Value encoded within the QR code | `string` | -
-`[background]` | Background colour of the QR code | `string` | `white`
-`[backgroundAlpha]` | Background alpha of the QR code	 | `number` | `1.0`
-`[foreground]` | Foreground colour of the QR code | `string` | `white`
-`[foregroundAlpha]` | Foreground alpha of the QR code | `number` | `1.0`
-`[level]` | Error correction level of the QR code | `'L','M','Q','H'` | `'L'`
-`[mime]` | MIME type used to render the image for the QR code | `string` | `image/png`
-`[padding]` | Padding for the QR code (pixels) | `number` | `10`
-`[size]` | Size of the QR code (pixels) | `number` | `220`
-`(change)` | change event | `EventEmitter<string>` | -
+| Property | Description | Type | Default | Global Config |
+|----------|-------------|------|---------|---------------|
+| `[value]` | Value encoded within the QR code | `string` | - |  |
+| `[background]` | Background colour of the QR code | `string` | `white` | ✅ |
+| `[backgroundAlpha]` | Background alpha of the QR code | `number` | `1` | ✅ |
+| `[foreground]` | Foreground colour of the QR code | `string` | `white` | ✅ |
+| `[foregroundAlpha]` | Foreground alpha of the QR code | `number` | `1` | ✅ |
+| `[level]` | Error correction level of the QR code | `'L','M','Q','H'` | `'L'` | ✅ |
+| `[mime]` | MIME type used to render the image for the QR code | `string` | `image/png` | ✅ |
+| `[padding]` | Padding for the QR code (pixels) | `number` | `10` | ✅ |
+| `[size]` | Size of the QR code (pixels) | `number` | `220` | ✅ |
+| `[delay]` | Delayed rendering, unit: ms | `number` | `0` | ✅ |
+| `(change)` | change event | `EventEmitter<string>` | - |  |
 
 ## FAQ
 

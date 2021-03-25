@@ -30,7 +30,7 @@ title: 全局参数
 | `@h4-font-size` | `16px` | h4字号 |
 | `@h5-font-size` | `14px` | h5字号 |
 | `@h6-font-size` | `12px` | h6字号 |
-| `@enable-all-colors` | `true` | 开启背景、文本颜色<br>例如：`.bg-teal`、`.text-teal`<br>有关颜色值见样式规则章节 |
+| `@enable-all-colors` | `false` | 开启背景、文本颜色<br>例如：`.bg-teal`、`.text-teal`<br>有关颜色值见样式规则章节 |
 | `@modal-sm` | `300px` | 小号对话框 |
 | `@modal-md` | `500px` | 中号对话框 |
 | `@modal-lg` | `900px` | 大号对话框 |
@@ -51,6 +51,7 @@ title: 全局参数
 | `@scrollbar-track-color` | `rgba(0, 0, 0, 0.3)` | 美化滚动条的轨道颜色 |
 | `@scrollbar-thumb-color` | `#6e6e6e` | 美化滚动条小方块颜色 |
 | `@scrollbar-table-enabled` | `false` | 启用美化表格滚动条 |
+| `@rtl-enabled` | `false` | 是否支持 RTL |
 
 ## Ng补丁
 
@@ -61,6 +62,7 @@ title: 全局参数
 | `@preserve-white-spaces-enabled` | `true` | 解决开启 [preserveWhitespaces](https://angular.io/api/core/Component#preserveWhitespaces) 时按钮间可能会出现无缝  |
 | `@preserve-sf-and-st-spaces` | `16px` | `sf` 与 `st` 间间距 |
 | `@preserve-buttons-spaces` | 按钮间间距（包括：button、button-group、popconfirm） |
+| `@router-animation-enabled` | `false` | 是否启用路由切换动画 |
 | `@router-animation-duration` | `antFadeIn` | 路由切换动画 |
 | `@router-animation-duration` | `1s` | 路由切换动画时长 |
 
@@ -109,5 +111,4 @@ title: 全局参数
 | `@abs-enabled` | `true` | 中心元素 |
 | `@masonry-enabled` | `true` | CSS瀑布流列 |
 | `@setting-drawer-enabled` | `true` | 主题设置 |
-| `@search-form-enabled` | `true` | 简化搜索框，[DEMO](https://ng-alain.github.io/ng-alain/) |
-| `@search__form-enabled` | `true` | Pro搜索框，[DEMO](https://ng-alain.github.io/ng-alain/) |
+| `@search__form-enabled` | `true` | Pro搜索框，[DEMO](https://ng-alain.surge.sh/) |

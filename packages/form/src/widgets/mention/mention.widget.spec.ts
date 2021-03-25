@@ -1,6 +1,5 @@
-import { fakeAsync, ComponentFixture } from '@angular/core/testing';
-
 import { DebugElement } from '@angular/core';
+import { ComponentFixture, fakeAsync } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
 import { of } from 'rxjs';
 import { configureSFTestSuite, SFPage, TestFormComponent } from '../../../spec/base.spec';
@@ -24,7 +23,7 @@ describe('form: widget: mention', () => {
     page.cleanOverlay().prop(dl, context, fixture);
   });
 
-  function getWidget() {
+  function getWidget(): MentionWidget {
     return page.getWidget<MentionWidget>('sf-' + widget);
   }
 
@@ -40,7 +39,7 @@ describe('form: widget: mention', () => {
       .checkCount('.ant-mention-dropdown-item', DATA.length, true)
       .typeEvent('click', '.ant-mention-dropdown-item');
 
-    expect((s.properties.a.ui as any).select).toHaveBeenCalled();
+    expect((s.properties!.a.ui as any).select).toHaveBeenCalled();
   }));
 
   it('should be validator mention count via minimum or maximum', fakeAsync(() => {
@@ -49,12 +48,10 @@ describe('form: widget: mention', () => {
         a: { type: 'string', minimum: 1, maximum: 2, ui: { widget, asyncData: () => of(DATA) } },
       },
     };
-    page
-      .newSchema(s)
-      .typeChar('@')
-      .checkError(`最少提及 1 次`);
+    page.newSchema(s).typeChar('@').checkError(`最少提及 1 次`);
 
-    spyOn(getWidget().mentionChild, 'getMentions').and.returnValue(['', '', '', '']);
+    // tslint:disable-next-line: no-string-literal
+    spyOn(getWidget()['mentionChild'], 'getMentions').and.returnValue(['', '', '', '']);
     page.typeChar('@').checkError(`最多提及 2 次`);
   }));
 
@@ -70,9 +67,6 @@ describe('form: widget: mention', () => {
         },
       },
     };
-    page
-      .newSchema(s)
-      .typeChar('@')
-      .checkElText('.ant-mention-dropdown-item', '1', true);
+    page.newSchema(s).dc(1).typeChar('@').checkElText('.ant-mention-dropdown-item', '1', true);
   }));
 });

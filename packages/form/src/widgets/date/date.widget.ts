@@ -1,32 +1,44 @@
-import { Component, OnInit } from '@angular/core';
-import format from 'date-fns/format';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { toDate } from '@delon/util/date-time';
+import { format } from 'date-fns';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 import { SFValue } from '../../interface';
 import { FormProperty } from '../../model/form.property';
 import { toBool } from '../../utils';
-import { ControlWidget } from '../../widget';
+import { ControlUIWidget } from '../../widget';
+import { SFDateWidgetSchema } from './schema';
 
 @Component({
   selector: 'sf-date',
   templateUrl: './date.widget.html',
+  preserveWhitespaces: false,
+  encapsulation: ViewEncapsulation.None,
 })
-export class DateWidget extends ControlWidget implements OnInit {
+export class DateWidget extends ControlUIWidget<SFDateWidgetSchema> implements OnInit {
+  private startFormat: string;
+  private endFormat: string;
+  private flatRange = false;
   mode: string;
-  displayValue: Date | Date[] = null;
+  displayValue: Date | Date[] | null = null;
   displayFormat: string;
-  format: string;
-  // tslint:disable-next-line:no-any
   i: any;
-  flatRange = false;
 
   ngOnInit(): void {
-    const ui = this.ui;
-    this.mode = ui.mode || 'date';
-    this.flatRange = ui.end != null;
+    const { mode, end, displayFormat, allowClear, showToday } = this.ui;
+    this.mode = mode || 'date';
+    this.flatRange = end != null;
+    // 构建属性对象时会对默认值进行校验，因此可以直接使用 format 作为格式化属性
+    this.startFormat = this.ui._format!;
     if (this.flatRange) {
       this.mode = 'range';
+      const endUi = this.endProperty.ui as SFDateWidgetSchema;
+      this.endFormat = endUi.format ? endUi._format : this.startFormat;
     }
-    if (!ui.displayFormat) {
+    if (!displayFormat) {
       switch (this.mode) {
+        case 'year':
+          this.displayFormat = `yyyy`;
+          break;
         case 'month':
           this.displayFormat = `yyyy-MM`;
           break;
@@ -35,76 +47,76 @@ export class DateWidget extends ControlWidget implements OnInit {
           break;
       }
     } else {
-      this.displayFormat = ui.displayFormat;
+      this.displayFormat = displayFormat;
     }
-    this.format = ui.format
-      ? ui.format
-      : this.schema.type === 'number'
-      ? 'x'
-      : 'YYYY-MM-DD HH:mm:ss';
-    // 公共API
     this.i = {
-      allowClear: toBool(ui.allowClear, true),
+      allowClear: toBool(allowClear, true),
       // nz-date-picker
-      showToday: toBool(ui.showToday, true),
+      showToday: toBool(showToday, true),
     };
   }
 
-  private compCd() {
-    // TODO: removed after nz-datepick support OnPush mode
-    setTimeout(() => this.detectChanges());
-  }
-
-  reset(value: SFValue) {
-    value = this.toDate(value);
+  reset(value: SFValue): void {
+    const toDateOptions = { formatString: this.startFormat, defaultValue: null };
+    if (Array.isArray(value)) {
+      value = value.map(v => toDate(v, toDateOptions));
+    } else {
+      value = toDate(value, toDateOptions);
+    }
     if (this.flatRange) {
-      this.displayValue = value == null ? [] : [value, this.toDate(this.endProperty.formData)];
+      const endValue = toDate(this.endProperty.formData as NzSafeAny, {
+        formatString: this.endFormat || this.startFormat,
+        defaultValue: null,
+      });
+      this.displayValue = value == null || endValue == null ? [] : [value, endValue];
     } else {
       this.displayValue = value;
     }
-    this.compCd();
+    this.detectChanges();
+    // TODO: Need to wait for the rendering to complete, otherwise it will be overwritten of end widget
+    if (this.displayValue) {
+      setTimeout(() => this._change(this.displayValue, false));
+    }
   }
 
-  _change(value: Date | Date[]) {
-    if (value == null) {
+  _change(value: Date | Date[] | null, emitModelChange: boolean = true): void {
+    if (emitModelChange && this.ui.change) {
+      this.ui.change(value);
+    }
+    if (value == null || (Array.isArray(value) && value.length < 2)) {
       this.setValue(null);
       this.setEnd(null);
       return;
     }
 
     const res = Array.isArray(value)
-      ? value.map(d => format(d, this.format))
-      : format(value, this.format);
+      ? [format(value[0], this.startFormat), format(value[1], this.endFormat || this.startFormat)]
+      : format(value, this.startFormat);
 
     if (this.flatRange) {
-      this.setEnd(res[1]);
       this.setValue(res[0]);
+      this.setEnd(res[1]);
     } else {
       this.setValue(res);
     }
   }
 
-  _openChange(status: boolean) {
+  _openChange(status: boolean): void {
     if (this.ui.onOpenChange) this.ui.onOpenChange(status);
   }
 
-  // tslint:disable-next-line:no-any
-  _ok(value: any) {
+  _ok(value: any): void {
     if (this.ui.onOk) this.ui.onOk(value);
   }
 
   private get endProperty(): FormProperty {
-    return this.formProperty.parent.properties[this.ui.end];
+    return (this.formProperty.parent!.properties as { [key: string]: FormProperty })[this.ui.end!];
   }
 
-  private setEnd(value: string) {
+  private setEnd(value: string | null): void {
+    if (!this.flatRange) return;
+
     this.endProperty.setValue(value, true);
-  }
-
-  private toDate(value: SFValue) {
-    if (typeof value === 'number' || (typeof value === 'string' && !isNaN(+value))) {
-      value = new Date(+value);
-    }
-    return value;
+    this.endProperty.updateValueAndValidity();
   }
 }

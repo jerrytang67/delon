@@ -1,23 +1,20 @@
-@import '../../../theme/styles/default.less';
-
+@import '../../../theme/theme-default.less';
 @page-header-prefix: ~'.page-header';
-@page-header-bg: #fff;
-@page-header-wide: 1200px;
 
 @{page-header-prefix} {
   display: block;
+  padding: @page-header-padding;
   background-color: @page-header-bg;
-  padding: 16px 32px 0 32px;
   border-bottom: @border-width-base @border-style-base @border-color-split;
   &__wide {
     max-width: @page-header-wide;
     margin: auto;
   }
   .@{ant-prefix}-breadcrumb {
-    margin-bottom: 16px;
+    margin-bottom: @margin-md;
   }
   .@{ant-prefix}-tabs {
-    margin: 0 0 -17px -8px;
+    margin: 0 0 (-(@margin-md + 1)) 0;
     &-bar {
       border-bottom: @border-width-base @border-style-base @border-color-split;
     }
@@ -31,28 +28,28 @@
   }
   &__logo {
     flex: 0 1 auto;
-    margin-right: 16px;
+    margin-right: @margin-md;
     padding-top: 1px;
     img {
+      display: block;
       width: 28px;
       height: 28px;
       border-radius: @border-radius-base;
-      display: block;
     }
   }
   &__title {
-    font-size: 20px;
-    font-weight: 500;
     color: @heading-color;
+    font-weight: 500;
+    font-size: 20px;
     small {
+      padding-left: @layout-gutter;
       font-weight: normal;
       font-size: 14px;
-      padding-left: @layout-gutter;
     }
   }
   &__action {
-    margin-left: 56px;
     min-width: 266px;
+    margin-left: 56px;
   }
 
   &__title,
@@ -72,13 +69,13 @@
 
   &__title,
   &__action {
-    margin-bottom: 16px;
+    margin-bottom: @margin-md;
   }
 
   &__logo,
   &__desc,
   &__extra {
-    margin-bottom: 16px;
+    margin-bottom: @margin-md;
   }
 
   &__action,
@@ -87,8 +84,8 @@
   }
 
   &__extra {
-    margin-left: 88px;
     min-width: 242px;
+    margin-left: 88px;
   }
   @media screen and (max-width: @screen-xl) {
     &__extra {
@@ -134,3 +131,5 @@
     }
   }
 }
+
+@import './rtl.less';

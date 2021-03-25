@@ -1,22 +1,16 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "sourceMap": false,
-    "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "outDir": "../out-tsc/app",
-    "target": "es5",
-    "module": "es2015",
-    "baseUrl": ".",
+    "outDir": "./out-tsc/app",
     "types": [],
-    "paths": {
-      "@shared": ["app/shared"],
-      "@shared/*": ["app/shared/*"],
-      "@delon/*": ["../packages/*"]
-    }
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
-  "exclude": ["test.ts", "**/*.spec.ts", "templates/*.ts"]
+  "files": ["main.ts", "polyfills.ts"],
+  "exclude": ["**/*.d.ts", "test.ts", "**/*.spec.ts", "templates/*.ts"],
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
 }

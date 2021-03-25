@@ -1,20 +1,17 @@
 import { HttpClient, HTTP_INTERCEPTORS } from '@angular/common/http';
-import {
-  HttpClientTestingModule,
-  HttpTestingController,
-  TestRequest,
-} from '@angular/common/http/testing';
-import { TestBed, TestBedStatic } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController, TestRequest } from '@angular/common/http/testing';
+import { Type } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { DefaultUrlSerializer, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-
-import { DelonAuthConfig } from '../../auth.config';
+import { AlainAuthConfig, ALAIN_CONFIG } from '@delon/util/config';
+import { Observable } from 'rxjs';
 import { DelonAuthModule } from '../../auth.module';
 import { DA_SERVICE_TOKEN, ITokenModel, ITokenService } from '../interface';
 import { SimpleInterceptor } from './simple.interceptor';
 import { SimpleTokenModel } from './simple.model';
 
-function genModel(token: string = `123`) {
+function genModel(token: string = `123`): SimpleTokenModel {
   const model = new SimpleTokenModel();
   model.token = token;
   model.uid = 1;
@@ -24,6 +21,8 @@ function genModel(token: string = `123`) {
 class MockTokenService implements ITokenService {
   [key: string]: any;
   _data: any;
+  options: any;
+  refresh: Observable<ITokenModel>;
   set(data: ITokenModel): boolean {
     this._data = data;
     return true;
@@ -34,16 +33,15 @@ class MockTokenService implements ITokenService {
   change(): any {
     return null;
   }
-  clear() {
+  clear(): void {
     this._data = null;
   }
-  get login_url() {
+  get login_url(): string {
     return '/login';
   }
 }
 
 describe('auth: simple.interceptor', () => {
-  let injector: TestBedStatic;
   let http: HttpClient;
   let httpBed: HttpTestingController;
   const mockRouter = {
@@ -53,11 +51,11 @@ describe('auth: simple.interceptor', () => {
     }),
   };
 
-  function genModule(options: DelonAuthConfig, tokenData?: SimpleTokenModel) {
-    injector = TestBed.configureTestingModule({
+  function genModule(options: AlainAuthConfig, tokenData?: SimpleTokenModel): void {
+    TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([]), DelonAuthModule],
       providers: [
-        { provide: DelonAuthConfig, useValue: options },
+        { provide: ALAIN_CONFIG, useValue: { auth: options } },
         { provide: Router, useValue: mockRouter },
         {
           provide: HTTP_INTERCEPTORS,
@@ -67,17 +65,17 @@ describe('auth: simple.interceptor', () => {
         { provide: DA_SERVICE_TOKEN, useClass: MockTokenService },
       ],
     });
-    if (tokenData) injector.get(DA_SERVICE_TOKEN).set(tokenData);
+    if (tokenData) TestBed.inject(DA_SERVICE_TOKEN).set(tokenData);
 
-    http = injector.get(HttpClient);
-    httpBed = injector.get(HttpTestingController);
+    http = TestBed.inject<HttpClient>(HttpClient);
+    httpBed = TestBed.inject(HttpTestingController as Type<HttpTestingController>);
   }
 
   describe('[token position]', () => {
     it(`in headers`, (done: () => void) => {
       const basicModel = genModel();
       genModule({}, basicModel);
-      http.get('/test', { responseType: 'text' }).subscribe(value => {
+      http.get('/test', { responseType: 'text' }).subscribe(() => {
         done();
       });
       const req = httpBed.expectOne('/test') as TestRequest;
@@ -91,7 +89,7 @@ describe('auth: simple.interceptor', () => {
         },
         genModel('123'),
       );
-      http.get('/test', { responseType: 'text' }).subscribe(value => {
+      http.get('/test', { responseType: 'text' }).subscribe(() => {
         done();
       });
       const req = httpBed.expectOne('/test') as TestRequest;
@@ -105,7 +103,7 @@ describe('auth: simple.interceptor', () => {
         },
         genModel('123'),
       );
-      http.get('/test', { responseType: 'text' }).subscribe(value => {
+      http.get('/test', { responseType: 'text' }).subscribe(() => {
         done();
       });
       const req = httpBed.expectOne(() => true) as TestRequest;
@@ -120,7 +118,7 @@ describe('auth: simple.interceptor', () => {
         },
         genModel('123'),
       );
-      http.get('https://ng-alain.com/test', { responseType: 'text' }).subscribe(value => {
+      http.get('https://ng-alain.com/test', { responseType: 'text' }).subscribe(() => {
         done();
       });
       const req = httpBed.expectOne(() => true) as TestRequest;
@@ -145,12 +143,10 @@ describe('auth: simple.interceptor', () => {
         basicModel,
       );
 
-      http.get('/test', { responseType: 'text' }).subscribe(value => {
+      http.get('/test', { responseType: 'text' }).subscribe(() => {
         done();
       });
-      const ret = httpBed.expectOne(
-        r => r.method === 'GET' && (r.url as string).startsWith('/test'),
-      ) as TestRequest;
+      const ret = httpBed.expectOne(r => r.method === 'GET' && (r.url as string).startsWith('/test')) as TestRequest;
       expect(ret.request.headers.get('Authorization')).toBe(`Bearer ${basicModel.token}`);
       ret.flush('ok!');
     });
@@ -167,15 +163,11 @@ describe('auth: simple.interceptor', () => {
         basicModel,
       );
 
-      http.get('/test', { responseType: 'text' }).subscribe(value => {
+      http.get('/test', { responseType: 'text' }).subscribe(() => {
         done();
       });
-      const ret = httpBed.expectOne(
-        r => r.method === 'GET' && (r.url as string).startsWith('/test'),
-      ) as TestRequest;
-      expect(ret.request.headers.get('Authorization')).toBe(
-        `Bearer ${basicModel.uid}-${basicModel.token}`,
-      );
+      const ret = httpBed.expectOne(r => r.method === 'GET' && (r.url as string).startsWith('/test')) as TestRequest;
+      expect(ret.request.headers.get('Authorization')).toBe(`Bearer ${basicModel.uid}-${basicModel.token}`);
       ret.flush('ok!');
     });
   });

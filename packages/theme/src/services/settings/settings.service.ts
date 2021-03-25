@@ -1,90 +1,99 @@
-import { Injectable } from '@angular/core';
+import { Platform } from '@angular/cdk/platform';
+import { Inject, Injectable, InjectionToken } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { App, Layout, SettingsNotify, User } from './interface';
+import { App, Layout, SettingsNotify, User } from './types';
 
-export const LAYOUT = 'layout';
+export interface SettingsKeys {
+  /** Layout data specifies the stored key,  default: `layout` */
+  layout: string;
+  /** User data specifies the stored key,  default: `user` */
+  user: string;
+  /** App data specifies the stored key,  default: `app` */
+  app: string;
+}
 
-export const USER = 'user';
-
-export const APP = 'app';
+export const ALAIN_SETTING_KEYS = new InjectionToken<SettingsKeys>('ALAIN_SETTING_KEYS');
 
 @Injectable({ providedIn: 'root' })
-export class SettingsService {
+export class SettingsService<L extends Layout = Layout, U extends User = User, A extends App = App> {
   private notify$ = new Subject<SettingsNotify>();
-  private _app: App = null;
-  private _user: User = null;
-  private _layout: Layout = null;
+  private _app: A | null = null;
+  private _user: U | null = null;
+  private _layout: L | null = null;
 
-  private get(key: string) {
+  constructor(private platform: Platform, @Inject(ALAIN_SETTING_KEYS) private KEYS: SettingsKeys) {}
+
+  getData(key: string): any {
+    if (!this.platform.isBrowser) {
+      return null;
+    }
     return JSON.parse(localStorage.getItem(key) || 'null') || null;
   }
 
-  // tslint:disable-next-line:no-any
-  private set(key: string, value: any) {
+  setData(key: string, value: any): void {
+    if (!this.platform.isBrowser) {
+      return;
+    }
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  get layout(): Layout {
+  get layout(): L {
     if (!this._layout) {
       this._layout = {
         fixed: true,
         collapsed: false,
         boxed: false,
         lang: null,
-        ...this.get(LAYOUT),
+        ...this.getData(this.KEYS.layout),
       };
-      this.set(LAYOUT, this._layout);
+      this.setData(this.KEYS.layout, this._layout);
     }
-    return this._layout;
+    return this._layout as L;
   }
 
-  get app(): App {
+  get app(): A {
     if (!this._app) {
       this._app = {
         year: new Date().getFullYear(),
-        ...this.get(APP),
+        ...this.getData(this.KEYS.app),
       };
-      this.set(APP, this._app);
+      this.setData(this.KEYS.app, this._app);
     }
-    return this._app;
+    return this._app as A;
   }
 
-  get user(): User {
+  get user(): U {
     if (!this._user) {
-      this._user = { ...this.get(USER) };
-      this.set(USER, this._user);
+      this._user = { ...this.getData(this.KEYS.user) };
+      this.setData(this.KEYS.user, this._user);
     }
-    return this._user;
+    return this._user as U;
   }
 
   get notify(): Observable<SettingsNotify> {
     return this.notify$.asObservable();
   }
 
-  // tslint:disable-next-line:no-any
-  setLayout(name: string | Layout, value?: any): boolean {
+  setLayout(name: string | L, value?: any): boolean {
     if (typeof name === 'string') {
-      this.layout[name] = value;
+      (this.layout as Layout)[name] = value;
     } else {
       this._layout = name;
     }
-    this.set(LAYOUT, this._layout);
-    // tslint:disable-next-line:no-any
+    this.setData(this.KEYS.layout, this._layout);
     this.notify$.next({ type: 'layout', name, value } as any);
     return true;
   }
 
-  setApp(value: App) {
+  setApp(value: A): void {
     this._app = value;
-    this.set(APP, value);
+    this.setData(this.KEYS.app, value);
     this.notify$.next({ type: 'app', value });
-    return true;
   }
 
-  setUser(value: User) {
+  setUser(value: U): void {
     this._user = value;
-    this.set(USER, value);
+    this.setData(this.KEYS.user, value);
     this.notify$.next({ type: 'user', value });
-    return true;
   }
 }

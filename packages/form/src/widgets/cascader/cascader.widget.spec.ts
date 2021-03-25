@@ -1,5 +1,5 @@
 import { DebugElement } from '@angular/core';
-import { fakeAsync, ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
 import { configureSFTestSuite, SFPage, TestFormComponent } from '../../../spec/base.spec';
 import { CascaderWidget } from './cascader.widget';
@@ -18,6 +18,36 @@ describe('form: widget: cascader', () => {
     page = new SFPage(context.comp);
     page.prop(dl, context, fixture);
   });
+
+  it('#setValue', fakeAsync(() => {
+    const data = [
+      {
+        value: 110000,
+        label: '北京',
+        parent: 0,
+      },
+      {
+        value: 120000,
+        label: '上海',
+        parent: 0,
+      },
+    ];
+    page
+      .newSchema({
+        properties: {
+          a: {
+            type: 'number',
+            ui: { widget, triggerAction: ['hover'] },
+            enum: data,
+            default: [120000],
+          },
+        },
+      })
+      .dc(1);
+    expect(page.getEl('.ant-cascader-picker-label').textContent!.trim()).toBe('上海');
+    page.setValue('/a', 110000).dc(1);
+    expect(page.getEl('.ant-cascader-picker-label').textContent!.trim()).toBe('北京');
+  }));
 
   describe('[data source]', () => {
     it('with enum', fakeAsync(() => {
@@ -85,15 +115,13 @@ describe('form: widget: cascader', () => {
       });
       const comp = page.getWidget<CascaderWidget>('sf-cascader');
       const ui = page.getProperty('a').ui;
-      comp._visibleChange(null);
+      comp._visibleChange(null!);
       expect(ui.visibleChange).toHaveBeenCalled();
-      comp._change(null);
+      comp._change(null!);
       expect(ui.change).toHaveBeenCalled();
-      comp._selectionChange(null);
+      comp._selectionChange(null!);
       expect(ui.selectionChange).toHaveBeenCalled();
-      comp._select(null);
-      expect(ui.select).toHaveBeenCalled();
-      comp._clear(null);
+      comp._clear();
       expect(ui.clear).toHaveBeenCalled();
       page.asyncEnd();
     }));

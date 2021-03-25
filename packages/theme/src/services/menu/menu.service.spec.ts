@@ -1,28 +1,27 @@
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { filter } from 'rxjs/operators';
-
 import { ACLService } from '@delon/acl';
-import { deepCopy } from '@delon/util';
+import { deepCopy } from '@delon/util/other';
+import { filter } from 'rxjs/operators';
 import { AlainI18NServiceFake, ALAIN_I18N_TOKEN } from '../i18n/i18n';
-
-import { Menu } from './interface';
+import { Menu, MenuInner } from './interface';
 import { MenuService } from './menu.service';
 
 class MockACLService {
-  can(val: string) {
+  can(val: string): boolean {
     return val === 'admin';
   }
 }
 
 describe('Service: Menu', () => {
-  let injector: Injector;
   let srv: MenuService;
   const DATA = [
     {
       text: 'dashboard',
       link: '/dashboard',
-      children: [{ text: 'v1', link: '/dashboard/v1' }, { text: 'v2', link: '/dashboard/v2' }],
+      children: [
+        { text: 'v1', link: '/dashboard/v1' },
+        { text: 'v2', link: '/dashboard/v2' },
+      ],
     },
     {
       text: 'text',
@@ -45,14 +44,14 @@ describe('Service: Menu', () => {
 
   describe('[default]', () => {
     beforeEach(() => {
-      injector = TestBed.configureTestingModule({
+      TestBed.configureTestingModule({
         providers: [
           MenuService,
           { provide: ALAIN_I18N_TOKEN, useClass: AlainI18NServiceFake },
           { provide: ACLService, useClass: MockACLService },
         ],
       });
-      srv = injector.get(MenuService);
+      srv = TestBed.inject<MenuService>(MenuService);
     });
 
     it('should create an instance', () => {
@@ -67,7 +66,7 @@ describe('Service: Menu', () => {
     it('#resume', () => {
       srv.add(deepCopy(DATA));
       let tick = 0;
-      srv.resume(item => ++tick);
+      srv.resume(() => ++tick);
       expect(tick).toBeGreaterThan(0);
     });
 
@@ -81,8 +80,8 @@ describe('Service: Menu', () => {
     it('should be hidden item when setting [hide] property', () => {
       const newMenus = [{ text: 'new menu' }, { text: 'new menu', hide: true }];
       srv.add(newMenus);
-      expect(srv.menus[0]._hidden).toBe(false);
-      expect(srv.menus[1]._hidden).toBe(true);
+      expect((srv.menus[0] as MenuInner)._hidden).toBe(false);
+      expect((srv.menus[1] as MenuInner)._hidden).toBe(true);
     });
 
     it('should be hidden group name when setting [group] property', () => {
@@ -103,22 +102,22 @@ describe('Service: Menu', () => {
       it('with url', () => {
         srv.add(deepCopy(DATA));
         srv.openedByUrl(`/dashboard/v1`);
-        expect(srv.menus[0]._open).toBe(true);
+        expect((srv.menus[0] as MenuInner)._open).toBe(true);
       });
       it('not found', () => {
         srv.add(deepCopy(DATA));
         srv.openedByUrl(`/notfound`);
-        expect(srv.menus.filter(w => w._open === false).length).toBe(srv.menus.length);
+        expect(srv.menus.filter((w: MenuInner) => w._open === false).length).toBe(srv.menus.length);
       });
       it('invalid url', () => {
         srv.add(deepCopy(DATA));
         srv.openedByUrl(null);
-        expect(srv.menus.filter(w => w._open === false).length).toBe(0);
+        expect(srv.menus.filter((w: MenuInner) => w._open === false).length).toBe(0);
       });
       it('recursive up find', () => {
         srv.add(deepCopy(DATA));
         srv.openedByUrl(`/dashboard/v1/1`, true);
-        expect(srv.menus[0]._open).toBe(true);
+        expect((srv.menus[0] as MenuInner)._open).toBe(true);
       });
     });
 
@@ -130,6 +129,12 @@ describe('Service: Menu', () => {
       it('when recursive is true', () => {
         const item = srv.getHit(DATA, '/dashboard/invalid', true);
         expect(item == null).toBe(false);
+      });
+      it('when include queryString', () => {
+        expect(srv.getHit(DATA, '/test?a=1', true) != null).toBe(true);
+      });
+      it('when include queryString when is hash location strategy', () => {
+        expect(srv.getHit(DATA, '/test;reload=1', true) != null).toBe(true);
       });
     });
 
@@ -155,7 +160,7 @@ describe('Service: Menu', () => {
     describe('#shortcuts', () => {
       it('should be under the dashboard', () => {
         srv.add(deepCopy(DATA));
-        expect(srv.menus[0].children[1].children.length).toBe(1);
+        expect(srv.menus[0].children![1].children!.length).toBe(1);
       });
       it('should be use [shortcutRoot: true]', () => {
         const newMenus = [
@@ -173,7 +178,7 @@ describe('Service: Menu', () => {
           },
         ] as Menu[];
         srv.add(newMenus);
-        expect(srv.menus[0].children[2].children.length).toBe(1);
+        expect(srv.menus[0].children![2].children!.length).toBe(1);
       });
       it('should be under zero node', () => {
         const newMenus = [
@@ -187,7 +192,7 @@ describe('Service: Menu', () => {
           },
         ] as Menu[];
         srv.add(newMenus);
-        expect(srv.menus[0].children[0].children.length).toBe(1);
+        expect(srv.menus[0].children![0].children!.length).toBe(1);
       });
       it('should be clean children', () => {
         const newMenus = [
@@ -205,17 +210,20 @@ describe('Service: Menu', () => {
           },
         ] as Menu[];
         srv.add(newMenus);
-        const shortcutList = srv.menus[0].children[2].children;
-        expect(shortcutList.length).toBe(1);
-        expect(shortcutList[0].__parent).toBe(srv.menus[0].children[2]);
+        const shortcutList = srv.menus[0].children![2].children;
+        expect(shortcutList!.length).toBe(1);
+        expect((shortcutList![0] as MenuInner)._parent).toBe(srv.menus[0].children![2]);
       });
     });
 
     it('ACL', () => {
-      const newMenus = [{ text: 'new menu', acl: 'admin' }, { text: 'new menu', acl: 'user' }];
+      const newMenus = [
+        { text: 'new menu', acl: 'admin' },
+        { text: 'new menu', acl: 'user' },
+      ];
       srv.add(newMenus);
-      expect(srv.menus[0]._aclResult).toBe(true);
-      expect(srv.menus[1]._aclResult).toBe(false);
+      expect((srv.menus[0] as MenuInner)._aclResult).toBe(true);
+      expect((srv.menus[1] as MenuInner)._aclResult).toBe(false);
     });
 
     it('#change', (done: () => void) => {
@@ -228,14 +236,38 @@ describe('Service: Menu', () => {
       srv.add(newMenus);
     });
 
+    it('#getItem', () => {
+      const newMenus = [{ text: 'new menu', key: 'a' }, { text: 'new menu' }];
+      srv.add(newMenus);
+      expect(srv.getItem('a') == null).toBe(false);
+      expect(srv.getItem('invalid-key') == null).toBe(true);
+    });
+
+    describe('#setItem', () => {
+      it('should be working', () => {
+        const newMenus = [{ text: 'a', key: 'a' }];
+        srv.add(newMenus);
+        expect(srv.getItem('a')!.text).toBe('a');
+        srv.setItem('a', { text: 'b', badge: 10 });
+        expect(srv.getItem('a')!.text).toBe('b');
+        expect(srv.getItem('a')!.badge).toBe(10);
+      });
+      it('should be ingore update when not found key', () => {
+        const newMenus = [{ text: 'a', key: 'a' }];
+        srv.add(newMenus);
+        srv.setItem('invalid-key', { text: 'b' });
+        expect(srv.getItem('a')!.text).toBe('a');
+      });
+    });
+
     describe('ISSUES', () => {
       it('ng-alain #107', () => {
         srv.add(deepCopy(DATA));
-        expect(srv.menus[0].children.filter(w => w.shortcutRoot === true).length).toBe(1);
-        expect(srv.menus[0].children[1].children.length).toBe(1);
+        expect(srv.menus[0].children!.filter(w => w.shortcutRoot === true).length).toBe(1);
+        expect(srv.menus[0].children![1].children!.length).toBe(1);
         srv.resume();
-        expect(srv.menus[0].children.filter(w => w.shortcutRoot === true).length).toBe(1);
-        expect(srv.menus[0].children[1].children.length).toBe(1);
+        expect(srv.menus[0].children!.filter(w => w.shortcutRoot === true).length).toBe(1);
+        expect(srv.menus[0].children![1].children!.length).toBe(1);
       });
     });
 
@@ -316,25 +348,25 @@ describe('Service: Menu', () => {
 
   describe('[i18n changed]', () => {
     it('with ALAIN_I18N_TOKEN', () => {
-      injector = TestBed.configureTestingModule({
+      TestBed.configureTestingModule({
         providers: [
           MenuService,
           { provide: ALAIN_I18N_TOKEN, useClass: AlainI18NServiceFake },
           { provide: ACLService, useClass: MockACLService },
         ],
       });
-      srv = injector.get(MenuService);
+      srv = TestBed.inject<MenuService>(MenuService);
       spyOn(srv, 'resume');
       expect(srv.resume).not.toHaveBeenCalled();
-      injector.get(ALAIN_I18N_TOKEN).use('en');
+      TestBed.inject(ALAIN_I18N_TOKEN).use('en');
       expect(srv.resume).toHaveBeenCalled();
     });
 
     it('without ALAIN_I18N_TOKEN', () => {
-      injector = TestBed.configureTestingModule({
+      TestBed.configureTestingModule({
         providers: [MenuService, { provide: ACLService, useClass: MockACLService }],
       });
-      srv = injector.get(MenuService);
+      srv = TestBed.inject<MenuService>(MenuService);
       expect(true).toBe(true);
     });
   });

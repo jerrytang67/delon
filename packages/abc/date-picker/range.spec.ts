@@ -1,34 +1,33 @@
+import { registerLocaleData } from '@angular/common';
+import zh from '@angular/common/locales/zh';
 import { Component, DebugElement, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { configureTestSuite, createTestContext } from '@delon/testing';
-
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { createTestContext, dispatchMouseEvent } from '@delon/testing';
+import { AlainDateRangePickerShortcut } from '@delon/util/config';
+import { differenceInDays } from 'date-fns';
 import { DatePickerModule } from './date-picker.module';
 import { RangePickerComponent } from './range.component';
+
+registerLocaleData(zh);
 
 describe('abc: date-picker: range', () => {
   let fixture: ComponentFixture<TestComponent>;
   let dl: DebugElement;
   let context: TestComponent;
 
-  configureTestSuite(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [DatePickerModule, FormsModule],
+      imports: [DatePickerModule, FormsModule, NoopAnimationsModule],
       declarations: [TestComponent],
     });
-  });
-
-  beforeEach(() => {
     ({ fixture, dl, context } = createTestContext(TestComponent));
     fixture.detectChanges();
     spyOn(context, '_nzOnOpenChange');
     spyOn(context, '_nzOnPanelChange');
     spyOn(context, '_nzOnOk');
-  });
-
-  it('should working', () => {
-    expect(context).not.toBeNull();
   });
 
   describe('#ngModel', () => {
@@ -66,7 +65,7 @@ describe('abc: date-picker: range', () => {
     it('should be disabled', () => {
       context.comp.setDisabledState(true);
       fixture.detectChanges();
-      expect(dl.queryAll(By.css('.ant-input-disabled')).length).toBe(1);
+      expect(dl.queryAll(By.css('.ant-picker-disabled')).length).toBe(1);
     });
   });
 
@@ -87,6 +86,62 @@ describe('abc: date-picker: range', () => {
       expect(context._nzOnOk).toHaveBeenCalled();
     });
   });
+
+  describe('#shortcat', () => {
+    it('with true', fakeAsync(() => {
+      context.shortcut = true;
+      fixture.detectChanges();
+      openPicker();
+      getPickerFooterExtra().querySelectorAll('a')[0].click();
+      timeEnd();
+      expect(differenceInDays(context.i.end, context.i.start)).toBe(0);
+    }));
+    it('with false', fakeAsync(() => {
+      context.shortcut = false;
+      fixture.detectChanges();
+      openPicker();
+      expect(dl.query(By.css('.ant-picker-footer-extra')) == null).toBe(true);
+    }));
+    it('with null', fakeAsync(() => {
+      context.shortcut = null;
+      fixture.detectChanges();
+      openPicker();
+      expect(dl.query(By.css('.ant-picker-footer-extra')) == null).toBe(true);
+    }));
+    it('should be keeping open panel when closed is false', fakeAsync(() => {
+      context.shortcut = { closed: false, enabled: true };
+      fixture.detectChanges();
+      openPicker();
+      expect(dl.query(By.css('.ant-picker-footer-extra')) == null).toBe(false);
+      getPickerFooterExtra().querySelectorAll('a')[0].click();
+      const list = getPickerFooterExtra().querySelectorAll('a');
+      const shortcut = context.comp.shortcut as AlainDateRangePickerShortcut;
+      expect(list.length).toBe(shortcut.list!.length);
+      list.forEach(el => {
+        el.click();
+        timeEnd();
+      });
+      timeEnd();
+      expect(dl.query(By.css('.ant-picker-footer-extra')) == null).toBe(false);
+    }));
+  });
+
+  function openPicker(): HTMLInputElement {
+    const el = dl.query(By.css('.ant-picker-input input')).nativeElement as HTMLInputElement;
+    dispatchMouseEvent(el, 'click');
+    timeEnd();
+    return el;
+  }
+
+  function timeEnd(): void {
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+  }
+
+  function getPickerFooterExtra(): HTMLElement {
+    return dl.query(By.css('.ant-picker-footer-extra')).nativeElement as HTMLElement;
+  }
 });
 
 @Component({
@@ -98,14 +153,15 @@ describe('abc: date-picker: range', () => {
       (nzOnOpenChange)="_nzOnOpenChange()"
       (nzOnPanelChange)="_nzOnPanelChange()"
       (nzOnOk)="_nzOnOk()"
+      [shortcut]="shortcut"
     ></range-picker>
   `,
 })
 class TestComponent {
-  @ViewChild('comp')
-  comp: RangePickerComponent;
+  @ViewChild('comp', { static: true }) comp: RangePickerComponent;
   i: any = {};
-  _nzOnOpenChange() {}
-  _nzOnPanelChange() {}
-  _nzOnOk() {}
+  shortcut: boolean | AlainDateRangePickerShortcut | null = false;
+  _nzOnOpenChange(): void {}
+  _nzOnPanelChange(): void {}
+  _nzOnOk(): void {}
 }

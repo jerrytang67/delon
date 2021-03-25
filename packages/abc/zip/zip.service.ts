@@ -1,35 +1,46 @@
-// tslint:disable:no-any
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { LazyResult, LazyService } from '@delon/util';
+import { Injectable, NgZone } from '@angular/core';
+import { AlainConfigService, AlainZipConfig } from '@delon/util/config';
+import { ZoneOutside } from '@delon/util/decorator';
+import { LazyResult, LazyService } from '@delon/util/other';
 import { saveAs } from 'file-saver';
-
-import { ZipConfig } from './zip.config';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 import { ZipSaveOptions } from './zip.types';
 
 declare var JSZip: any;
 
 @Injectable({ providedIn: 'root' })
 export class ZipService {
-  constructor(private cog: ZipConfig, private http: HttpClient, private lazy: LazyService) {}
+  private cog: AlainZipConfig;
 
-  private init(): Promise<LazyResult[]> {
-    return this.lazy.load([this.cog.url].concat(this.cog.utils));
+  constructor(private http: HttpClient, private lazy: LazyService, configSrv: AlainConfigService, private ngZone: NgZone) {
+    this.cog = configSrv.merge('zip', {
+      url: '//cdn.bootcss.com/jszip/3.3.0/jszip.min.js',
+      utils: [],
+    })!;
   }
 
-  private check(zip: any) {
+  private init(): Promise<LazyResult[]> {
+    return this.lazy.load([this.cog.url!].concat(this.cog.utils!));
+  }
+
+  private check(zip: any): void {
     if (!zip) throw new Error('get instance via `ZipService.create()`');
   }
 
   /** 解压 */
+  @ZoneOutside()
   read(fileOrUrl: File | string, options?: any): Promise<any> {
     return new Promise<any>((resolve, reject) => {
+      const resolveCallback = (data: NzSafeAny) => {
+        this.ngZone.run(() => resolve(data));
+      };
       this.init().then(() => {
         // from url
         if (typeof fileOrUrl === 'string') {
           this.http.request('GET', fileOrUrl, { responseType: 'arraybuffer' }).subscribe(
             (res: ArrayBuffer) => {
-              JSZip.loadAsync(res, options).then(ret => resolve(ret));
+              JSZip.loadAsync(res, options).then((ret: NzSafeAny) => resolveCallback(ret));
             },
             (err: any) => {
               reject(err);
@@ -40,7 +51,7 @@ export class ZipService {
         // from file
         const reader: FileReader = new FileReader();
         reader.onload = (e: any) => {
-          JSZip.loadAsync(e.target.result, options).then(ret => resolve(ret));
+          JSZip.loadAsync(e.target.result, options).then((ret: NzSafeAny) => resolveCallback(ret));
         };
         reader.readAsBinaryString(fileOrUrl as File);
       });
@@ -86,7 +97,7 @@ export class ZipService {
    */
   save(zip: any, options?: ZipSaveOptions): Promise<void> {
     this.check(zip);
-    const opt = { ...options };
+    const opt = { ...options } as ZipSaveOptions;
     return new Promise<void>((resolve, reject) => {
       zip.generateAsync({ type: 'blob', ...opt.options }, opt.update).then(
         (data: Blob) => {
@@ -94,7 +105,7 @@ export class ZipService {
           saveAs(data, opt.filename || 'download.zip');
           resolve();
         },
-        err => {
+        (err: NzSafeAny) => {
           reject(err);
         },
       );

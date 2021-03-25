@@ -1,38 +1,37 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import { SimpleGuard } from '@delon/auth';
 import { environment } from '@env/environment';
 // layout
-import { LayoutDefaultComponent } from '../layout/default/default.component';
-import { LayoutFullScreenComponent } from '../layout/fullscreen/fullscreen.component';
+import { LayoutBasicComponent } from '../layout/basic/basic.component';
 import { LayoutPassportComponent } from '../layout/passport/passport.component';
 // dashboard pages
 import { DashboardComponent } from './dashboard/dashboard.component';
+// single pages
+import { CallbackComponent } from './passport/callback.component';
+import { UserLockComponent } from './passport/lock/lock.component';
 // passport pages
 import { UserLoginComponent } from './passport/login/login.component';
-import { UserRegisterComponent } from './passport/register/register.component';
 import { UserRegisterResultComponent } from './passport/register-result/register-result.component';
-// single pages
-import { CallbackComponent } from './callback/callback.component';
-import { UserLockComponent } from './passport/lock/lock.component';
+import { UserRegisterComponent } from './passport/register/register.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: LayoutDefaultComponent,
+    component: LayoutBasicComponent,
     canActivate: [SimpleGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent, data: { title: '仪表盘'<% if (!i18n) { %>, titleI18n: 'dashboard'<% } %> } },
-      { path: 'exception', loadChildren: './exception/exception.module#ExceptionModule' },
+      { path: 'exception', loadChildren: () => import('./exception/exception.module').then(m => m.ExceptionModule) },
       // 业务子模块
-      // { path: 'widgets', loadChildren: './widgets/widgets.module#WidgetsModule' }
+      // { path: 'widgets', loadChildren: () => import('./widgets/widgets.module').then(m => m.WidgetsModule) },
     ]
   },
-  // 全屏布局
+  // 空白布局
   // {
-  //     path: 'fullscreen',
-  //     component: LayoutFullScreenComponent,
+  //     path: 'blank',
+  //     component: LayoutBlankComponent,
   //     children: [
   //     ]
   // },
@@ -48,7 +47,7 @@ const routes: Routes = [
     ]
   },
   // 单页不包裹Layout
-  { path: 'callback/:type', component: CallbackComponent },
+  { path: 'passport/callback/:type', component: CallbackComponent },
   { path: '**', redirectTo: 'exception/404' },
 ];
 

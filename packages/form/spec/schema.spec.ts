@@ -1,7 +1,7 @@
 import { DebugElement } from '@angular/core';
-import { ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, discardPeriodicTasks, fakeAsync } from '@angular/core/testing';
 import { createTestContext } from '@delon/testing';
-import { deepCopy } from '@delon/util';
+import { deepCopy } from '@delon/util/other';
 import { ObjectProperty } from '../src/model/object.property';
 import { SFSchema } from '../src/schema/index';
 import { SFUISchema, SFUISchemaItem } from '../src/schema/ui';
@@ -60,9 +60,15 @@ describe('form: schema', () => {
             items: {
               type: 'object',
               properties: {
-                a: { type: 'string' },
+                a: {
+                  type: 'string',
+                  ui: {
+                    grid: { span: 12 },
+                  },
+                },
                 b: { type: 'string' },
               },
+              ui: { spanLabelFixed: 10 },
             },
           },
         },
@@ -80,7 +86,8 @@ describe('form: schema', () => {
         .newSchema(schema, ui)
         .checkUI('/name1', 'spanLabel', label)
         .add()
-        .checkUI('/name2/0/a', 'spanLabel', 9);
+        .checkUI('/name2/0/a', 'spanLabel', null) // 当指定标签为固定宽度时无须指定 `spanLabel`，`spanControl` 会强制清理
+        .checkUI('/name2/0/b', 'spanLabelFixed', 10);
     });
     it('should be fixed label width', () => {
       const schema: SFSchema = {
@@ -98,10 +105,7 @@ describe('form: schema', () => {
         },
         ui: { spanLabelFixed: 10, debug: true },
       };
-      page
-        .newSchema(schema)
-        .checkUI('/name', 'spanLabelFixed', 10)
-        .checkUI('/protocol', 'spanLabelFixed', 10);
+      page.newSchema(schema).checkUI('/name', 'spanLabelFixed', 10).checkUI('/protocol', 'spanLabelFixed', 10);
     });
     it('support invalid format value', () => {
       page
@@ -117,7 +121,7 @@ describe('form: schema', () => {
       fixture.detectChanges();
       page.checkUI('/name', 'spanLabel', null);
     });
-    it('should call refreshSchema changed schema', () => {
+    it('should call refreshSchema changed schema', fakeAsync(() => {
       context.comp.refreshSchema(
         {
           properties: {
@@ -133,9 +137,10 @@ describe('form: schema', () => {
         { '*': { spanLabelFixed: 100, spanControl: 10, offsetControl: 11 } },
       );
       page.checkUI('/user/name', 'spanLabelFixed', 100);
-      page.checkUI('/user/name', 'spanControl', 10);
+      page.checkUI('/user/name', 'spanControl', null); // 当指定标签为固定宽度时无须指定 `spanLabel`，`spanControl` 会强制清理
       page.checkUI('/user/name', 'offsetControl', 11);
-    });
+      discardPeriodicTasks();
+    }));
     it('support ui is null', () => {
       expect(() => {
         context.ui = null;
@@ -160,8 +165,8 @@ describe('form: schema', () => {
       describe('[#via in json schema]', () => {
         it('should be has $items when is array', () => {
           const schema = deepCopy(arrSchema) as SFSchema;
-          schema.properties.name.ui = deepCopy(arrUI);
-          page.newSchema(schema).checkUI('/name', 'grid.arraySpan', arrUI.grid.arraySpan);
+          schema.properties!.name.ui = deepCopy(arrUI);
+          page.newSchema(schema).checkUI('/name', 'grid.arraySpan', arrUI.grid!.arraySpan);
         });
       });
       describe('[#via ui property]', () => {
@@ -173,9 +178,51 @@ describe('form: schema', () => {
               ...deepCopy(arrUI),
             },
           };
-          page.newSchema(schema, uiSchema).checkUI('/name', 'grid.arraySpan', arrUI.grid.arraySpan);
+          page.newSchema(schema, uiSchema).checkUI('/name', 'grid.arraySpan', arrUI.grid!.arraySpan);
         });
       });
+    });
+    describe('#optionalHelp', () => {
+      it('should working when value is string', fakeAsync(() => {
+        context.comp.refreshSchema({
+          properties: {
+            name: { type: 'string', ui: { optionalHelp: 'a' } },
+          },
+        });
+        page.checkCount('.sf__optional [nz-tooltip]', 1);
+        discardPeriodicTasks();
+      }));
+      it('should working when value is object', fakeAsync(() => {
+        context.comp.refreshSchema({
+          properties: {
+            name: { type: 'string', ui: { optionalHelp: { text: 'b', placement: 'bottomRight' } } },
+          },
+        });
+        page.checkCount('.sf__optional [nz-tooltip]', 1);
+        discardPeriodicTasks();
+      }));
+      it('should be hide when not text value in object', fakeAsync(() => {
+        context.comp.refreshSchema({
+          properties: {
+            name: { type: 'string', ui: { optionalHelp: { text: '', placement: 'bottomRight' } } },
+          },
+        });
+        page.checkCount('.sf__optional [nz-tooltip]', 0);
+        discardPeriodicTasks();
+      }));
+      it('should be inherit the root config', fakeAsync(() => {
+        context.comp.refreshSchema(
+          {
+            properties: {
+              name: { type: 'string', ui: { optionalHelp: { text: 'a' } } },
+            },
+          },
+          { '*': { optionalHelp: { text: '', placement: 'bottomRight' } } },
+        );
+        const prop = page.getProperty('/name');
+        expect((prop!.ui!.optionalHelp as any).placement!).toBe(`bottomRight`);
+        discardPeriodicTasks();
+      }));
     });
   });
 
@@ -225,7 +272,10 @@ describe('form: schema', () => {
             login_type: {
               type: 'string',
               title: '登录方式',
-              enum: [{ label: '手机', value: 'mobile' }, { label: '账密', value: 'account' }],
+              enum: [
+                { label: '手机', value: 'mobile' },
+                { label: '账密', value: 'account' },
+              ],
               default: 'mobile',
               ui: {
                 widget: 'radio',
@@ -268,7 +318,10 @@ describe('form: schema', () => {
             login_type: {
               type: 'string',
               title: '登录方式',
-              enum: [{ label: '手机', value: 'mobile' }, { label: '账密', value: 'account' }],
+              enum: [
+                { label: '手机', value: 'mobile' },
+                { label: '账密', value: 'account' },
+              ],
               default: 'mobile',
               ui: {
                 widget: 'radio',
@@ -317,7 +370,10 @@ describe('form: schema', () => {
             login_type: {
               type: 'string',
               title: '登录方式',
-              enum: [{ label: '手机', value: 'mobile' }, { label: '账密', value: 'account' }],
+              enum: [
+                { label: '手机', value: 'mobile' },
+                { label: '账密', value: 'account' },
+              ],
               default: 'mobile',
               ui: {
                 widget: 'radio',
@@ -348,11 +404,11 @@ describe('form: schema', () => {
   });
 
   describe('[order]', () => {
-    function genKeys() {
-      return JSON.stringify(Object.keys((context.comp.rootProperty as ObjectProperty).properties));
+    function genKeys(): string {
+      return JSON.stringify(Object.keys((context.comp.rootProperty as ObjectProperty).properties!));
     }
 
-    function checkOrderKeys(arr: string[]) {
+    function checkOrderKeys(arr: string[]): void {
       expect(genKeys()).toBe(JSON.stringify(arr));
     }
 
@@ -425,6 +481,31 @@ describe('form: schema', () => {
           });
         }).toThrow();
       });
+    });
+  });
+
+  describe('[$ref]', () => {
+    it('should be required valid', () => {
+      page
+        .newSchema({
+          definitions: {
+            nameRef: {
+              type: 'string',
+              title: 'nameRef',
+            },
+          },
+          properties: {
+            name: {
+              type: 'string',
+              title: 'Name',
+            },
+            nameTwo: {
+              $ref: '#/definitions/nameRef',
+            },
+          },
+          required: ['name', 'nameTwo'],
+        })
+        .checkUI('/nameTwo', '_required', true);
     });
   });
 });

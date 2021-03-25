@@ -29,7 +29,7 @@ ng g ng-alain:module trade
 
 会在 `routes/trade` 生成两个文件 `trade.module.ts`、`trade-routing.module.ts`，你无法指定不生成 `*-routing.module.ts` 因为这是 ng-alain 的任性。
 
-模块内容包括了导入 `SharedModule` 以及一些统一性导入与导出的方式，并且你不可能破坏这些变量名（例如：`COMPONENTS`、`COMPONENTS_NOROUNT`、`routes`）。
+模块内容包括了导入 `SharedModule` 以及一些统一性导入与导出的方式，并且你不可能破坏这些变量名（例如：`COMPONENTS`、`routes`）。
 
 ## 业务页
 
@@ -68,6 +68,12 @@ sys
 ng g ng-alain:view view -m=sys -t=log
 ```
 
+**覆盖默认模板页**
+
+若 `list`、`edit`、`view`、`empty` 四个指令所产生默认页并非所在业务期望，可以覆盖它们。
+
+例如覆盖 `list` 命令默认模板，在根目录 `_cli-tpl` 下创建目录名 `_list`，目录结构务必等同 [原始list目录](https://github.com/ng-alain/delon/tree/master/packages/schematics/list/files) 的结构。
+
 ### edit & view 页
 
 对于 `edit`、`view` 默认是以模态框展示来生成，你可以改用页面展示则：
@@ -76,20 +82,20 @@ ng g ng-alain:view view -m=sys -t=log
 ng g ng-alain:edit [page name] --modal=false
 ```
 
-> 如果你不小心将收到【No provider for NzModalRef! 】表明你把一个需要使用 `nzModalService` 打开的模态框组件，用了路由注册的方式。打开模态框组件无须注册路由，但需要注册至 `entryComponents`。
+> 如果你不小心将收到【No provider for NzModalRef! 】表明你把一个需要使用 `nzModalService` 打开的模态框组件，用了路由注册的方式。打开模态框组件无须注册路由。
 
 ## 自定义页
 
-除上述默认业务页以外，也可以自定义属于项目级别业务页，例如我们创建一个自己的编辑页模板，则只需要在项目的根目录创建以下目录结构：
+除上述默认业务页以外，也可以自定义属于项目级别业务页，例如我们创建一个自己的编辑页模板，则只需要在项目的根目录创建以下目录结构（你可以通过 [Github](https://github.com/ng-alain/ng-alain/tree/master/_cli-tpl) 上来获取）：
 
 ```
 └── _cli-tpl
-│   └── edit                                              // 模板名称
-│       └── __path__                                      // （名称固定值）
-│           └── __name@dasherize@if-flat__                // （名称固定值）
-│               ├── __name@dasherize__.component.ts       // 组件类文件（名称固定值）
-│               ├── __name@dasherize__.component.html     // 组件模板文件（名称固定值）
-│               └── __name@dasherize__.component.spec.ts  // 组件测试文件（名称固定值）
+│   └── edit                                                       // 模板名称
+│       └── __path__                                               // （名称固定值）
+│           └── __name@dasherize@if-flat__                         // （名称固定值）
+│               ├── __name@dasherize__.component.ts.template       // 组件类文件（名称固定值）
+│               ├── __name@dasherize__.component.html.template     // 组件模板文件（名称固定值）
+│               └── __name@dasherize__.component.spec.ts.template  // 组件测试文件（名称固定值）
 └── src
 ```
 

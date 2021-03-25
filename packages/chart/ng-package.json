@@ -8,7 +8,9 @@
     "umdModuleIds": {
       "ng-zorro-antd": "ng-zorro-antd",
       "@delon/theme": "delon.theme",
-      "@delon/util": "delon.util"
+      "@delon/util": "delon.util",
+      "@antv/g2": "G2"
     }
-  }
+  },
+  "allowedNonPeerDependencies": ["@delon/theme", "@delon/util", "@antv/g2", "@antv/data-set"]
 }

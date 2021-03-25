@@ -1,12 +1,4 @@
-// tslint:disable:no-any
-
 export interface CLodop {
-  /** 建立打印机名单 */
-  Create_Printer_List(el: Element): void;
-
-  /** 建立纸张类型名单 */
-  Create_PageSize_List(el: Element, iPrintIndex: number): void;
-
   /**
    * 判断是否支持https协议的属性
    *
@@ -16,11 +8,17 @@ export interface CLodop {
    */
   readonly HTTPS_STATUS: number;
 
-  /** 结果回调函数 */
-  On_Return(taskID: string, value: boolean | string): void;
-
   /** 结果回调函数保留 */
-  readonly On_Return_Remain: boolean;
+  On_Return_Remain: boolean;
+
+  /** 结果回调函数 */
+  On_Return: ((taskID: string, value: boolean | string) => void) | null;
+
+  /** 建立打印机名单 */
+  Create_Printer_List(el: Element): void;
+
+  /** 建立纸张类型名单 */
+  Create_PageSize_List(el: Element, iPrintIndex: number): void;
 }
 
 export interface Lodop extends CLodop {
@@ -41,57 +39,28 @@ export interface Lodop extends CLodop {
   PRINT_INIT(strTaskName: string): boolean;
 
   /** 设定纸张大小 */
-  SET_PRINT_PAGESIZE(
-    intOrient: number,
-    PageWidth: number | string,
-    PageHeight: number | string,
-    strPageName: string,
-  ): void;
+  SET_PRINT_PAGESIZE(intOrient: number, PageWidth: number | string, PageHeight: number | string, strPageName: string): void;
 
   /** 增加超文本打印项(普通模式) */
-  ADD_PRINT_HTM(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strHtmlContent: string,
-  ): void;
+  ADD_PRINT_HTM(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strHtmlContent: string): void;
 
-  /** 增加表格打印项（超文本模式）*/
-  ADD_PRINT_TABLE(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strHtml: string,
-  ): void;
+  /**
+   * 增加表格打印项（超文本模式）
+   */
+  ADD_PRINT_TABLE(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strHtml: string): void;
 
-  /** 增加表格打印项（超文本模式）*/
-  ADD_PRINT_TABLE(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strHtml: string,
-  ): void;
+  /**
+   * 增加表格打印项（超文本模式）
+   */
+  ADD_PRINT_TABLE(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strHtml: string): void;
 
-  /** 增加超文本打印项（URL模式）*/
-  ADD_PRINT_URL(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strURL: string,
-  ): void;
+  /**
+   * 增加超文本打印项（URL模式）
+   */
+  ADD_PRINT_URL(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strURL: string): void;
 
   /** 增加纯文本打印项 */
-  ADD_PRINT_TEXT(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strContent: string,
-  ): void;
+  ADD_PRINT_TEXT(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strContent: string): void;
 
   /** 增加图片打印项 */
   ADD_PRINT_IMAGE(
@@ -182,11 +151,7 @@ export interface Lodop extends CLodop {
   /** 指定打印设备 */
   SET_PRINTER_INDEX(oIndexOrName: number | string): boolean;
   /** 【CLodop】指定打印机 */
-  SET_PRINTER_INDEX(
-    DriverIndex: number | string,
-    PrinterIDandName: number | string,
-    SubDevIndex: number | string,
-  ): boolean;
+  SET_PRINTER_INDEX(DriverIndex: number | string, PrinterIDandName: number | string, SubDevIndex: number | string): boolean;
 
   /** 选择打印设备 */
   SELECT_PRINTER(): number;
@@ -253,13 +218,7 @@ export interface Lodop extends CLodop {
   GET_DIALOG_VALUE(oType: string, oPreValue: string): string;
 
   /** (增强型)打印初始化 */
-  PRINT_INITA(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strPrintName: string,
-  ): boolean;
+  PRINT_INITA(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strPrintName: string): boolean;
 
   /** (增强型)增加超文本打印项(图形模式) */
   ADD_PRINT_HTML(
@@ -271,29 +230,13 @@ export interface Lodop extends CLodop {
   ): void;
 
   /** (增强型)增加表格打印项（URL模式） */
-  ADD_PRINT_TBURL(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strURL: string,
-  ): void;
+  ADD_PRINT_TBURL(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strURL: string): void;
 
   /** (增强型)增加纯文本打印项 */
-  ADD_PRINT_TEXTA(
-    Top: number | string,
-    Left: number | string,
-    Width: number | string,
-    Height: number | string,
-    strContent: string,
-  ): void;
+  ADD_PRINT_TEXTA(Top: number | string, Left: number | string, Width: number | string, Height: number | string, strContent: string): void;
 
   /** (增强型)设置打印项风格A, 继承 `SET_PRINT_STYLE` 的所有属性 */
-  SET_PRINT_STYLEA(
-    varItemNameID: number | string,
-    strStyleName: string,
-    varStyleValue: number | string,
-  ): void;
+  SET_PRINT_STYLEA(varItemNameID: number | string, strStyleName: string, varStyleValue: number | string): void;
 
   /** (增强型)导出数据到文件 */
   SAVE_TO_FILE(strFileName: string): boolean;
@@ -345,13 +288,9 @@ export interface Lodop extends CLodop {
    * @param  strLicenseA 附加注册号A，用途与控件参数LicenseA一样。
    * @param  strLicenseB 附加注册号B，用途与控件参数LicenseB一样。
    */
-  SET_LICENSES(
-    strCompanyName: string,
-    strLicense: string,
-    strLicenseA?: string,
-    strLicenseB?: string,
-  ): void;
+  SET_LICENSES(strCompanyName: string, strLicense: string, strLicenseA?: string, strLicenseB?: string): void;
 
+  // tslint:disable-next-line: member-ordering
   webskt: WebSocket;
 }
 

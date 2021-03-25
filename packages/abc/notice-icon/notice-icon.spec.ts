@@ -1,104 +1,117 @@
-import { Component, DebugElement, Injector, ViewChild } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Component, DebugElement, ViewChild } from '@angular/core';
+import { ComponentFixture, discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { configureTestSuite, createTestContext } from '@delon/testing';
-import { en_US, zh_CN, DelonLocaleModule, DelonLocaleService } from '@delon/theme';
-
+import { cleanCdkOverlayHtml, createTestContext } from '@delon/testing';
+import { DelonLocaleModule, DelonLocaleService, en_US, zh_CN } from '@delon/theme';
 import { NoticeIconComponent } from './notice-icon.component';
 import { NoticeIconModule } from './notice-icon.module';
 import { NoticeItem } from './notice-icon.types';
 
+const CLICKTIME = 151;
+
 describe('abc: notice-icon', () => {
-  let injector: Injector;
   let fixture: ComponentFixture<TestComponent>;
   let dl: DebugElement;
   let context: TestComponent;
 
-  configureTestSuite(() => {
-    injector = TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, NoticeIconModule, DelonLocaleModule],
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, NoticeIconModule, HttpClientTestingModule, DelonLocaleModule],
       declarations: [TestComponent],
     });
+    ({ fixture, dl, context } = createTestContext(TestComponent));
   });
 
-  beforeEach(() => ({ fixture, dl, context } = createTestContext(TestComponent)));
-
-  afterEach(() => context.comp.ngOnDestroy());
+  afterEach(() => {
+    context.comp.ngOnDestroy();
+    cleanCdkOverlayHtml();
+  });
 
   describe('when not data', () => {
     beforeEach(() => (context.data = []));
-    it('should be count', done => {
+    it('should be count', fakeAsync(() => {
       context.count = 5;
       fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
       const cur = dl.query(By.css('.ant-scroll-number-only .current')).nativeElement as HTMLElement;
-      fixture.whenStable().then(() => {
-        expect(+cur.textContent.trim()).toBe(context.count);
-        done();
-      });
-    });
+      expect(+cur.textContent!.trim()).toBe(context.count);
+      discardPeriodicTasks();
+    }));
   });
 
   describe('when has data', () => {
     beforeEach(() => fixture.detectChanges());
 
     describe('should be show dropdown', () => {
-      it('via popoverVisible property', done => {
+      it('via popoverVisible property', () => {
         spyOn(context, 'popupVisibleChange');
         expect(context.comp.popoverVisible).toBe(false);
         context.popoverVisible = true;
         fixture.detectChanges();
-        fixture.whenStable().then(() => {
-          expect(context.comp.popoverVisible).toBe(true);
-          done();
-        });
+        expect(context.comp.popoverVisible).toBe(true);
       });
       it('via click', done => {
         expect(context.popoverVisible).toBeUndefined();
         (dl.query(By.css('.ant-badge')).nativeElement as HTMLElement).click();
         fixture.detectChanges();
-        fixture.whenStable().then(() => {
+        setTimeout(() => {
           expect(context.popoverVisible).toBe(true);
           done();
-        });
+        }, CLICKTIME);
       });
     });
-    it('should be control loading in visible popover', () => {
+    it('should be control loading in visible popover', done => {
       context.loading = true;
       context.popoverVisible = true;
       fixture.detectChanges();
-      const el = dl.query(By.css('.ant-spin-container')).nativeElement as HTMLElement;
-      expect(el.style.display).toBe('');
+      setTimeout(() => {
+        const el = document.querySelector('.ant-spin-container') as HTMLElement;
+        expect(el.style.display).toBe('');
+        done();
+      }, CLICKTIME);
     });
-    it('should be select item', () => {
+    it('should be select item', done => {
       spyOn(context, 'select');
       context.popoverVisible = true;
       fixture.detectChanges();
-      expect(context.select).not.toHaveBeenCalled();
-      (dl.query(By.css('nz-list-item')).nativeElement as HTMLElement).click();
-      fixture.detectChanges();
-      expect(context.select).toHaveBeenCalled();
+      setTimeout(() => {
+        expect(context.select).not.toHaveBeenCalled();
+        (document.querySelector('nz-list-item')! as HTMLElement).click();
+        fixture.detectChanges();
+        expect(context.select).toHaveBeenCalled();
+        done();
+      }, CLICKTIME);
     });
-    it('should be clear', () => {
+    it('should be clear', done => {
       spyOn(context, 'clear');
       context.popoverVisible = true;
       fixture.detectChanges();
-      expect(context.clear).not.toHaveBeenCalled();
-      (dl.query(By.css('.notice-icon__clear')).nativeElement as HTMLElement).click();
-      fixture.detectChanges();
-      expect(context.clear).toHaveBeenCalled();
+      setTimeout(() => {
+        expect(context.clear).not.toHaveBeenCalled();
+        (document.querySelector('.notice-icon__clear')! as HTMLElement).click();
+        fixture.detectChanges();
+        expect(context.clear).toHaveBeenCalled();
+        done();
+      }, CLICKTIME);
     });
   });
 
-  it('#i18n', () => {
+  it('#i18n', done => {
     context.popoverVisible = true;
     context.data = [{ title: 'a1', list: [] }];
     fixture.detectChanges();
-    const a = dl.query(By.css('.notice-icon__notfound')).nativeElement as HTMLElement;
-    expect(a.innerText).toBe(zh_CN.noticeIcon.emptyText);
-    injector.get(DelonLocaleService).setLocale(en_US);
-    fixture.detectChanges();
-    expect(a.innerText).toBe(en_US.noticeIcon.emptyText);
+    setTimeout(() => {
+      const a = document.querySelector('.notice-icon__notfound')! as HTMLElement;
+      expect(a.innerText).toBe(zh_CN.noticeIcon.emptyText);
+      const srv = TestBed.inject<DelonLocaleService>(DelonLocaleService) as DelonLocaleService;
+      srv.setLocale(en_US);
+      fixture.detectChanges();
+      expect(a.innerText).toBe(en_US.noticeIcon.emptyText);
+      done();
+    }, CLICKTIME);
   });
 });
 
@@ -117,7 +130,7 @@ describe('abc: notice-icon', () => {
   `,
 })
 class TestComponent {
-  @ViewChild('comp')
+  @ViewChild('comp', { static: true })
   comp: NoticeIconComponent;
   data: NoticeItem[] = [
     {
@@ -165,7 +178,7 @@ class TestComponent {
   count = 10;
   loading = false;
   popoverVisible: boolean;
-  select() {}
-  clear() {}
-  popupVisibleChange() {}
+  select(): void {}
+  clear(): void {}
+  popupVisibleChange(): void {}
 }

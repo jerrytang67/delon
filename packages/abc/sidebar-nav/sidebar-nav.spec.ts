@@ -1,15 +1,14 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DebugElement, Injector, ViewChild } from '@angular/core';
-import { fakeAsync, tick, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Component, DebugElement, ViewChild } from '@angular/core';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router, RouterModule } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-
 import { ACLService } from '@delon/acl';
-import { configureTestSuite } from '@delon/testing';
-import { AlainThemeModule, MenuIcon, MenuService, SettingsService, WINDOW } from '@delon/theme';
-import { deepCopy } from '@delon/util';
-
+import { AlainThemeModule, MenuIcon, MenuService, SettingsService } from '@delon/theme';
+import { deepCopy } from '@delon/util/other';
+import { WINDOW } from '@delon/util/token';
 import { SidebarNavComponent } from './sidebar-nav.component';
 import { SidebarNavModule } from './sidebar-nav.module';
 import { Nav } from './sidebar-nav.types';
@@ -42,15 +41,36 @@ const MOCKMENUS = [
   },
 ] as Nav[];
 
+const MOCKOPENSTRICTLY = [
+  {
+    text: '',
+    group: true,
+    children: [
+      {
+        text: '',
+        link: '/v1',
+        open: true,
+        children: [{ text: '' }],
+      },
+      {
+        text: '',
+        link: '/v1',
+        open: true,
+        children: [{ text: '' }],
+      },
+    ],
+  },
+] as Nav[];
+
 class MockACLService {
-  can(val: string) {
+  can(val: string): boolean {
     return val === 'admin';
   }
 }
 
 class MockWindow {
-  open() {}
   location = new MockLocation();
+  open(): void {}
 }
 class MockLocation {
   private url: string;
@@ -63,7 +83,6 @@ class MockLocation {
 }
 
 describe('abc: sidebar-nav', () => {
-  let injector: Injector;
   let fixture: ComponentFixture<TestComponent>;
   let dl: DebugElement;
   let context: TestComponent;
@@ -73,9 +92,9 @@ describe('abc: sidebar-nav', () => {
   let page: PageObject;
   let doc: Document;
 
-  function createModule() {
-    injector = TestBed.configureTestingModule({
-      imports: [RouterModule.forRoot([]), AlainThemeModule, SidebarNavModule],
+  function createModule(): void {
+    TestBed.configureTestingModule({
+      imports: [RouterModule.forRoot([]), AlainThemeModule, HttpClientTestingModule, SidebarNavModule],
       declarations: [TestComponent],
       providers: [
         { provide: ACLService, useClass: MockACLService },
@@ -84,15 +103,15 @@ describe('abc: sidebar-nav', () => {
     });
   }
 
-  function createComp(needMockNavigateByUrl = true, callback?: () => void) {
+  function createComp(needMockNavigateByUrl: boolean = true, callback?: () => void): void {
     fixture = TestBed.createComponent(TestComponent);
     dl = fixture.debugElement;
     context = fixture.componentInstance;
     fixture.detectChanges();
-    router = injector.get(Router);
-    setSrv = injector.get(SettingsService);
-    menuSrv = injector.get(MenuService);
-    doc = injector.get(DOCUMENT);
+    router = TestBed.inject<Router>(Router);
+    setSrv = TestBed.inject<SettingsService>(SettingsService);
+    menuSrv = TestBed.inject<MenuService>(MenuService);
+    doc = TestBed.inject(DOCUMENT);
     menuSrv.add(deepCopy(MOCKMENUS));
     page = new PageObject();
     if (needMockNavigateByUrl) spyOn(router, 'navigateByUrl');
@@ -102,7 +121,7 @@ describe('abc: sidebar-nav', () => {
   afterEach(() => context.comp.ngOnDestroy());
 
   describe('', () => {
-    configureTestSuite(createModule);
+    beforeEach(() => createModule());
 
     describe('[default]', () => {
       it('should be navigate url', () => {
@@ -113,7 +132,7 @@ describe('abc: sidebar-nav', () => {
         expect(context.select).not.toHaveBeenCalled();
         expect(router.navigateByUrl).not.toHaveBeenCalled();
         const itemEl = page.getEl<HTMLElement>('.sidebar-nav__depth1 a');
-        itemEl.click();
+        itemEl!.click();
         fixture.detectChanges();
         expect(context.select).toHaveBeenCalled();
         expect(router.navigateByUrl).toHaveBeenCalled();
@@ -122,17 +141,17 @@ describe('abc: sidebar-nav', () => {
       describe('should be navigate external link', () => {
         it('with target is _blank', () => {
           createComp();
-          const win = injector.get(WINDOW) as MockWindow;
+          const win = TestBed.inject(WINDOW);
           spyOn(win, 'open');
           const itemEl = page.getEl<HTMLElement>('.sidebar-nav__item [data-id="6"]');
-          itemEl.click();
+          itemEl!.click();
           expect(win.open).toHaveBeenCalled();
         });
         it('with target is _top', () => {
           createComp();
-          const win = injector.get(WINDOW) as MockWindow;
+          const win = TestBed.inject(WINDOW);
           const itemEl = page.getEl<HTMLElement>('.sidebar-nav__item [data-id="7"]');
-          itemEl.click();
+          itemEl!.click();
           expect(win.location.href).toBe(`//ng-alain.com/top`);
         });
       });
@@ -151,11 +170,11 @@ describe('abc: sidebar-nav', () => {
         createComp();
         const data = deepCopy(MOCKMENUS);
         menuSrv.add(data);
-        expect(data[0].children[0]._open).toBeUndefined();
+        expect(data[0].children![0]._open).toBeUndefined();
         const subTitleEl = page.getEl<HTMLElement>('.sidebar-nav__item-link');
-        subTitleEl.click();
+        subTitleEl!.click();
         fixture.detectChanges();
-        expect(data[0].children[0]._open).toBe(true);
+        expect(data[0].children![0]._open).toBe(true);
       });
 
       it('should be reset menu when service is changed', () => {
@@ -180,14 +199,22 @@ describe('abc: sidebar-nav', () => {
         menuSrv.add(newMenus);
         expect(context.select).not.toHaveBeenCalled();
         const itemEl = page.getEl<HTMLElement>('.sidebar-nav__item-disabled');
-        itemEl.click();
+        itemEl!.click();
         fixture.detectChanges();
         expect(context.select).toHaveBeenCalled();
+      });
+
+      it('should be support html in text or i18n', () => {
+        createComp();
+        menuSrv.add([{ text: 'text <strong>1</strong>' }]);
+        page.checkText('.sidebar-nav__item', `text 1`);
+        menuSrv.add([{ i18n: 'i18n <strong>1</strong>' }]);
+        page.checkText('.sidebar-nav__item', `i18n 1`);
       });
     });
 
     describe('#icon', () => {
-      function updateIcon(icon: string | MenuIcon) {
+      function updateIcon(icon: string | MenuIcon): void {
         createComp();
 
         menuSrv.add([
@@ -246,13 +273,32 @@ describe('abc: sidebar-nav', () => {
           page.showSubMenu();
         });
         it('should be displayed full submenu', () => {
-          const clientHeight = spyOnProperty(doc.documentElement, 'clientHeight').and.returnValue(
-            0,
-          );
-          spyOnProperty(doc.querySelector('body'), 'clientHeight').and.returnValue(0);
+          const clientHeight = spyOnProperty(doc.documentElement, 'clientHeight').and.returnValue(0);
+          spyOnProperty(doc.querySelector('body')!, 'clientHeight').and.returnValue(0);
           expect(clientHeight).not.toHaveBeenCalled();
           page.showSubMenu();
           expect(clientHeight).toHaveBeenCalled();
+        });
+        it('should be working when include badge', () => {
+          const mockMenu = deepCopy(MOCKMENUS) as Nav[];
+          mockMenu[0].children![0].badge = 1;
+          menuSrv.add(mockMenu);
+          fixture.detectChanges();
+          expect(page.getEl('.badge') != null).toBe(true);
+          page.showSubMenu();
+          expect(page.getEl('.sidebar-nav__floating-container .sidebar-nav__item', true) != null).toBe(true);
+        });
+        it('should be ingore children title trigger event', () => {
+          spyOn(context, 'select');
+          expect(context.select).not.toHaveBeenCalled();
+          const mockMenu = deepCopy(MOCKMENUS) as Nav[];
+          mockMenu[0].children![0].children = [{ text: 'a', children: [{ text: 'b' }] }];
+          menuSrv.add(mockMenu);
+          fixture.detectChanges();
+          page.showSubMenu();
+          const containerEl = page.getEl<HTMLElement>(floatingShowCls, true)!;
+          (containerEl.querySelector('.sidebar-nav__item-link') as HTMLElement).click();
+          expect(context.select).not.toHaveBeenCalled();
         });
       });
       describe('should be hide sub-menu in floating container', () => {
@@ -269,7 +315,7 @@ describe('abc: sidebar-nav', () => {
           setSrv.layout.collapsed = true;
           fixture.detectChanges();
           page.showSubMenu();
-          page.getEl<HTMLElement>(floatingShowCls, true).dispatchEvent(new Event('mouseleave'));
+          page.getEl<HTMLElement>(floatingShowCls, true)!.dispatchEvent(new Event('mouseleave'));
           fixture.detectChanges();
           expect(page.getEl<HTMLElement>(floatingShowCls, true)).toBeNull();
         });
@@ -279,7 +325,26 @@ describe('abc: sidebar-nav', () => {
           fixture.detectChanges();
           page.showSubMenu();
           const containerEl = page.getEl<HTMLElement>(floatingShowCls, true);
-          containerEl.querySelectorAll('li')[1].click();
+          containerEl!.querySelectorAll('li')[1].click();
+          fixture.detectChanges();
+          expect(router.navigateByUrl).not.toHaveBeenCalled();
+        });
+        it('muse be hide via click span of menu item', () => {
+          createComp();
+          setSrv.layout.collapsed = true;
+          fixture.detectChanges();
+          page.showSubMenu();
+          const containerEl = page.getEl<HTMLElement>(floatingShowCls, true);
+          containerEl!.querySelectorAll('span')[1].click();
+          fixture.detectChanges();
+          expect(router.navigateByUrl).toHaveBeenCalled();
+        });
+        it('muse be hide via document click', () => {
+          createComp();
+          setSrv.layout.collapsed = true;
+          fixture.detectChanges();
+          page.showSubMenu();
+          document.dispatchEvent(new MouseEvent('click'));
           fixture.detectChanges();
           expect(router.navigateByUrl).not.toHaveBeenCalled();
         });
@@ -289,7 +354,8 @@ describe('abc: sidebar-nav', () => {
         setSrv.layout.collapsed = true;
         fixture.detectChanges();
         page.showSubMenu();
-        spyOn(context.comp.floatingEl, 'remove');
+        // tslint:disable-next-line: no-string-literal
+        spyOn(context.comp['floatingEl'], 'remove');
         page.hideSubMenu();
         expect(page.getEl<HTMLElement>(floatingShowCls, true)).toBeNull();
       });
@@ -299,7 +365,10 @@ describe('abc: sidebar-nav', () => {
       const newMenus = [
         {
           text: '',
-          children: [{ text: 'new menu', acl: 'admin' }, { text: 'new menu', acl: 'user' }],
+          children: [
+            { text: 'new menu', acl: 'admin' },
+            { text: 'new menu', acl: 'user' },
+          ],
         },
       ];
       beforeEach(() => createComp());
@@ -308,7 +377,7 @@ describe('abc: sidebar-nav', () => {
         fixture.detectChanges();
         menuSrv.add(newMenus);
         const itemEl = page.getEl<HTMLElement>('.sidebar-nav__item [data-id="3"]');
-        expect(itemEl.classList).toContain('sidebar-nav__item-disabled');
+        expect(itemEl!.classList).toContain('sidebar-nav__item-disabled');
       });
       it('should be hidden item when with false', () => {
         context.disabledAcl = false;
@@ -318,6 +387,29 @@ describe('abc: sidebar-nav', () => {
         expect(itemEl == null).toBe(true);
       });
     });
+
+    describe('#openStrictly', () => {
+      beforeEach(() => {
+        createComp();
+        context.openStrictly = true;
+        fixture.detectChanges();
+        menuSrv.add(deepCopy(MOCKOPENSTRICTLY));
+        fixture.detectChanges();
+      });
+      it('should working', () => {
+        page.checkCount('.sidebar-nav__open', 2);
+      });
+      it(`should be won't close other item`, () => {
+        const list = dl.queryAll(By.css('.sidebar-nav__item-link'));
+        expect(list.length).toBe(4);
+        (list[0].nativeElement as HTMLElement).click();
+        fixture.detectChanges();
+        page.checkCount('.sidebar-nav__open', 1);
+        (list[2].nativeElement as HTMLElement).click();
+        fixture.detectChanges();
+        page.checkCount('.sidebar-nav__open', 0);
+      });
+    });
   });
 
   describe('[underPad]', () => {
@@ -325,10 +417,7 @@ describe('abc: sidebar-nav', () => {
 
     it('should be auto collapsed when less than pad', fakeAsync(() => {
       // create test component
-      TestBed.overrideTemplate(
-        TestComponent,
-        `<sidebar-nav #comp [autoCloseUnderPad]="true"></sidebar-nav>`,
-      );
+      TestBed.overrideTemplate(TestComponent, `<sidebar-nav #comp [autoCloseUnderPad]="true"></sidebar-nav>`);
       const defaultCollapsed = false;
       createComp(false, () => {
         spyOnProperty(window, 'innerWidth').and.returnValue(767);
@@ -342,10 +431,7 @@ describe('abc: sidebar-nav', () => {
     }));
     it(`should be won't collapsed when more than pad`, fakeAsync(() => {
       // create test component
-      TestBed.overrideTemplate(
-        TestComponent,
-        `<sidebar-nav #comp [autoCloseUnderPad]="true"></sidebar-nav>`,
-      );
+      TestBed.overrideTemplate(TestComponent, `<sidebar-nav #comp [autoCloseUnderPad]="true"></sidebar-nav>`);
       const defaultCollapsed = false;
       createComp(false, () => {
         spyOnProperty(window, 'innerWidth').and.returnValue(769);
@@ -354,21 +440,18 @@ describe('abc: sidebar-nav', () => {
       });
       router.navigateByUrl('/');
       fixture.detectChanges();
-      tick(20);
+      tick(1000);
       expect(setSrv.layout.collapsed).toBe(defaultCollapsed);
     }));
     it('should be auto expaned when less than pad trigger click', fakeAsync(() => {
       // create test component
-      TestBed.overrideTemplate(
-        TestComponent,
-        `<sidebar-nav #comp [autoCloseUnderPad]="true"></sidebar-nav>`,
-      );
+      TestBed.overrideTemplate(TestComponent, `<sidebar-nav #comp [autoCloseUnderPad]="true"></sidebar-nav>`);
       createComp();
       setSrv.layout.collapsed = true;
       fixture.detectChanges();
       spyOnProperty(window, 'innerWidth').and.returnValue(767);
       expect(setSrv.layout.collapsed).toBe(true);
-      page.getEl<HTMLElement>('.sidebar-nav').click();
+      page.getEl<HTMLElement>('.sidebar-nav')!.click();
       fixture.detectChanges();
       tick(20);
       expect(setSrv.layout.collapsed).toBe(false);
@@ -376,8 +459,8 @@ describe('abc: sidebar-nav', () => {
   });
 
   describe('should be recursive path', () => {
-    configureTestSuite(() => {
-      injector = TestBed.configureTestingModule({
+    beforeEach(() => {
+      TestBed.configureTestingModule({
         imports: [
           RouterModule.forRoot([]),
           AlainThemeModule,
@@ -395,14 +478,17 @@ describe('abc: sidebar-nav', () => {
       fixture = TestBed.createComponent(TestComponent);
       dl = fixture.debugElement;
       context = fixture.componentInstance;
-      menuSrv = injector.get(MenuService);
+      menuSrv = TestBed.inject<MenuService>(MenuService);
       fixture.detectChanges();
       createComp(false);
       menuSrv.add([
         {
           text: '主导航',
           group: true,
-          children: [{ text: 'user', link: '/user' }],
+          children: [
+            { text: 'user1', link: '/user' },
+            { text: 'user2', link: '/user' },
+          ],
         },
       ]);
     }));
@@ -430,31 +516,36 @@ describe('abc: sidebar-nav', () => {
       fixture.detectChanges();
       page.checkCount('.sidebar-nav__selected', 0);
     }));
+    it('should be ingore _open when enabled openStrictly', fakeAsync(() => {
+      context.openStrictly = true;
+      fixture.detectChanges();
+      menuSrv.add(deepCopy(MOCKOPENSTRICTLY));
+      page.checkCount('.sidebar-nav__open', 2);
+      router.navigateByUrl('/user2');
+      fixture.detectChanges();
+      page.checkCount('.sidebar-nav__open', 2);
+    }));
   });
 
   class PageObject {
-    getEl<T>(cls: string, body = false) {
-      const el = body
-        ? document.querySelector(cls)
-        : dl.query(By.css(cls))
-        ? dl.query(By.css(cls)).nativeElement
-        : null;
+    getEl<T>(cls: string, body: boolean = false): T | null {
+      const el = body ? document.querySelector(cls) : dl.query(By.css(cls)) ? dl.query(By.css(cls)).nativeElement : null;
       return el ? (el as T) : null;
     }
-    checkText(cls: string, value: any) {
+    checkText(cls: string, value: any): void {
       const el = this.getEl<HTMLElement>(cls);
       expect(el ? el.innerText.trim() : '').toBe(value);
     }
-    checkCount(cls: string, count = 1) {
+    checkCount(cls: string, count: number = 1): this {
       expect(dl.queryAll(By.css(cls)).length).toBe(count);
       return this;
     }
     /** 期望显示子菜单，默认：`true` */
-    showSubMenu(resultExpectShow = true) {
+    showSubMenu(resultExpectShow: boolean = true): void {
       let conEl = this.getEl<HTMLElement>(floatingShowCls, true);
       expect(conEl).toBeNull();
       const subTitleEl = this.getEl<HTMLElement>('.sidebar-nav__item-link');
-      subTitleEl.dispatchEvent(new Event('mouseenter'));
+      subTitleEl!.dispatchEvent(new Event('mouseenter'));
       fixture.detectChanges();
       conEl = this.getEl<HTMLElement>(floatingShowCls, true);
       if (resultExpectShow) {
@@ -464,10 +555,10 @@ describe('abc: sidebar-nav', () => {
       }
     }
     /** 期望隐藏子菜单，默认：`true` */
-    hideSubMenu(resultExpectHide = true) {
+    hideSubMenu(resultExpectHide: boolean = true): void {
       const containerEl = this.getEl<HTMLElement>(floatingShowCls, true);
       expect(containerEl).not.toBeNull();
-      containerEl.querySelector(resultExpectHide ? 'a' : 'li').click();
+      containerEl!.querySelector(resultExpectHide ? 'a' : 'li')!.click();
       fixture.detectChanges();
       const conEl = this.getEl<HTMLElement>(floatingShowCls, true);
       if (resultExpectHide) expect(conEl).toBeNull();
@@ -483,17 +574,19 @@ describe('abc: sidebar-nav', () => {
       [disabledAcl]="disabledAcl"
       [autoCloseUnderPad]="autoCloseUnderPad"
       [recursivePath]="recursivePath"
+      [openStrictly]="openStrictly"
       (select)="select()"
     ></sidebar-nav>
   `,
 })
 class TestComponent {
-  @ViewChild('comp')
+  @ViewChild('comp', { static: true })
   comp: SidebarNavComponent;
   disabledAcl = false;
   autoCloseUnderPad = false;
   recursivePath = false;
-  select() {}
+  openStrictly = false;
+  select(): void {}
 }
 
 @Component({ template: `` })

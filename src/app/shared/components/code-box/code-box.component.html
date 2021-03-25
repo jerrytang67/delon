@@ -1,35 +1,71 @@
-<section class="code-box-demo" [ngStyle]="{'background': item.bg}">
-  <div [ngClass]="{'browser-mockup': item.browser}" [ngStyle]="{'height.px': item.browser}">
-    <div [ngClass]="{'browser-scroll': item.browser}">
+<section class="code-box-demo" [ngStyle]="{ background: item.bg }">
+  <div [ngClass]="{ 'browser-mockup': item.browser }" [ngStyle]="{ 'height.px': item.browser }">
+    <div [ngClass]="{ 'browser-scroll': item.browser }">
       <ng-content></ng-content>
     </div>
   </div>
 </section>
 <section class="code-box-meta markdown">
-  <div class="code-box-title">
-    {{ item.title }}
-    <edit-button [item]="item"></edit-button>
-  </div>
-  <div [innerHTML]="item.summary"></div>
-  <nz-tooltip [nzTitle]="expand ? 'Hide Code' : 'Show Code'">
-    <span class="code-expand-icon" nz-tooltip>
-      <img alt="expand code" src="https://gw.alipayobjects.com/zos/rmsportal/wSAkBuJFbdxsosKKpqyq.svg" [ngClass]="{'code-expand-icon-hide': expand, 'code-expand-icon-show': !expand}"
-        (click)="handle()" />
-      <img alt="expand code" src="https://gw.alipayobjects.com/zos/rmsportal/OpROPHYqWmrMDBFMZtKF.svg" [ngClass]="{'code-expand-icon-show': expand, 'code-expand-icon-hide': !expand}"
-        (click)="handle()" />
-    </span>
-  </nz-tooltip>
-</section>
-<section class="highlight-wrapper" [ngClass]="{'highlight-wrapper-expand': expand}">
-  <div class="highlight">
-    <div class="code-box-actions">
-      <nz-tooltip [nzTitle]="'app.demo.stackblitz' | translate">
-        <i nz-tooltip (click)="openOnStackBlitz()" nz-icon type="form" class="code-box-code-copy"></i>
-      </nz-tooltip>
-      <nz-tooltip [nzTitle]="'app.demo.copy' | translate">
-        <i nz-tooltip (click)="onCopy(item.code)" nz-icon type="copy" class="code-box-code-copy"></i>
-      </nz-tooltip>
+  <ng-container *ngIf="type === 'default'">
+    <div class="code-box-title">
+      {{ item.title }}
+      <edit-button [item]="item"></edit-button>
     </div>
+    <div class="code-box-description" [innerHTML]="item.summary"></div>
+  </ng-container>
+  <div class="code-box-actions">
+    <i
+      nz-tooltip
+      [nzTooltipTitle]="'app.demo.code-sandbox' | i18n"
+      (click)="openOnlineIDE('CodeSandbox')"
+      nz-icon
+      nzType="code-sandbox"
+      class="code-box-code-icon"
+    ></i>
+    <i
+      nz-tooltip
+      [nzTooltipTitle]="'app.demo.stackblitz' | i18n"
+      (click)="openOnlineIDE()"
+      nz-icon
+      nzType="thunderbolt"
+      nzTheme="fill"
+      class="code-box-code-icon"
+    ></i>
+    <i
+      nz-tooltip
+      [nzTooltipTitle]="'app.demo.copy' | i18n"
+      (click)="onCopy(item.code)"
+      nz-icon
+      [nzType]="copied ? 'check' : 'snippets'"
+      class="code-box-code-icon"
+      [class.ant-tooltip-open]="copied"
+    ></i>
+    <i nz-tooltip [nzTooltipTitle]="expand ? 'Hide Code' : 'Show Code'" class="code-expand-icon">
+      <img
+        alt="expand code"
+        [src]="
+          theme === 'dark'
+            ? 'https://gw.alipayobjects.com/zos/antfincdn/btT3qDZn1U/wSAkBuJFbdxsosKKpqyq.svg'
+            : 'https://gw.alipayobjects.com/zos/rmsportal/wSAkBuJFbdxsosKKpqyq.svg'
+        "
+        [ngClass]="{ 'code-expand-icon-hide': expand, 'code-expand-icon-show': !expand }"
+        (click)="handle()"
+      />
+      <img
+        alt="expand code"
+        [src]="
+          theme === 'dark'
+            ? 'https://gw.alipayobjects.com/zos/antfincdn/CjZPwcKUG3/OpROPHYqWmrMDBFMZtKF.svg'
+            : 'https://gw.alipayobjects.com/zos/rmsportal/OpROPHYqWmrMDBFMZtKF.svg'
+        "
+        [ngClass]="{ 'code-expand-icon-show': expand, 'code-expand-icon-hide': !expand }"
+        (click)="handle()"
+      />
+    </i>
+  </div>
+</section>
+<section class="highlight-wrapper" [ngClass]="{ 'highlight-wrapper-expand': expand }">
+  <div class="highlight">
     <pre class="hljs language-ts"><code>{{item.code}}</code></pre>
   </div>
 </section>

@@ -1,26 +1,17 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnInit,
-  Output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { DelonLocaleService } from '@delon/theme';
-
-import {
-  CloseType,
-  ReuseContextCloseEvent,
-  ReuseContextI18n,
-  ReuseCustomContextMenu,
-  ReuseItem,
-} from './reuse-tab.interfaces';
+import { CloseType, ReuseContextCloseEvent, ReuseContextI18n, ReuseCustomContextMenu, ReuseItem } from './reuse-tab.interfaces';
 
 @Component({
   selector: 'reuse-tab-context-menu',
   templateUrl: './reuse-tab-context-menu.component.html',
+  host: {
+    '(document:click)': 'closeMenu($event)',
+    '(document:contextmenu)': 'closeMenu($event)',
+  },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class ReuseTabContextMenuComponent implements OnInit {
   private _i18n: ReuseContextI18n;
@@ -31,7 +22,7 @@ export class ReuseTabContextMenuComponent implements OnInit {
       ...value,
     };
   }
-  get i18n() {
+  get i18n(): ReuseContextI18n {
     return this._i18n;
   }
   @Input() item: ReuseItem;
@@ -39,13 +30,13 @@ export class ReuseTabContextMenuComponent implements OnInit {
   @Input() customContextMenu: ReuseCustomContextMenu[];
   @Output() readonly close = new EventEmitter<ReuseContextCloseEvent>();
 
-  get includeNonCloseable() {
+  get includeNonCloseable(): boolean {
     return this.event.ctrlKey;
   }
 
   constructor(private i18nSrv: DelonLocaleService) {}
 
-  private notify(type: CloseType) {
+  private notify(type: CloseType): void {
     this.close.next({
       type,
       item: this.item,
@@ -57,7 +48,7 @@ export class ReuseTabContextMenuComponent implements OnInit {
     if (this.includeNonCloseable) this.item.closable = true;
   }
 
-  click(e: MouseEvent, type: CloseType, custom?: ReuseCustomContextMenu) {
+  click(e: MouseEvent, type: CloseType, custom?: ReuseCustomContextMenu): void {
     e.preventDefault();
     e.stopPropagation();
     if (type === 'close' && !this.item.closable) return;
@@ -74,8 +65,6 @@ export class ReuseTabContextMenuComponent implements OnInit {
     return custom.disabled ? custom.disabled(this.item) : false;
   }
 
-  @HostListener('document:click', ['$event'])
-  @HostListener('document:contextmenu', ['$event'])
   closeMenu(event: MouseEvent): void {
     if (event.type === 'click' && event.button === 2) return;
     this.notify(null);

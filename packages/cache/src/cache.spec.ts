@@ -1,50 +1,61 @@
+// tslint:disable:no-string-literal
+import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { TestBed, TestBedStatic } from '@angular/core/testing';
-import { of, Observable } from 'rxjs';
+import { Type } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { AlainCacheConfig, ALAIN_CONFIG } from '@delon/util/config';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
+import { Observable, of } from 'rxjs';
 import { filter } from 'rxjs/operators';
-
-import { AlainThemeModule } from '@delon/theme';
-
 import { DelonCacheModule } from './cache.module';
 import { CacheService } from './cache.service';
 import { ICache } from './interface';
 
 describe('cache: service', () => {
-  let injector: TestBedStatic;
   let srv: CacheService;
   const KEY = 'a';
+
+  function getHTC(): HttpTestingController {
+    return TestBed.inject(HttpTestingController as Type<HttpTestingController>);
+  }
 
   beforeEach(() => {
     let data: any = {};
 
-    spyOn(localStorage, 'getItem').and.callFake(
-      (key: string): string => {
-        return data[key] || null;
-      },
-    );
-    spyOn(localStorage, 'removeItem').and.callFake(
-      (key: string): void => {
-        delete data[key];
-      },
-    );
-    spyOn(localStorage, 'setItem').and.callFake(
-      (key: string, value: string): string => {
-        return (data[key] = value as string);
-      },
-    );
+    spyOn(localStorage, 'getItem').and.callFake((key: string): string => {
+      return data[key] || null;
+    });
+    spyOn(localStorage, 'removeItem').and.callFake((key: string): void => {
+      delete data[key];
+    });
+    spyOn(localStorage, 'setItem').and.callFake((key: string, value: string): string => {
+      return (data[key] = value as string);
+    });
     spyOn(localStorage, 'clear').and.callFake(() => {
       data = {};
     });
   });
 
-  function genModule() {
-    injector = TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, AlainThemeModule.forRoot(), DelonCacheModule],
-      providers: [],
+  function genModule(options?: AlainCacheConfig): void {
+    const providers: any[] = [];
+    if (options) {
+      providers.push({ provide: ALAIN_CONFIG, useValue: { cache: options } });
+    }
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule, DelonCacheModule],
+      providers,
     });
 
-    srv = injector.get(CacheService);
+    srv = TestBed.inject<CacheService>(CacheService);
   }
+
+  it('should be specify a global config', () => {
+    genModule({ expire: 100, type: 'm' });
+    const saveSpy = spyOn(srv as any, 'save');
+    srv.set(KEY, 'a');
+    const args = saveSpy.calls.first().args;
+    expect(args[0]).toBe('m');
+  });
 
   describe('[property]', () => {
     beforeEach(() => genModule());
@@ -78,7 +89,7 @@ describe('cache: service', () => {
         srv.set(KEY, 'a', { type: 's' });
         expect(localStorage.setItem).toHaveBeenCalled();
         expect(srv.has(KEY)).toBe(true);
-        const meta = JSON.parse(localStorage.getItem('__cache_meta')) as ICache;
+        const meta = JSON.parse(localStorage.getItem('__cache_meta')!) as ICache;
         expect(meta).not.toBeNaN();
         expect(meta.v.indexOf(KEY)).not.toBe(-1);
       });
@@ -89,7 +100,7 @@ describe('cache: service', () => {
       it('should be set string and expires vis storage', () => {
         srv.set(KEY, 'a', { type: 's', expire: 10 });
         expect(localStorage.setItem).toHaveBeenCalled();
-        const org = JSON.parse(localStorage.getItem(KEY)) as ICache;
+        const org = JSON.parse(localStorage.getItem(KEY)!) as ICache;
         expect(org.e).toBeGreaterThan(1000);
       });
       it('should be overwirte key', () => {
@@ -132,33 +143,24 @@ describe('cache: service', () => {
           expect(srv.getNone(k)).toBe('ok!');
           done();
         });
-        injector
-          .get(HttpTestingController)
-          .expectOne(k)
-          .flush('ok!');
+        getHTC().expectOne(k).flush('ok!');
       });
       it('should be specify sotre type via promise mode', (done: () => void) => {
         const k = '/data/1';
         const setSpy = spyOn(srv, 'set');
-        srv.get(k, { mode: 'promise', type: 'm' }).subscribe(res => {
+        srv.get(k, { mode: 'promise', type: 'm' }).subscribe(() => {
           const data = setSpy.calls.mostRecent().args[2];
           expect(data.type).toBe('m');
           done();
         });
-        injector
-          .get(HttpTestingController)
-          .expectOne(k)
-          .flush('ok!');
+        getHTC().expectOne(k).flush('ok!');
       });
       it('reproduce-issues-40', () => {
         const url = `/test`;
         const firstGet = srv.get(url);
         expect(firstGet instanceof Observable).toBe(true);
         firstGet.subscribe();
-        injector
-          .get(HttpTestingController)
-          .expectOne(url)
-          .flush('ok!');
+        getHTC().expectOne(url).flush('ok!');
         const secondGet = srv.get(url);
         expect(secondGet instanceof Observable).toBe(true);
       });
@@ -183,10 +185,20 @@ describe('cache: service', () => {
         });
       });
       it('should be return value via memory', (done: () => void) => {
-        srv.tryGet(KEY, of(10), { type: 'm' }).subscribe(ret => {
+        srv.tryGet(KEY, of(10), { type: 'm' }).subscribe((ret: NzSafeAny) => {
           expect(ret).toBe(10);
           done();
         });
+      });
+      it('should be return value via http request', done => {
+        const http = TestBed.inject(HttpClient);
+        srv.tryGet(KEY, http.get('/')).subscribe((ret: any) => {
+          expect(ret.a).toBe(1);
+          done();
+        });
+        TestBed.inject(HttpTestingController as Type<HttpTestingController>)
+          .expectOne(() => true)
+          .flush({ a: 1 });
       });
     });
 
@@ -254,23 +266,23 @@ describe('cache: service', () => {
         status: 'ok',
       };
       it('should be get [status]', () => {
-        expect(srv._deepGet(tree, ['status'])).toBe(tree.status);
+        expect(srv['deepGet'](tree, ['status'])).toBe(tree.status);
       });
       it('should be get [responsne.totle]', () => {
-        expect(srv._deepGet(tree, ['responsne', 'total'])).toBe(tree.responsne.total);
+        expect(srv['deepGet'](tree, ['responsne', 'total'])).toBe(tree.responsne.total);
       });
       it('should be return default value when not exist deep key', () => {
         const def = 'aa';
-        const res = srv._deepGet(tree, ['responsne', 'totala'], def);
+        const res = srv['deepGet'](tree, ['responsne', 'totala'], def);
         expect(res).toBe(def);
       });
       it('should be return default value when not exist key', () => {
         const def = 'aa';
-        expect(srv._deepGet(tree, ['status11'], def)).toBe(def);
+        expect(srv['deepGet'](tree, ['status11'], def)).toBe(def);
       });
       it('should be return default value when source object is null', () => {
         const def = 'aa';
-        expect(srv._deepGet(null, ['status11'], def)).toBe(def);
+        expect(srv['deepGet'](null, ['status11'], def)).toBe(def);
       });
     });
 

@@ -1,22 +1,20 @@
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, RouteReuseStrategy } from '@angular/router';
-import { filter } from 'rxjs/operators';
-
 import { MenuService } from '@delon/theme';
-
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
+import { filter } from 'rxjs/operators';
 import { ReuseTabMatchMode, ReuseTitle } from './reuse-tab.interfaces';
 import { ReuseTabService } from './reuse-tab.service';
 import { ReuseTabStrategy } from './reuse-tab.strategy';
 
 class MockMenuService {
-  getPathByUrl(url: string) {
+  getPathByUrl(url: string): Array<{ text: string }> {
     return url === '/a/0' ? [] : [{ text: `标题` }];
   }
 }
 class MockRouter {
   navigateByUrl = jasmine.createSpy();
-  get events() {
+  get events(): any {
     return {
       subscribe: () => {
         return { unsubscribe: () => {} };
@@ -26,15 +24,14 @@ class MockRouter {
 }
 
 describe('abc: reuse-tab(service)', () => {
-  let injector: Injector;
   let srv: ReuseTabService;
   let menuSrv: MenuService;
   let router: MockRouter;
 
   afterEach(() => srv.ngOnDestroy());
 
-  function genModule(providers: any[] = [{ provide: MenuService, useClass: MockMenuService }]) {
-    injector = TestBed.configureTestingModule({
+  function genModule(providers: any[] = [{ provide: MenuService, useClass: MockMenuService }]): void {
+    TestBed.configureTestingModule({
       providers: [
         ReuseTabService,
         {
@@ -46,16 +43,16 @@ describe('abc: reuse-tab(service)', () => {
         { provide: Router, useFactory: () => new MockRouter() },
       ].concat(providers),
     });
-    srv = injector.get(ReuseTabService);
-    menuSrv = injector.get(MenuService, null);
-    router = injector.get(Router) as any;
+    srv = TestBed.inject<ReuseTabService>(ReuseTabService);
+    menuSrv = TestBed.inject<MenuService>(MenuService, undefined);
+    router = TestBed.inject<Router>(Router) as NzSafeAny;
   }
 
-  function genCached(count: number, urlTpl: string = `a/{index}`) {
+  function genCached(count: number, urlTpl: string = `a/{index}`): void {
     srv.clear();
     Array(count)
       .fill({})
-      .forEach((item: any, index: number) => {
+      .forEach((_item: any, index: number) => {
         srv.store(getSnapshot(index + 1, urlTpl), { a: 1 });
       });
   }
@@ -64,7 +61,7 @@ describe('abc: reuse-tab(service)', () => {
    * 模拟 Snapshot
    * - 1 => a/1
    */
-  function getSnapshot(index: number, urlTpl: string = `a/{index}`) {
+  function getSnapshot(index: number, urlTpl: string = `a/{index}`): any {
     return {
       routeConfig: {},
       url: [urlTpl.replace(`{index}`, index + '')],
@@ -170,7 +167,7 @@ describe('abc: reuse-tab(service)', () => {
     describe('#excludes', () => {
       beforeEach(() => (srv.mode = ReuseTabMatchMode.URL));
       it('can hit because not exclude', () => {
-        srv.excludes = null;
+        srv.excludes = [];
         const snapshot = getSnapshot(1);
         expect(srv.can(snapshot)).toBe(true);
       });
@@ -193,7 +190,7 @@ describe('abc: reuse-tab(service)', () => {
       // get
       expect(srv.get('/a/1')).not.toBeNull(`'get' muse be return cache data`);
       expect(srv.get('/a/b')).toBeNull(`'get' muse be return null`);
-      expect(srv.get(null)).toBeNull(`'get' muse be return null if null`);
+      expect(srv.get()).toBeNull(`'get' muse be return null if null`);
       // remove
       srv.close('/a/1');
       --count;
@@ -356,7 +353,7 @@ describe('abc: reuse-tab(service)', () => {
     it('#refresh', () => {
       const _$ = srv.change.pipe(filter(w => w !== null)).subscribe(
         res => {
-          expect(res.active).toBe('refresh');
+          expect(res!.active).toBe('refresh');
           _$.unsubscribe();
         },
         () => expect(false).toBe(true),

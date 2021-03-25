@@ -15,29 +15,28 @@ Simplest of usage.
 
 ```ts
 import { Component } from '@angular/core';
-import { SFSchema } from '@delon/form';
-import { NzMessageService } from 'ng-zorro-antd';
+import { SFRadioWidgetSchema, SFSchema } from '@delon/form';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-demo',
-  template: `
-    <sf [schema]="schema" (formSubmit)="submit($event)"></sf>
-  `,
+  template: ` <sf [schema]="schema" (formSubmit)="submit($event)"></sf> `,
 })
 export class DemoComponent {
   schema: SFSchema = {
     properties: {
-      sex: {
+      btn: {
         type: 'string',
-        title: 'Sex',
-        enum: ['男', '女', '未知'],
+        title: 'Button',
+        enum: ['A', 'B', 'C'],
         ui: {
           widget: 'radio',
           styleType: 'button',
-          change: console.log,
-        },
-        default: '未知',
+          buttonStyle: 'solid',
+        } as SFRadioWidgetSchema,
+        default: 'A',
       },
       // 异步数据
       async: {
@@ -45,18 +44,22 @@ export class DemoComponent {
         title: 'Async',
         ui: {
           widget: 'radio',
-          asyncData: () => of([
-            { label: '男', value: 'M' },
-            { label: '女', value: 'F' },
-            { label: '未知', value: 'N' },
-          ]),
+          asyncData: () =>
+            of([
+              { label: '男', value: 'M' },
+              { label: '女', value: 'F' },
+              { label: '未知', value: 'N' },
+            ]).pipe(delay(100)),
           change: console.log,
-        },
+        } as SFRadioWidgetSchema,
+        default: 'N',
       },
     },
   };
-  constructor(public msg: NzMessageService) {}
-  submit(value: any) {
+
+  constructor(private msg: NzMessageService) {}
+
+  submit(value: {}): void {
     this.msg.success(JSON.stringify(value));
   }
 }

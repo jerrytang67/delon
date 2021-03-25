@@ -1,30 +1,24 @@
 import { DebugElement } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { NzDropDownDirective } from 'ng-zorro-antd/dropdown';
+import { dispatchFakeEvent } from './dispatch-events';
 
-import { NzDropDownDirective } from 'ng-zorro-antd';
-
-/**
- * [nz-dropdown](https://github.com/NG-ZORRO/ng-zorro-antd/blob/master/components/dropdown/nz-dropdown.component.ts#L159) 抖动合理值
- */
-export const DROPDOWN_MIN_TIME = 51;
+export const DROPDOWN_MIN_TIME = 1000;
 
 /**
  * 触发 dropdown
  */
-export function dispatchDropDown(
-  dl: DebugElement,
-  trigger: 'mouseleave' | 'click',
-  allowNull = true,
-) {
+export function dispatchDropDown(dl: DebugElement, trigger: 'mouseleave' | 'click', allowNull: boolean = true): boolean {
   const directive = dl.query(By.directive(NzDropDownDirective));
   if (allowNull && directive == null) {
     return false;
   }
+  const el = directive.injector.get<NzDropDownDirective>(NzDropDownDirective).elementRef.nativeElement as HTMLElement;
   if (trigger === 'click') {
-    directive.injector.get(NzDropDownDirective).onClick(null);
+    dispatchFakeEvent(el, 'click');
   } else {
-    directive.injector.get(NzDropDownDirective).onMouseEnter(null);
+    dispatchFakeEvent(el, 'mouseenter');
   }
   tick(DROPDOWN_MIN_TIME);
   return true;

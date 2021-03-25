@@ -1,13 +1,11 @@
+import { DOCUMENT } from '@angular/common';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Injector } from '@angular/core';
-import { discardPeriodicTasks, fakeAsync, tick, TestBed } from '@angular/core/testing';
+import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { DefaultUrlSerializer, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-
-import { DOCUMENT } from '@angular/common';
-import { DelonAuthConfig } from '../auth.config';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 import { DelonAuthModule } from '../auth.module';
-import { DA_SERVICE_TOKEN, ITokenModel, ITokenService } from '../token/interface';
+import { DA_SERVICE_TOKEN, ITokenModel } from '../token/interface';
 import { SimpleTokenModel } from '../token/simple/simple.model';
 import { SocialService } from './social.service';
 
@@ -46,26 +44,20 @@ const MockAuth0 = {
 };
 
 describe('auth: social.service', () => {
-  let injector: Injector;
   let srv: SocialService;
 
-  function genModule(options: DelonAuthConfig, tokenData?: SimpleTokenModel) {
-    injector = TestBed.configureTestingModule({
+  function genModule(tokenData?: SimpleTokenModel): void {
+    TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([]), DelonAuthModule],
-      providers: [
-        SocialService,
-        { provide: DelonAuthConfig, useValue: options },
-        { provide: DOCUMENT, useClass: MockDocument },
-        { provide: Router, useValue: mockRouter },
-      ],
+      providers: [SocialService, { provide: DOCUMENT, useClass: MockDocument }, { provide: Router, useValue: mockRouter }],
     });
-    if (tokenData) injector.get(DA_SERVICE_TOKEN).set(tokenData);
+    if (tokenData) TestBed.inject(DA_SERVICE_TOKEN).set(tokenData);
 
-    srv = injector.get(SocialService);
+    srv = TestBed.inject<SocialService>(SocialService);
   }
 
   beforeEach(() => {
-    genModule({});
+    genModule();
   });
 
   afterEach(() => srv.ngOnDestroy());
@@ -74,49 +66,50 @@ describe('auth: social.service', () => {
     [MockAuth0].forEach((item: any) => {
       it(`${item.type} via href`, () => {
         srv.login(item.url, '/', { type: 'href' });
-        const ret = injector.get(DOCUMENT).location.href;
-        // tslint:disable-next-line:forin
-        for (const key in item.be) {
+        const ret = TestBed.inject(DOCUMENT).location.href;
+        Object.keys(item.be).forEach(key => {
           const expected = `${key}=${item.be[key]}`;
           expect(ret).toContain(expected, `muse contain "${expected}"`);
-        }
+        });
       });
 
       it(`${item.type} via window`, fakeAsync(() => {
-        spyOn(window, 'open').and.callFake(() => {
-          injector.get(DA_SERVICE_TOKEN).set(item.model);
+        const mockWindowOpen = () => {
+          TestBed.inject(DA_SERVICE_TOKEN).set(item.model);
           return { closed: true };
-        });
-        srv.login(item.url).subscribe(res => {});
+        };
+        spyOn(window, 'open').and.callFake(mockWindowOpen as NzSafeAny);
+        srv.login(item.url).subscribe(() => {});
         tick(130);
         expect(window.open).toHaveBeenCalled();
-        const token = injector.get(DA_SERVICE_TOKEN).get();
-        // tslint:disable-next-line:forin
-        for (const key in item.be) {
+        const token = TestBed.inject(DA_SERVICE_TOKEN).get()!;
+        Object.keys(item.be).forEach(key => {
           expect(token[key]).toContain(item.be[key]);
-        }
+        });
         discardPeriodicTasks();
       }));
     });
 
     it(`should be return null model if set a null in window`, fakeAsync(() => {
-      spyOn(window, 'open').and.callFake(() => {
-        injector.get(DA_SERVICE_TOKEN).set(null);
+      const mockWindowOpen = () => {
+        TestBed.inject(DA_SERVICE_TOKEN).set(null);
         return { closed: true };
-      });
-      srv.login(MockAuth0.url).subscribe(res => {});
+      };
+      spyOn(window, 'open').and.callFake(mockWindowOpen as NzSafeAny);
+      srv.login(MockAuth0.url).subscribe(() => {});
       tick(130);
       expect(window.open).toHaveBeenCalled();
       discardPeriodicTasks();
     }));
 
-    it('can\'t get model until closed', fakeAsync(() => {
+    it(`can't get model until closed`, fakeAsync(() => {
       spyOn(srv, 'ngOnDestroy');
-      spyOn(window, 'open').and.callFake(() => {
-        injector.get(DA_SERVICE_TOKEN).set(null);
+      const mockWindowOpen = () => {
+        TestBed.inject(DA_SERVICE_TOKEN).set(null);
         return { closed: false };
-      });
-      srv.login(MockAuth0.url).subscribe(res => {});
+      };
+      spyOn(window, 'open').and.callFake(mockWindowOpen as NzSafeAny);
+      srv.login(MockAuth0.url).subscribe(() => {});
       tick(130);
       expect(window.open).toHaveBeenCalled();
       expect(srv.ngOnDestroy).not.toHaveBeenCalled();
@@ -155,10 +148,10 @@ describe('auth: social.service', () => {
         be: 'throw',
       },
       { summary: 'via ITokenModel', url: swtData, be: swtData },
-    ].forEach((item: any, index: number) => {
+    ].forEach((item: any) => {
       it(`${item.summary}`, () => {
         if (item.be === 'throw') {
-          const router = injector.get(Router) as any;
+          const router = TestBed.inject<Router>(Router) as any;
           router.url = item.url;
           expect(() => {
             srv.callback(null);
@@ -166,10 +159,9 @@ describe('auth: social.service', () => {
           return;
         }
         const ret = srv.callback(item.url);
-        // tslint:disable-next-line:forin
-        for (const key in item.be) {
+        Object.keys(item.be).forEach(key => {
           expect(ret[key]).toBe(item.be[key]);
-        }
+        });
       });
     });
   });

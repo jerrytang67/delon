@@ -1,32 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, Injector, NgModule } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgZorroAntdModule, NzModalRef, NzModalService } from 'ng-zorro-antd';
+import { Component, NgModule } from '@angular/core';
+import { ComponentFixture, fakeAsync, flush, TestBed, tick } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { NzModalModule, NzModalRef } from 'ng-zorro-antd/modal';
 import { AlainThemeModule } from '../../theme.module';
 import { ModalHelper } from './modal.helper';
 
 describe('theme: ModalHelper', () => {
-  let injector: Injector;
   let modal: ModalHelper;
-  let srv: NzModalService;
   let fixture: ComponentFixture<TestComponent>;
 
   beforeEach(() => {
     @NgModule({
-      imports: [
-        CommonModule,
-        NgZorroAntdModule,
-        AlainThemeModule.forChild(),
-      ],
+      imports: [CommonModule, NoopAnimationsModule, AlainThemeModule.forChild(), NzModalModule],
       declarations: [TestModalComponent, TestComponent],
-      entryComponents: [TestModalComponent],
     })
-    class TestModule { }
+    class TestModule {}
 
-    injector = TestBed.configureTestingModule({ imports: [TestModule] });
+    TestBed.configureTestingModule({ imports: [TestModule] });
     fixture = TestBed.createComponent(TestComponent);
-    modal = injector.get(ModalHelper);
-    srv = injector.get(NzModalService);
+    modal = TestBed.inject<ModalHelper>(ModalHelper);
   });
 
   afterEach(() => {
@@ -35,99 +28,82 @@ describe('theme: ModalHelper', () => {
   });
 
   describe('[default]', () => {
-    it('#open', (done: () => void) => {
-      modal
-        .open(TestModalComponent, {
-          ret: 'true',
-        })
-        .subscribe(res => {
-          expect(true).toBeTruthy();
-          done();
-        });
+    it('#open', fakeAsync(() => {
+      modal.open(TestModalComponent, { ret: 'true' }).subscribe(() => {
+        expect(true).toBeTruthy();
+        flush();
+      });
       fixture.detectChanges();
-    });
+      tick(1000);
+      fixture.detectChanges();
+    }));
 
-    it('#open of 100px modal', (done: () => void) => {
-      modal
-        .open(
-          TestModalComponent,
-          {
-            ret: 'true',
-          },
-          100,
-        )
-        .subscribe(res => {
-          expect(true).toBeTruthy();
-          done();
-        });
+    it('shoudl be size & nzWrapClassName toggle', fakeAsync(() => {
+      modal.open(TestModalComponent, { ret: 'true' }, 'sm', { nzWrapClassName: 'aaa' }).subscribe(() => {
+        expect(true).toBeTruthy();
+        flush();
+      });
       fixture.detectChanges();
-    });
+      tick(1000);
+      fixture.detectChanges();
+    }));
+
+    it('#open of 100px modal', fakeAsync(() => {
+      modal.open(TestModalComponent, { ret: 'true' }, 100).subscribe(() => {
+        expect(true).toBeTruthy();
+        flush();
+      });
+      fixture.detectChanges();
+      tick(1000);
+      fixture.detectChanges();
+    }));
   });
 
   describe('#create', () => {
-    it('should be open', (done: () => void) => {
-      modal
-        .create(TestModalComponent, {
-          ret: 'true',
-        })
-        .subscribe(res => {
-          expect(true).toBeTruthy();
-          done();
-        });
+    it('should be open', fakeAsync(() => {
+      modal.create(TestModalComponent, { ret: 'true' }).subscribe(() => {
+        expect(true).toBeTruthy();
+        flush();
+      });
       fixture.detectChanges();
-    });
-    it('should be open a tabset', (done: () => void) => {
-      modal
-        .create(
-          TestModalComponent,
-          {
-            ret: 'true',
-          },
-          {
-            includeTabs: true,
-          },
-        )
-        .subscribe(res => {
-          expect(true).toBeTruthy();
-          done();
-        });
+      tick(1000);
+      fixture.detectChanges();
+    }));
+    it('should be open a tabset', fakeAsync(() => {
+      modal.create(TestModalComponent, { ret: 'true' }, { includeTabs: true }).subscribe(() => {
+        expect(true).toBeTruthy();
+        flush();
+      });
+      fixture.detectChanges();
+      tick(1000);
       fixture.detectChanges();
       expect(document.querySelector('.modal-include-tabs')).not.toBeNull();
-    });
+    }));
     describe('#exact width true', () => {
-      it('should be not trigger subscript when return a undefined value', (done: () => void) => {
-        modal
-          .create(
-            TestModalComponent,
-            {
-              ret: undefined,
-            },
-            {
-              includeTabs: true,
-              exact: true,
-            },
-          )
-          .subscribe(
-            res => {
-              expect(false).toBeTruthy();
-              done();
-            },
-            err => {
-              expect(false).toBeTruthy();
-              done();
-            },
-            () => {
-              expect(true).toBeTruthy();
-              done();
-            },
-          );
+      it('should be not trigger subscript when return a undefined value', fakeAsync(() => {
+        modal.create(TestModalComponent, { ret: undefined }, { includeTabs: true, exact: true }).subscribe(
+          () => {
+            expect(false).toBeTruthy();
+            flush();
+          },
+          () => {
+            expect(false).toBeTruthy();
+            flush();
+          },
+          () => {
+            expect(true).toBeTruthy();
+            flush();
+          },
+        );
         fixture.detectChanges();
-      });
+        tick(1000);
+        fixture.detectChanges();
+      }));
     });
   });
 
   describe('#static', () => {
-    it('should be open', (done: () => void) => {
+    it('should be open', fakeAsync(() => {
       const id = '' + +new Date();
       modal
         .static(TestModalComponent, {
@@ -137,11 +113,13 @@ describe('theme: ModalHelper', () => {
         .subscribe(res => {
           fixture.detectChanges();
           expect(res).toBe(true);
-          done();
+          flush();
         });
       fixture.detectChanges();
-    });
-    it('should be open sm size', (done: () => void) => {
+      tick(1000);
+      fixture.detectChanges();
+    }));
+    it('should be open sm size', fakeAsync(() => {
       const id = '' + +new Date();
       modal
         .static(
@@ -155,11 +133,13 @@ describe('theme: ModalHelper', () => {
         .subscribe(res => {
           fixture.detectChanges();
           expect(res).toBe('true');
-          done();
+          flush();
         });
       fixture.detectChanges();
-    });
-    it('should be open default size', (done: () => void) => {
+      tick(1000);
+      fixture.detectChanges();
+    }));
+    it('should be open default size', fakeAsync(() => {
       const id = '' + +new Date();
       modal
         .static(
@@ -173,13 +153,15 @@ describe('theme: ModalHelper', () => {
         .subscribe(res => {
           fixture.detectChanges();
           expect(res).toBe('true');
-          done();
+          flush();
         });
       fixture.detectChanges();
-    });
-    it('should be custom modal options', (done: () => void) => {
+      tick(1000);
+      fixture.detectChanges();
+    }));
+    it('should be custom modal options', fakeAsync(() => {
       const id = '' + +new Date();
-      const zIndex = 980;
+      const nzZIndex = 980;
       modal
         .static(
           TestModalComponent,
@@ -189,20 +171,22 @@ describe('theme: ModalHelper', () => {
           },
           'sm',
           {
-            zIndex,
+            nzZIndex,
           },
         )
         .subscribe(res => {
           fixture.detectChanges();
           expect(res).toBe(1);
-          done();
+          flush();
         });
       fixture.detectChanges();
-    });
+      tick(1000);
+      fixture.detectChanges();
+    }));
   });
 
   describe('#createStatic', () => {
-    it('should be open', (done: () => void) => {
+    it('should be open', fakeAsync(() => {
       const id = '' + +new Date();
       modal
         .createStatic(TestModalComponent, {
@@ -212,11 +196,13 @@ describe('theme: ModalHelper', () => {
         .subscribe(res => {
           fixture.detectChanges();
           expect(res).toBe(true);
-          done();
+          flush();
         });
       fixture.detectChanges();
-    });
-    it('should be open sm size', (done: () => void) => {
+      tick(1000);
+      fixture.detectChanges();
+    }));
+    it('should be open sm size', fakeAsync(() => {
       const id = '' + +new Date();
       modal
         .createStatic(
@@ -230,25 +216,32 @@ describe('theme: ModalHelper', () => {
         .subscribe(res => {
           fixture.detectChanges();
           expect(res).toBe('true');
-          done();
+          flush();
         });
       fixture.detectChanges();
-    });
+      tick(1000);
+      fixture.detectChanges();
+    }));
   });
 });
 
-@Component({ template: `<div id="modal{{id}}">modal{{id}}</div>` })
+@Component({
+  template: ` <div id="modal{{ id }}">modal{{ id }}</div> `,
+})
 class TestModalComponent {
-  id: string = '';
+  id = '';
   ret: any = 'true';
 
   constructor(private modal: NzModalRef) {
     setTimeout(() => {
-      if (this.ret === 'destroy') this.modal.destroy();
-      else this.modal.close(this.ret);
+      if (this.ret === 'destroy') {
+        this.modal.destroy();
+      } else {
+        this.modal.close(this.ret);
+      }
     }, 100);
   }
 }
 
 @Component({ template: `` })
-class TestComponent { }
+class TestComponent {}

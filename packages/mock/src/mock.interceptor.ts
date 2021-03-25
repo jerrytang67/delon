@@ -1,4 +1,3 @@
-// tslint:disable:no-any
 import {
   HttpBackend,
   HttpErrorResponse,
@@ -11,11 +10,10 @@ import {
   HTTP_INTERCEPTORS,
 } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
-import { of, throwError, Observable } from 'rxjs';
+import { deepCopy } from '@delon/util/other';
+import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-
 import { MockRequest } from './interface';
-import { DelonMockConfig } from './mock.config';
 import { MockService } from './mock.service';
 import { MockStatusError } from './status.error';
 
@@ -33,27 +31,21 @@ export class MockInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const src = this.injector.get(MockService);
-    const config = {
-      delay: 300,
-      force: false,
-      log: true,
-      executeOtherInterceptors: true,
-      ...this.injector.get(DelonMockConfig, null),
-    };
+    const config = src.config;
     const rule = src.getRule(req.method, req.url.split('?')[0]);
     if (!rule && !config.force) {
       return next.handle(req);
     }
 
     let res: any;
-    switch (typeof rule.callback) {
+    switch (typeof rule!.callback) {
       case 'function':
         const mockRequest: MockRequest = {
           original: req,
           body: req.body,
           queryString: {},
           headers: {},
-          params: rule.params,
+          params: rule!.params,
         };
         const urlParams = req.url.split('?');
         if (urlParams.length > 1) {
@@ -76,22 +68,19 @@ export class MockInterceptor implements HttpInterceptor {
         req.headers.keys().forEach(key => (mockRequest.headers[key] = req.headers.get(key)));
 
         try {
-          res = rule.callback.call(this, mockRequest);
+          res = rule!.callback.call(this, mockRequest);
         } catch (e) {
           res = new HttpErrorResponse({
             url: req.url,
             headers: req.headers,
-            status: 400,
+            status: e instanceof MockStatusError ? e.status : 400,
             statusText: e.statusText || 'Unknown Error',
             error: e.error,
           });
-          if (e instanceof MockStatusError) {
-            res.status = e.status;
-          }
         }
         break;
       default:
-        res = rule.callback;
+        res = rule!.callback;
         break;
     }
 
@@ -103,9 +92,13 @@ export class MockInterceptor implements HttpInterceptor {
       });
     }
 
+    if (res.body) {
+      res.body = deepCopy(res.body);
+    }
+
     if (config.log) {
-      console.log(`%c👽${req.method}->${req.url}->request`, 'background:#000;color:#bada55', req);
-      console.log(`%c👽${req.method}->${req.url}->response`, 'background:#000;color:#bada55', res);
+      console.log(`%c👽${req.method}->${req.urlWithParams}->request`, 'background:#000;color:#bada55', req);
+      console.log(`%c👽${req.method}->${req.urlWithParams}->response`, 'background:#000;color:#bada55', res);
     }
 
     const res$ = res instanceof HttpErrorResponse ? throwError(res) : of(res);
@@ -114,16 +107,13 @@ export class MockInterceptor implements HttpInterceptor {
       const interceptors = this.injector.get(HTTP_INTERCEPTORS, []);
       const lastInterceptors = interceptors.slice(interceptors.indexOf(this) + 1);
       if (lastInterceptors.length > 0) {
-        const chain = lastInterceptors.reduceRight(
-          (_next, _interceptor) => new HttpMockInterceptorHandler(_next, _interceptor),
-          {
-            handle: () => res$,
-          } as HttpBackend,
-        );
-        return chain.handle(req).pipe(delay(config.delay));
+        const chain = lastInterceptors.reduceRight((_next, _interceptor) => new HttpMockInterceptorHandler(_next, _interceptor), {
+          handle: () => res$,
+        } as HttpBackend);
+        return chain.handle(req).pipe(delay(config.delay!));
       }
     }
 
-    return res$.pipe(delay(config.delay));
+    return res$.pipe(delay(config.delay!));
   }
 }

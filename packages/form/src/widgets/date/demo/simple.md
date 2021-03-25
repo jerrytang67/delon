@@ -15,15 +15,14 @@ Simplest of usage.
 
 ```ts
 import { Component } from '@angular/core';
-import { NzMessageService } from 'ng-zorro-antd';
-import { SFSchema } from '@delon/form';
+import { SFDateWidgetSchema, SFSchema } from '@delon/form';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
-  selector: 'app-demo',
-  template: `<sf [schema]="schema" (formSubmit)="submit($event)"
-  (formChange)="change($event)"></sf>`,
+  selector: 'form-date-simple',
+  template: ` <sf [schema]="schema" (formSubmit)="submit($event)" (formChange)="change($event)"></sf> `,
 })
-export class DemoComponent {
+export class FormDateSimpleComponent {
   schema: SFSchema = {
     properties: {
       datetime: {
@@ -36,7 +35,11 @@ export class DemoComponent {
       },
       date_number: {
         type: 'number',
-        ui: { widget: 'date' },
+        ui: { widget: 'date' } as SFDateWidgetSchema,
+      },
+      year: {
+        type: 'number',
+        ui: { widget: 'date', mode: 'year', format: 'yyyy' } as SFDateWidgetSchema,
       },
       month: {
         type: 'string',
@@ -48,26 +51,30 @@ export class DemoComponent {
       },
       range: {
         type: 'string',
-        ui: { widget: 'date', mode: 'range' },
+        ui: { widget: 'date', mode: 'range' } as SFDateWidgetSchema,
       },
       start: {
         type: 'string',
-        ui: { widget: 'date', end: 'end' },
+        ui: { widget: 'date', end: 'end' } as SFDateWidgetSchema,
       },
       end: {
         type: 'string',
-        ui: { widget: 'date', end: 'end' },
+        ui: { widget: 'date', end: 'end' } as SFDateWidgetSchema,
+      },
+      inline: {
+        type: 'string',
+        ui: { widget: 'date', inline: true } as SFDateWidgetSchema,
       },
     },
   };
 
-  constructor(public msg: NzMessageService) {}
+  constructor(private msg: NzMessageService) {}
 
-  submit(value: any) {
+  submit(value: {}): void {
     this.msg.success(JSON.stringify(value));
   }
 
-  change(value: any) {
+  change(value: {}): void {
     console.log('change', value);
   }
 }

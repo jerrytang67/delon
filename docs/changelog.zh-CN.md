@@ -4,389 +4,256 @@ title: 更新日志
 type: Other
 ---
 
-# [7.0.0-rc.6](https://github.com/ng-alain/delon/compare/7.0.0-rc.5...7.0.0-rc.6) (2019-01-22)
+NG-ALAIN 严格遵循 [Semantic Versioning 2.0.0](http://semver.org/lang/zh-CN/) 语义化版本规范。
+
+#### 发布周期
+
+* 修订版本号：每周末会进行日常 bugfix 更新。（如果有紧急的 bugfix，则任何时候都可发布）
+* 次版本号：每月发布一个带有新特性的向下兼容的版本。
+* 主版本号：含有破坏性更新和新特性，不在发布周期内。
+
+---
+
+## [11.8.1](https://github.com/ng-alain/delon/compare/11.8.0...11.8.1) (2021-03-17)
 
 ### Bug Fixes
 
-* **module:schematics:** 修复无效 `ng-alain-codelyzer` 版本号 ([#401](https://github.com/ng-alain/delon/issues/401)) ([e217940](https://github.com/ng-alain/delon/commit/e217940))
+* **abc:pdf:** 修复选中内容会出现错位 ([#1220](https://github.com/ng-alain/delon/issues/1220)) ([d9fd20f](https://github.com/ng-alain/delon/commit/d9fd20f30edfb34f38dc57a478a1fcd4b419de63))
+* **abc:st:** 修复避免污染 `iif` ([#1219](https://github.com/ng-alain/delon/issues/1219)) ([7ae25d2](https://github.com/ng-alain/delon/commit/7ae25d2afa4452a9d58d31eff141df05853496de))
+* **abc:st:** 修复小屏幕出现错位 ([#1218](https://github.com/ng-alain/delon/issues/1218)) ([4a3f461](https://github.com/ng-alain/delon/commit/4a3f461ce6a2d5234c2620a3a4f3cc222d0cd588))
+* 修复 `date-fns` 使用 esm 导入，避免不必要的警告 ([#1217](https://github.com/ng-alain/delon/issues/1217)) ([36b172c](https://github.com/ng-alain/delon/commit/36b172ccdc49146c131c6d403a866fdac074e539))
+* **form:** 修复无法正确解析错误信息中的参数值 ([#1215](https://github.com/ng-alain/delon/issues/1215)) ([df0aeb1](https://github.com/ng-alain/delon/commit/df0aeb1239f0b8417119b855a49012bf0a6e9ff6))
 
 
-# [7.0.0-rc.5](https://github.com/ng-alain/delon/compare/7.0.0-rc.4...7.0.0-rc.5) (2019-01-22)
-
-### Scaffold
-
-* **style:** 新增导入 [ng-alain-codelyzer](https://github.com/ng-alain/ng-alain-codelyzer)，清除重复 tslint 规则 ([#885](https://github.com/ng-alain/ng-alain/pull/885))
+# [11.8.0](https://github.com/ng-alain/delon/compare/11.7.1...11.8.0) (2021-03-13)
 
 ### Bug Fixes
 
-* **module:mock:** 修复 `/:id` 路由参数会匹配到 `user/1` ([#384](https://github.com/ng-alain/delon/issues/384)) ([246934b](https://github.com/ng-alain/delon/commit/246934b))
-* **module:sf:number:** 修复类型为 `integer` 时依然能使用小数点 ([#385](https://github.com/ng-alain/delon/issues/385)) ([1f0226c](https://github.com/ng-alain/delon/commit/1f0226c)), closes [#381](https://github.com/ng-alain/delon/issues/381)
-* **module:theme:title:** 修复首次引用时触发 `setTitle` 方法 ([#397](https://github.com/ng-alain/delon/issues/397)) ([4411a19](https://github.com/ng-alain/delon/commit/4411a19))
+* **cli:** 修复需要在 `package.json` 内增加 `ng-zorro-antd` 类库依赖，否则导致无法在 VSCode 内自动导入 `ng-zorro-antd` 模块 ([#1213](https://github.com/ng-alain/delon/issues/1213)) ([cfe6d6e](https://github.com/ng-alain/delon/commit/cfe6d6e136ff8eec69d86396efbe53e997507aef))
+* **abc:st:** 修复表头分组样式问题 ([#1204](https://github.com/ng-alain/delon/issues/1204)) ([4509b17](https://github.com/ng-alain/delon/commit/4509b174f4b318a547c976ce6f19811eccd60391))
+* **abc:st:** 修复小屏幕下设置 `scroll` 参数会错位 ([#1208](https://github.com/ng-alain/delon/issues/1208)) ([2fb3ac6](https://github.com/ng-alain/delon/commit/2fb3ac69500aa1f1503335ee519b04d507143826))
+* **form:** 修复 `enum` 大量数据时产生堆错误 ([#1209](https://github.com/ng-alain/delon/issues/1209)) ([6a90822](https://github.com/ng-alain/delon/commit/6a908220051d586a4e3bf74a9f4229ef1b0730b5))
+* **module:onboarding:** 修复点击目标元素无法关闭遮层 ([#1202](https://github.com/ng-alain/delon/issues/1202)) ([b741b4c](https://github.com/ng-alain/delon/commit/b741b4c9ba34f1d590fc00f1db071971479ed24a))
+* **sf:widget:select:** 修复无法使用 `showSearch` ([#1212](https://github.com/ng-alain/delon/issues/1212)) ([827d6f5](https://github.com/ng-alain/delon/commit/827d6f5d533c56844c1d34a088b61b986a8f5060))
+* **theme:_HttpClient:** 修复 `loading` 引发 `ExpressionChangedAfterItHasBeenCheckedError` ([#1211](https://github.com/ng-alain/delon/issues/1211)) ([ffebaf8](https://github.com/ng-alain/delon/commit/ffebaf863a2cdb8b600fb80d0f8ae3f6d79ff9b9))
 
 ### Features
 
-* **module:sf:radio:** 新增 `change` 事件 ([#383](https://github.com/ng-alain/delon/issues/383)) ([7ebb484](https://github.com/ng-alain/delon/commit/7ebb484))
-* **module:sf:upload:** 新增额外的属性 `beforeUpload`、`filter` 等 ([#395](https://github.com/ng-alain/delon/issues/395)) ([29c66b5](https://github.com/ng-alain/delon/commit/29c66b5)), closes [#389](https://github.com/ng-alain/delon/issues/389)
-* **module:st:** 新增 `iif` 自定义显示列 ([#396](https://github.com/ng-alain/delon/issues/396)) ([066030d](https://github.com/ng-alain/delon/commit/066030d)), closes [#393](https://github.com/ng-alain/delon/issues/393)
-* **module:st:** 新增设置 `expandRowByClick` 时触发 `expand` 事件类型 ([#394](https://github.com/ng-alain/delon/issues/394)) ([84ff628](https://github.com/ng-alain/delon/commit/84ff628))
-* **module:st:** 新增路由跳转时状态值包含 `pi`, `ps`, `total` 数据 ([#391](https://github.com/ng-alain/delon/issues/391)) ([567eadd](https://github.com/ng-alain/delon/commit/567eadd))
-* **module:theme:** 新增文本、图标、宽度的 `xs`、`xl`、`xxl` 尺寸 ([#392](https://github.com/ng-alain/delon/issues/392)) ([5bd9d7e](https://github.com/ng-alain/delon/commit/5bd9d7e))
+* **theme:SettingsService:** 优化存储键名可配置 ([#1210](https://github.com/ng-alain/delon/issues/1210)) ([5aea948](https://github.com/ng-alain/delon/commit/5aea94847278d3ce1863f1f1a572bb914923bf9a))
+* **theme:layout-default:** 新增 `hideAside`, `logoLink`, `logoFixWidth` 参数 ([#1206](https://github.com/ng-alain/delon/issues/1206)) ([3cfadc3](https://github.com/ng-alain/delon/commit/3cfadc3be9ed7e1111bd297f11ddd2773663d873))
+* **theme:SettingsService:** 新增支持泛型 ([#1207](https://github.com/ng-alain/delon/issues/1207)) ([c2532f8](https://github.com/ng-alain/delon/commit/c2532f8d0eb69d91d0d755c2fc2aaf01659105d7))
+* **util:** 新增 `ZoneOutside`, `ZoneRun` 装饰函数 ([#1198](https://github.com/ng-alain/delon/issues/1198)) ([770906c](https://github.com/ng-alain/delon/commit/770906ccac27da8e7d68a392744e5e455939a361))
 
 ### Performance Improvements
 
-* **module:chart:** 优化所有 `g2` 性能 ([#388](https://github.com/ng-alain/delon/issues/388)) ([94ef1fe](https://github.com/ng-alain/delon/commit/94ef1fe)), closes [#377](https://github.com/ng-alain/delon/issues/377)
+* **abc:st:** 优化渲染性能 ([#1203](https://github.com/ng-alain/delon/issues/1203)) ([b480649](https://github.com/ng-alain/delon/commit/b480649137ac6041bd253a49e36d321cc08642c2))
 
 
-# [7.0.0-rc.4](https://github.com/ng-alain/delon/compare/7.0.0-rc.3...7.0.0-rc.4) (2019-01-12)
+## [11.7.1](https://github.com/ng-alain/delon/compare/11.7.0...11.7.1) (2021-03-06)
+
+### Bug Fixes
+
+* **chart:mini-area,mini-bar:** 修复 `tooltipType` 为 `mini` 时偏移问题 ([#1200](https://github.com/ng-alain/delon/issues/1200)) ([5524c35](https://github.com/ng-alain/delon/commit/5524c359392a5e2fdf446512271ff03b09890477))
+* **sf:** 修复无法编译严格模式 Schema ([#1197](https://github.com/ng-alain/delon/issues/1197)) ([acb59a3](https://github.com/ng-alain/delon/commit/acb59a3cf77d94df230bf4c58fa3c538802ee8ef))
+
+
+# [11.7.0](https://github.com/ng-alain/delon/compare/11.6.0...11.7.0) (2021-02-27)
 
 ### Scaffold
 
-* 移除 `editor.snippetSuggestions` 配置，由于最新 [ng-zorro-vscode](https://marketplace.visualstudio.com/items?itemName=cipchk.ng-zorro-vscode) 版本不再推荐该项配置为 `top` ([#861](https://github.com/ng-alain/ng-alain/pull/861))
+* **feat:** 新增 [environment](https://github.com/ng-alain/ng-alain/blob/master/src/environments/environment.ts) 类型，更友好的使用环境变量 ([#1935](https://github.com/ng-alain/ng-alain/pull/1935))
+* **feat:** 移除多余的第三方类库，可以利用 `ng update ng-alain` 直接修复 ([#1940](https://github.com/ng-alain/ng-alain/pull/1940))
+* **feat:** 增加 `strictTemplates: true` 支持 ([#1939](https://github.com/ng-alain/ng-alain/pull/1939))
+* **perf:** 优化 `@delon/mock` 的导入方式在生产环境下可以减少 150kb 大小 ([#1941](https://github.com/ng-alain/ng-alain/pull/1941))
 
 ### Bug Fixes
 
-* **module:*:** 修复所有无效复杂类型的全局配置 ([#378](https://github.com/ng-alain/delon/issues/378)) ([b58334f](https://github.com/ng-alain/delon/commit/b58334f))
-* **module:reuse-tab:** 修复路由切换时可能产生溢出 ([#369](https://github.com/ng-alain/delon/issues/369)) ([83d7831](https://github.com/ng-alain/delon/commit/83d7831)), closes [#361](https://github.com/ng-alain/delon/issues/361)
-* **module:se:** 修复错误消息样式不正确 ([#371](https://github.com/ng-alain/delon/issues/371)) ([c5431f8](https://github.com/ng-alain/delon/commit/c5431f8)), closes [#370](https://github.com/ng-alain/delon/issues/370)
-* **module:sf:autocomplete:** 修复 `SFSchemaEnum` 无法识别 `value` 值 ([#362](https://github.com/ng-alain/delon/issues/362)) ([9cd179e](https://github.com/ng-alain/delon/commit/9cd179e))
-* **module:st:** 修复所有项都禁用时不应该允许操作全选操作 ([#367](https://github.com/ng-alain/delon/issues/367)) ([20b654e](https://github.com/ng-alain/delon/commit/20b654e)), closes [#363](https://github.com/ng-alain/delon/issues/363)
+* **abc:st:** 修复 `export` 导出Excel方法无法重新指定 `columns` ([#1181](https://github.com/ng-alain/delon/issues/1181)) ([50baea3](https://github.com/ng-alain/delon/commit/50baea3df93e94cbc674d007de7e824992aabaec))
+* **abc:st:** 修复导出Excel数据没有转换 ([#1180](https://github.com/ng-alain/delon/issues/1180)) ([f800e66](https://github.com/ng-alain/delon/commit/f800e66af62712a7a06443479befda78639dfab1))
+* **abc:theme:i18n:** 修复 `AlainI18NService` 缺失 `defaultLang`、`currentLang` 属性 ([#1183](https://github.com/ng-alain/delon/issues/1183)) ([f65cb6b](https://github.com/ng-alain/delon/commit/f65cb6bd54b4ffaba8f2a90bb73b1449da861be0))
+* **chart:trend:** 修复上升下降标识无法体现 ([#1174](https://github.com/ng-alain/delon/issues/1174)) ([3a10bf3](https://github.com/ng-alain/delon/commit/3a10bf354375701ea70a90b2a760531c46135f01))
+* **form:** 修复部分无 `for` 的小部件 ([#1144](https://github.com/ng-alain/delon/issues/1144)) ([e0ffa64](https://github.com/ng-alain/delon/commit/e0ffa64d3621b37458b460fbf9953e1bf9a1d1fd))
+* **form:widget:date:** 修复 `mode` 为 `range` 时无法指定默认值 ([#1185](https://github.com/ng-alain/delon/issues/1185)) ([d14a823](https://github.com/ng-alain/delon/commit/d14a8234f747c26e01b680e6d109b91071b5f3f4))
+* **theme:** 修复部分 less4 样式无效 ([#1172](https://github.com/ng-alain/delon/issues/1172)) ([5e272c1](https://github.com/ng-alain/delon/commit/5e272c13739d71e3cc4c479440eafd5ac61ef7a7))
+* **theme:layout-default:** 修复当指定 `nav` 参数时应禁用默认菜单 ([#1193](https://github.com/ng-alain/delon/issues/1193)) ([38e60f5](https://github.com/ng-alain/delon/commit/38e60f5d2f010c9fb6000795f703107cb6a0035c))
+* **util:ArrayService:** 修复 `flat`, `uniq` 返回参数问题 ([#1171](https://github.com/ng-alain/delon/issues/1171)) ([7375cdf](https://github.com/ng-alain/delon/commit/7375cdfb35a1d0b4489216a46d29fbb626f69265))
 
 ### Features
 
-* **module:reuse-tab:** 新增支持自定义右键菜单 ([#368](https://github.com/ng-alain/delon/issues/368)) ([2c0eb89](https://github.com/ng-alain/delon/commit/2c0eb89)), closes [#364](https://github.com/ng-alain/delon/issues/364)
-* **module:sidebar-nav:** 新增 `recursivePath` 属性 ([#374](https://github.com/ng-alain/delon/issues/374)) ([e24ee4f](https://github.com/ng-alain/delon/commit/e24ee4f)), closes [#373](https://github.com/ng-alain/delon/issues/373) [#365](https://github.com/ng-alain/delon/issues/365)
+* **abc:let:** 新增 `let` 组件 ([#1187](https://github.com/ng-alain/delon/issues/1187)) ([9c4397b](https://github.com/ng-alain/delon/commit/9c4397b579aaf606f3abc6d09b9c4e5e64b4e133))
+* **abc:reuse-tab:** 新增 `disabled` 属性 ([#1179](https://github.com/ng-alain/delon/issues/1179)) ([2d2014f](https://github.com/ng-alain/delon/commit/2d2014f97cb5b85e758c985bcae53be88ee0a310))
+* **abc:reuse-tab:** 新增 `titleRender` 属性 ([#1186](https://github.com/ng-alain/delon/issues/1186)) ([5df3c61](https://github.com/ng-alain/delon/commit/5df3c6113a12d4fc96b9d312440c169d5999b815))
+* **abc:theme:** 新增环境变量类型 ([#1182](https://github.com/ng-alain/delon/issues/1182)) ([4e1c432](https://github.com/ng-alain/delon/commit/4e1c432b5844494bb4996fe69595816b1dbe50cb))
+* **form:** 升级 `ajv` 至 `7.x`，不再需要 `angular.json` 中指定 `scripts` 参数 ([#1188](https://github.com/ng-alain/delon/issues/1188)) ([431d540](https://github.com/ng-alain/delon/commit/431d540d3f5169b36222697c83edbcff6de55220))
+* **mock:** 新增 `MockService` 下增加 `setData` 方法 ([#1190](https://github.com/ng-alain/delon/issues/1190)) ([a118a07](https://github.com/ng-alain/delon/commit/a118a07f5d5275e859d4ea425f8c39bbff90e6b5))
+* **module:theme:** 新增西班牙语 [#308](https://github.com/ng-alain/delon/issues/308) ([#1175](https://github.com/ng-alain/delon/issues/1175)) ([3428310](https://github.com/ng-alain/delon/commit/342831048bd37e5dd02cee4eebbf39904bfa0a8f))
+* **util:form:** 新增 `MatchControl`，一般用于密码与确认密码响应式表单中 ([#1178](https://github.com/ng-alain/delon/issues/1178)) ([84ab014](https://github.com/ng-alain/delon/commit/84ab014da009803476dfc4d8b3c7cb7b447ca18a))
+
+### Performance Improvements
+
+* 使用 `ngDevMode` 摇树优化掉错误消息，减少包体大小 ([#1191](https://github.com/ng-alain/delon/issues/1191)) ([56b45c8](https://github.com/ng-alain/delon/commit/56b45c8ecaf93248e70701acd25ce096f37fc0b5))
 
 
-# [7.0.0-rc.3](https://github.com/ng-alain/delon/compare/7.0.0-rc.2...7.0.0-rc.3) (2018-12-29)
+# [11.6.0](https://github.com/ng-alain/delon/compare/11.3.1...11.6.0) (2021-02-07)
 
-### Bug Fixes
+**祝大家牛年新年快乐 🇨🇳🐂🧧，为了讨喜NG-ALAIN将跳过两个次版本号，直接进入 `6` 版本，希望来年大家都能六六大顺。🧧🧨🧧🧨🧧🧨**
 
-* **module:theme:** 修复未找到 `window` 值 ([#355](https://github.com/ng-alain/delon/issues/355)) ([3be639a](https://github.com/ng-alain/delon/commit/3be639a))
+本次主要针对 `@delon/util` 的重构，在原来的基础进一步分类并新增一些常见的工具类，NG-ALAIN把其分为：
+- `@delon/util/array` 数组与树相关，数组、树、查找树、扁平、分组、去重
+- `@delon/util/browser` 浏览器相关，`CookieServicew`、`copy`、`ScrollService`
+- `@delon/util/date-time` 日期时间转换
+- `@delon/util/decorator` 装饰器
+- `@delon/util/form` 响应式表单校验
+- `@delon/util/format` 字符,校验,货币,掩码
+- `@delon/util/math` 范围、四舍五入
+- `@delon/util/token` 访问 `Window`、`visibilitychange` 等
+- `@delon/util/other` 深获取、拷贝、合并、延迟、断言
+- `@delon/util/pipes` 包含 `price`, `mega`, `cny`, `filter`, `mask` 管道
 
+> 有关更多细节请参考 @delon/util [文档](https://ng-alain.com/util/getting-started/zh)。
 
-# [7.0.0-rc.2](https://github.com/ng-alain/delon/compare/7.0.0-rc.1...7.0.0-rc.2) (2018-12-28)
+除此之外，**建议**使用 `nz-range-picker` 与 `extend` 指令配合来替代 `range-picker`，NG-ALAIN 将在 `12.0.0` 时移除 `range-picker`。
+
+```html
+<range-picker [(ngModel)]="i.start" [(ngModelEnd)]="i.end"></range-picker>
+```
+
+变更为：
+
+```html
+<nz-range-picker [(ngModel)]="i.start" extend [(ngModelEnd)]="i.end"></nz-range-picker>
+```
 
 ### Scaffold
 
-* 路由通配符指向 `/exception/404` ([db3055b](https://github.com/ng-alain/ng-alain/commit/db3055b))
-* 使用 `scrollPositionRestoration` 替代 `ScrollService` 来管理切换路由时滚动条位置 ([135327b](https://github.com/ng-alain/ng-alain/commit/135327b))
-* 优化 `default.interceptor.ts`
+* 修复小屏幕下无法多次打开搜索框 ([#1929](https://github.com/ng-alain/ng-alain/pull/1929))
+* 优化使用次级导入 `@delon/util` ([#1927](https://github.com/ng-alain/ng-alain/pull/1927))
 
 ### Bug Fixes
 
-* **module:cache:** 修复 `get` 无效指定存储参数 ([#343](https://github.com/ng-alain/delon/issues/343)) ([fd005e5](https://github.com/ng-alain/delon/commit/fd005e5))
-* **module:reuse-tab:** 修复存储时应忽略不可关闭缓存 ([#344](https://github.com/ng-alain/delon/issues/344)) ([fa08c07](https://github.com/ng-alain/delon/commit/fa08c07))
-* **module:se:** 修复重置值时应触发一次变更检测 ([#339](https://github.com/ng-alain/delon/issues/339)) ([7223e85](https://github.com/ng-alain/delon/commit/7223e85))
-* **module:sf:** 修复数组添加按钮会触发提交事件 ([#349](https://github.com/ng-alain/delon/issues/349)) ([8e11729](https://github.com/ng-alain/delon/commit/8e11729)), closes [#348](https://github.com/ng-alain/delon/issues/348)
-* **module:sf:** 修复异步可能会引起丢失数据问题 ([#345](https://github.com/ng-alain/delon/issues/345)) ([2520f11](https://github.com/ng-alain/delon/commit/2520f11))
+* **abc:st:** 修复 `toTop` 无法工作问题 ([#1153](https://github.com/ng-alain/delon/issues/1153)) ([93e314d](https://github.com/ng-alain/delon/commit/93e314de1c4d42117d25fc8f620e4176016cda64))
+* **cli:ng-update:** 修复 `Cannot read property 'configurations' of undefined` 错误 ([#1156](https://github.com/ng-alain/delon/issues/1156)) ([26d41e1](https://github.com/ng-alain/delon/commit/26d41e1efed154e0cdf477db88d2440a2c40b9ae))
+* **theme:_HttpClient:** 修复未订阅时不进行计数 ([#1157](https://github.com/ng-alain/delon/issues/1157)) ([a6b375a](https://github.com/ng-alain/delon/commit/a6b375ab89c80f012bca3f5abf26686f0bbee118))
+* **theme** 修复部分样式不支持 less4 问题 ([#1155](https://github.com/ng-alain/delon/issues/1155)) ([331b009](https://github.com/ng-alain/delon/commit/331b0095bbe725e1a192225cc25178da307e8c6e))
 
 ### Features
 
-* **module:reuse-tab:** 新增保持滚动条 ([#347](https://github.com/ng-alain/delon/issues/347)) ([862d8f4](https://github.com/ng-alain/delon/commit/862d8f4))
+* **abc:auto-focus:** 新增 `auto-focus` 组件 ([#1161](https://github.com/ng-alain/delon/issues/1161)) ([c02b755](https://github.com/ng-alain/delon/commit/c02b7552220d0bdbb4a56d435eac3640e785d966))
+* **abc:range-picker** 新增 `extend` 指令来替代 `range-picker` 组件，尽可能保持 `nz-range-picker` 的原始性 ([#1167](https://github.com/ng-alain/delon/issues/1167))
+* **abc:highlight:** 新增 `highlight` 高亮组件 ([#1160](https://github.com/ng-alain/delon/issues/1160)) ([0d940c3](https://github.com/ng-alain/delon/commit/0d940c354421ddb110ac2ccbe229bf0332703dda))
+* **abc:st:** 新增 `contextmenu` 右键菜单 ([#1169](https://github.com/ng-alain/delon/issues/1169)) ([6461428](https://github.com/ng-alain/delon/commit/6461428e94a6ee7b6954ad54ce27964b6fb3245b))
+* **abc:st:** 新增 `showHeader` 是否显示表头属性 ([#1151](https://github.com/ng-alain/delon/issues/1151)) ([47f0447](https://github.com/ng-alain/delon/commit/47f044769932c58ccca5502913f20f39a55b1746))
+* **abc:st** 新增 `STColumn` 支持强类型数据源 ([#1159](https://github.com/ng-alain/delon/issues/1159)) ([dadba41](https://github.com/ng-alain/delon/commit/dadba4187ee984ee4db63a18312ebe72a8f4c021))
+* **util:ArrayService:** 新增 `findTree` 方法 ([#1164](https://github.com/ng-alain/delon/issues/1164)) ([12bf232](https://github.com/ng-alain/delon/commit/12bf2320f66c8f8c3e36cfbcbc95dd640c780b60))
+* **util:token:** 新增一组常见 Web Apis 的 tokens ([#1162](https://github.com/ng-alain/delon/issues/1162)) ([1a4b9d7](https://github.com/ng-alain/delon/commit/1a4b9d78767f3e631dca530548e8989dba8a7c2a))
+* **util:pipes:** 新增 `filter` 管道 ([#1158](https://github.com/ng-alain/delon/issues/1158)) ([ac8f768](https://github.com/ng-alain/delon/commit/ac8f7688a45824945c841805fff2fc19d19429e8))
+* **util** 重构 `@delon/util`，新增数学、格式化、管道、浏览器、数组与树、断言等方法 ([#1154](https://github.com/ng-alain/delon/issues/1154))
 
 
-# [7.0.0-rc.1](https://github.com/ng-alain/delon/compare/7.0.0-rc.0...7.0.0-rc.1) (2018-12-24)
+## [11.3.1](https://github.com/ng-alain/delon/compare/11.3.0...11.3.1) (2021-01-28)
+
+### Bug Fixes
+
+* **sf:widget:select:** 修复缺少 `showArrow` 属性 ([#1147](https://github.com/ng-alain/delon/issues/1147)) ([4d51d61](https://github.com/ng-alain/delon/commit/4d51d6147d4c1908f684cdff1e7f5553e719a440))
+* **cli:** 修复 `ng-alain:module` 命令无法运行 ([#1149](https://github.com/ng-alain/delon/issues/1149)) ([f8c5a59](https://github.com/ng-alain/delon/commit/f8c5a59395db656691eea9efc54fe9618a460450))
+
+
+# [11.3.0](https://github.com/ng-alain/delon/compare/11.2.0...11.3.0) (2021-01-25)
+
+### Bug Fixes
+
+* **abc:full-content:** 修复工作区内无法显示滚动条 ([#1140](https://github.com/ng-alain/delon/issues/1140)) ([0fd0c40](https://github.com/ng-alain/delon/commit/0fd0c4064010b4286b1b7fa223ca4d9c966ac8ad))
+* **form:** 修复部分标签无法自动关联 `id` ([#1143](https://github.com/ng-alain/delon/issues/1143)) ([35bdffb](https://github.com/ng-alain/delon/commit/35bdffbd0455b418b8ee22ffe8d54b63f93e779a))
+* **sf:widget:array:** 修复无法触发 `minItems` 错误类型 ([#1145](https://github.com/ng-alain/delon/issues/1145)) ([1411a6d](https://github.com/ng-alain/delon/commit/1411a6d31926a5aa3983ce48aa95c879fcb723dc))
+* **sf:widget:time:** 修复无法显示占位符 ([#1139](https://github.com/ng-alain/delon/issues/1139)) ([e341c93](https://github.com/ng-alain/delon/commit/e341c93f9fa7296058cf633b21c0cebe7a694935))
+* **theme:** 修复路由动画为可选项 ([#1136](https://github.com/ng-alain/delon/issues/1136)) ([2865c2d](https://github.com/ng-alain/delon/commit/2865c2d9f0e6398f5dd4eeba433e9aa3c0a57d77))
+
+### Features
+
+* **abc:quick-menu:** 增加 `expand` 属性 ([#1138](https://github.com/ng-alain/delon/issues/1138)) ([ae80102](https://github.com/ng-alain/delon/commit/ae801023415e002de500125570fbd5a280102a79))
+* **abc:sv:** 增加 `sv-value` 组件 ([#1141](https://github.com/ng-alain/delon/issues/1141)) ([4892a71](https://github.com/ng-alain/delon/commit/4892a71a8194a1cab38322dbf9a67735ff9c319f))
+
+
+# [11.2.0](https://github.com/ng-alain/delon/compare/11.1.0...11.2.0) (2021-01-13)
+
+### Bug Fixes
+
+* **cli:** 修复 `ng add ng-alain` 时 `screenfull` 无效版本问题 ([#1129](https://github.com/ng-alain/delon/issues/1129)) ([f9291c9](https://github.com/ng-alain/delon/commit/f9291c9852fd769d91c8f395b5462aac110d8e1a))
+* **theme:** 修复路由切换时动画失效 ([#1134](https://github.com/ng-alain/delon/issues/1134)) ([dcb6284](https://github.com/ng-alain/delon/commit/dcb628495a52e4a0b61ee4ad7a692243f29c90c7))
+
+### Features
+
+* **chart:number-info:** 新增多个相同 `number-info` 时显示分隔线 ([#1133](https://github.com/ng-alain/delon/issues/1133)) ([876d4db](https://github.com/ng-alain/delon/commit/876d4db798dfc4cd1ee077324fe3a459bc6fff72))
+
+### BREAKING CHANGES
+
+* **cli:** 将.template后缀用于原理图模板文件，需要对 `_cli-tpl` 目录下的文件手动添加 `.template` 后缀 ([#1128](https://github.com/ng-alain/delon/issues/1128)) ([0ac979e](https://github.com/ng-alain/delon/commit/0ac979e4cc7dcbdfba923be6327e414f3991b2d7))
+
+
+# [11.1.0](https://github.com/ng-alain/delon/compare/11.0.2...11.1.0) (2021-01-05)
 
 ### Scaffold
 
-* 新增异常触发示例页
-* 新增波兰语
-* 优化路径配置 ([#825](https://github.com/ng-alain/ng-alain/pull/825))
+* 支持 RTL
+* 优化 `SharedModule` 模块 ([#1894](https://github.com/ng-alain/ng-alain/pull/1894)) ([bd0a161](https://github.com/ng-alain/ng-alain/commit/bd0a16163e4b3f9ebc4a4d80eb3829fe3ad7d731))
+* 更新 `.browserslistrc` ([#1902](https://github.com/ng-alain/ng-alain/pull/1902)) ([77925a8](https://github.com/ng-alain/ng-alain/commit/77925a8e1dda832ce3a54c26ed09377fd6c9e09d))
+* 移除重复 `package.json` 的依赖 ([#1902](https://github.com/ng-alain/ng-alain/pull/1902)) ([77925a8](https://github.com/ng-alain/ng-alain/commit/77925a8e1dda832ce3a54c26ed09377fd6c9e09d))
+* 移除 NG-ZORRO 在 `12` 版本将要移除的属性 ([#1895](https://github.com/ng-alain/ng-alain/pull/1895)) ([2272a9a](https://github.com/ng-alain/ng-alain/commit/2272a9ae7e1da1b87cda3dd796e0708c33f608c1))
 
 ### Bug Fixes
 
-* **module:auth:** 修复无法识别完整URL匿名键名 ([#328](https://github.com/ng-alain/delon/issues/328)) ([e223ccb](https://github.com/ng-alain/delon/commit/e223ccb))
-* **module:sf:** 修复重置值时应触发一次变更检测 ([#332](https://github.com/ng-alain/delon/issues/332)) ([ffd365b](https://github.com/ng-alain/delon/commit/ffd365b))
-* **module:sf:cascader:** 修复未指定 `labelProperty`、`valueProperty` 问题 ([#325](https://github.com/ng-alain/delon/issues/325)) ([4d4e53f](https://github.com/ng-alain/delon/commit/4d4e53f))
-* **module:st:** 修复调用 `removeRow` 方法应重新计算序号 ([#331](https://github.com/ng-alain/delon/issues/331)) ([6c8c2d1](https://github.com/ng-alain/delon/commit/6c8c2d1)), closes [#330](https://github.com/ng-alain/delon/issues/330)
-* **module:theme:** 修复主菜单在Firefox下总是显示滚动条 ([#336](https://github.com/ng-alain/delon/issues/336)) ([727d0d7](https://github.com/ng-alain/delon/commit/727d0d7))
-* **module:theme:menu:** 标记过期属性 `linkExact` ([#337](https://github.com/ng-alain/delon/issues/337)) ([ebbeed3](https://github.com/ng-alain/delon/commit/ebbeed3))
+* **auth:** 修复 jwt 模式总是触发刷新事件 ([#1115](https://github.com/ng-alain/delon/issues/1115)) ([1ef2369](https://github.com/ng-alain/delon/commit/1ef23696d5ff8de8133cbe2d5e7a53cedee2f5d6))
+* **cli:plugin:icon:** 修复支持条件表达式 ([#1121](https://github.com/ng-alain/delon/issues/1121)) ([a481c1c](https://github.com/ng-alain/delon/commit/a481c1c257edaac603852c0096c5f4a4ecb371f5))
 
 ### Features
 
-* **module:testing:** 增加 `@delon/testing` 测试套件库 ([#329](https://github.com/ng-alain/delon/issues/329)) ([9d533cf](https://github.com/ng-alain/delon/commit/9d533cf))
-* **module:auth:** 增加 `referrer` 属性，用于获取跳转前URL ([#334](https://github.com/ng-alain/delon/issues/334)) ([0510864](https://github.com/ng-alain/delon/commit/0510864))
-* **module:mock:** 增加 `executeOtherInterceptors` 命中后继续执行后续拦截器 ([#321](https://github.com/ng-alain/delon/issues/321)) ([d77e8e9](https://github.com/ng-alain/delon/commit/d77e8e9))
-* **module:sidebar-nav:** 增加 `disabledAcl` 属性，当 ACL 未授权时以禁用状态显示 ([#337](https://github.com/ng-alain/delon/issues/337)) ([ebbeed3](https://github.com/ng-alain/delon/commit/ebbeed3))
-* **module:st:** 增加 `expandRowByClick` 属性，点击行展开与收缩 ([#326](https://github.com/ng-alain/delon/issues/326)) ([a8a6695](https://github.com/ng-alain/delon/commit/a8a6695))
-* **module:st:** 增加 `url` 模式下支持数组响应体 ([#327](https://github.com/ng-alain/delon/issues/327)) ([4e681dc](https://github.com/ng-alain/delon/commit/4e681dc))
-* **module:util:** 增加 `stringTemplateOutlet` 指令 ([#324](https://github.com/ng-alain/delon/issues/324)) ([e8d9ed1](https://github.com/ng-alain/delon/commit/e8d9ed1))
-* **module:theme:** 新增波兰语 ([#308](https://github.com/ng-alain/delon/issues/308)) ([025282c](https://github.com/ng-alain/delon/commit/025282c))
+* **abc:st:** 新增 `pureList` 方法 ([#1126](https://github.com/ng-alain/delon/issues/1126)) ([70270f8](https://github.com/ng-alain/delon/commit/70270f8bb4914e5ad2bd4d769f121131b4e98944))
+* **abc:st:** 新增 `setRow` 支持行对象传递 ([#1119](https://github.com/ng-alain/delon/issues/1119)) ([9ea783e](https://github.com/ng-alain/delon/commit/9ea783e327d206b8cc8ad0d10cd2b56bd454d173))
+* **chart:** 使用延迟加载 G2 类库 ([#1123](https://github.com/ng-alain/delon/issues/1123)) ([cb7b5bb](https://github.com/ng-alain/delon/commit/cb7b5bbbbaeb218ac4e912275cd77e97dfc6e7e2))
+* **theme:** 新增 `RTLService` 服务类 ([#1120](https://github.com/ng-alain/delon/issues/1120)) ([1f4f67b](https://github.com/ng-alain/delon/commit/1f4f67b239f6ea7227aca046ba9110642a43e774))
+* **cli:plugin:rtl** 新增 `ng g ng-alain:plugin rtl` 插件 ([#1118](https://github.com/ng-alain/delon/issues/1118)) ([a5dc52e](https://github.com/ng-alain/delon/commit/a5dc52e0e180b18450e1d07537ff3da865c166b2))
 
-### BREAKING CHANGES
+### Performance Improvements
 
-* **module:chart:timeline:** 移除 `tickCount`，同步 antd 3.4 ([#323](https://github.com/ng-alain/delon/issues/323)) ([20920fc](https://github.com/ng-alain/delon/commit/20920fc))
+* **theme:** 优化 [@enable-all-colors](https://github.com/enable-all-colors) 默认为 `false` ([#1113](https://github.com/ng-alain/delon/issues/1113)) ([d03c8fb](https://github.com/ng-alain/delon/commit/d03c8fb1344b8d692e987fcd259e7d58417ec9dc))
 
-# [7.0.0-rc.0](https://github.com/ng-alain/delon/compare/2.0.1...7.0.0-rc.0) (2018-12-14)
 
-`ng-alain` will track the major version of `@angular/core` from `7.0.0-rc.0` like other angular libraries.
-
-- 支持 Angular 7.0
-- 重构整个 `@delon/*` 系列库，重点两项变更请参考：
-  - 移除部分类库 `.forRoot()`，[commit](https://github.com/ng-alain/ng-alain/pull/764/files#diff-e6d91e942371baa2d86bc42c2fa9ede8L85)
-  - `notify-icon` 组件需要额外增加 `btnClass`、`btnIconClass` 类名，[commit](https://github.com/ng-alain/ng-alain/pull/764/files#diff-b526c13479119e1a38465bdaa867009bR16)
-- 重构默认主题及所有示例页使用 OnPush 模式，参考 [#764](https://github.com/ng-alain/ng-alain/pull/764)
+## [11.0.2](https://github.com/ng-alain/delon/compare/11.0.1...11.0.2) (2020-12-23)
 
 ### Bug Fixes
 
-* **module:st:** 修复无过滤时依然显示过滤状态 ([#303](https://github.com/ng-alain/delon/issues/303)) ([96430d1](https://github.com/ng-alain/delon/commit/96430d1))
-* **module:st:** 修复无效 `body`
-* **module:st:** 修复丢失配置参数，[#815](https://github.com/ng-alain/ng-alain/issues/815)
-* **module:se:** 修复禁止状态时依然显示错误视觉, [#312](https://github.com/ng-alain/delon/issues/312)
-* **schematics:** 修复 `list` 模式使用过期代码 ([#302](https://github.com/ng-alain/delon/issues/302)) ([839147e](https://github.com/ng-alain/delon/commit/839147e))
-
-### Features
-
-* **module:theme:title:** 增加 `setTitleByI18n` 方法 ([#299](https://github.com/ng-alain/delon/issues/299)) ([80a9636](https://github.com/ng-alain/delon/commit/80a9636))
-* **module:utils:** 增加 `isUrl` 校验
-* **module:mock:** 增加允许舞台 `HttpResponse`, [#813](https://github.com/ng-alain/ng-alain/issues/813)
-* **module:theme:** 增加 `@forced-turn-off-nz-modal-animation-enabled` 强制关闭 `nzModel` 动画效果
-* **module:utils:** 增加 `deepMerge` 深度合并
-
-### BREAKING CHANGES
-
-* **module:utils:** 移除 `yuan`
+* **cli:ng-add:** 增加 `color.less` 和编译好的主题样式文件 ([#1111](https://github.com/ng-alain/delon/issues/1111)) ([5beca2f](https://github.com/ng-alain/delon/commit/5beca2fe36c64e5fdba6732facd276311ac6291b))
+* **sf:select:** 修改无效加载状态 ([#1110](https://github.com/ng-alain/delon/issues/1110)) ([a147f95](https://github.com/ng-alain/delon/commit/a147f95cc1d8d0c7524827cdd732b3ece47490cb))
+* **theme:_HttpClient:** 修复多个请求都结束时才会变更 `loading` 状态 ([#1109](https://github.com/ng-alain/delon/issues/1109)) ([9e3dc29](https://github.com/ng-alain/delon/commit/9e3dc29782bc9334e62abbf6afccb5a62e903653))
 
 
-## 2.0.1
-
-`2018-11-25`
+## [11.0.1](https://github.com/ng-alain/delon/compare/11.0.0...11.0.1) (2020-12-22)
 
 ### Bug Fixes
 
-* **module:page-header:** 修复 `autoBreadcrumb: false` 时切换路依然会渲染导航 ([#296](https://github.com/ng-alain/delon/issues/296)) ([862aa9d](https://github.com/ng-alain/delon/commit/862aa9d)), closes [#293](https://github.com/ng-alain/delon/issues/293)
-* **module:sf:autocomplete:** 修复无效值 ([#291](https://github.com/ng-alain/delon/issues/291)) ([ac17fb3](https://github.com/ng-alain/delon/commit/ac17fb3)), closes [#290](https://github.com/ng-alain/delon/issues/290)
-* **module:sf:button:** 修复无效按钮大小 ([#294](https://github.com/ng-alain/delon/issues/294)) ([96f8adc](https://github.com/ng-alain/delon/commit/96f8adc))
-* **module:theme:style:** 修复 dropdown 与 button 的标准间距 ([#292](https://github.com/ng-alain/delon/issues/292)) ([d330e5e](https://github.com/ng-alain/delon/commit/d330e5e))
-* **module:theme:title:** 修复 `default` 不允许设置 ([#295](https://github.com/ng-alain/delon/issues/295)) ([a882507](https://github.com/ng-alain/delon/commit/a882507))
-
-### Features
-
-* **module:theme:** 新增土耳其语语言 ([#289](https://github.com/ng-alain/delon/issues/289)) ([9df6f0e](https://github.com/ng-alain/delon/commit/9df6f0e)), closes [#288](https://github.com/ng-alain/delon/issues/288)
+* **cli:** 修复 `tslint-language-service` 无效版本号 ([#1106](https://github.com/ng-alain/delon/issues/1106)) ([70ebb94](https://github.com/ng-alain/delon/commit/70ebb94c98116381c5dc32a07f3254675a56f6a3))
 
 
-## 2.0.0
-
-`2018-11-20`
-
-### **支持使用工具将 1.x 升级至 2.x，请参考[升级指南](https://ng-alain.com/docs/upgrade-v2/zh)**
-
-### Scaffold
-
-* **all:** 重构部分页面优先使用 `OnPush` 模式，提供更好的性能体验 ([#772](https://github.com/ng-alain/ng-alain/pull/772))
-* **router:** 根路由添加 `SimpleGuard` ([#774](https://github.com/ng-alain/ng-alain/pull/774))
-* **i18n:** 重构系列授权页，增加多语言版本 ([#777](https://github.com/ng-alain/ng-alain/pull/777))
+# [11.0.0](https://github.com/ng-alain/delon/compare/10.1.3...11.0.0) (2020-12-22)
 
 ### Bug Fixes
 
-* **module:mock:** 修复 `_HttClient` 的 `loading` 状态值 ([#270](https://github.com/ng-alain/delon/pull/270))
-* **module:sf:upload:** 修复 size 属性被占用 ([#274](https://github.com/ng-alain/delon/pull/274))
-* **module:sf:checkbox:** 修复延迟状态问题 ([#278](https://github.com/ng-alain/delon/pull/278))
-* **module:st:** 修复在ie、edge下会渲染null字符 ([#275](https://github.com/ng-alain/delon/pull/275))
-* **module:page-header:** 修复路由切换无法刷新导航数据 ([#276](https://github.com/ng-alain/delon/pull/276))
+* **sf:** 修复空值时 `pathValue` 属性返回整个表单数据 ([#1099](https://github.com/ng-alain/delon/issues/1099)) ([dad5ed0](https://github.com/ng-alain/delon/commit/dad5ed045d5c559cb2e4ab3b92f297e7c1ee9f3c))
+* **util:time:** 修复 `toDate` 时间戳与格式字符串冲突 ([#1093](https://github.com/ng-alain/delon/issues/1093)) ([3b97fc3](https://github.com/ng-alain/delon/commit/3b97fc3f33a58ff2701df52d1a0a055dfc523165))
+* **util:array:** 修复非空根编号时总是返回空数组 ([#1084](https://github.com/ng-alain/delon/issues/1084)) ([95c0946](https://github.com/ng-alain/delon/commit/95c0946f3dff1399ca567ad17dccc5a58542bb65))
 
 ### Features
 
-* **schematics:** Support for dynamic build ng-alain of specified language versions ([#286](https://github.com/ng-alain/delon/issues/286)) ([f0bff6d](https://github.com/ng-alain/delon/commit/f0bff6d))
-* **module:st:** 新增 `clear` & `clearStatus` 清除数据方法 ([#282](https://github.com/ng-alain/delon/pull/282))
-* **module:st:** 新增单排序配置项 [#775](https://github.com/ng-alain/ng-alain/issues/775) ([#283](https://github.com/ng-alain/delon/pull/283))
-* **module:http:** 新增系列 `@GET`, `@POST` 等修饰器，[文档](https://ng-alain.com/theme/http/zh#%E4%BD%BF%E7%94%A8%E4%BF%AE%E9%A5%B0%E5%99%A8) ([#284](https://github.com/ng-alain/delon/pull/284))
-* **schematics:** 新增 `ng add` 额外按 `defaultLanguage` 指定语言的示例代码 ([#286](https://github.com/ng-alain/delon/pull/286))
+* **cli:** 使用 source-map-explorer 替代 webpack-bundle-analyzer ([#1091](https://github.com/ng-alain/delon/issues/1091)) ([30a3dc9](https://github.com/ng-alain/delon/commit/30a3dc972f02138fbd572114789738a957454b3d))
+* **cli:module:** 新增 `ng g ng-alain:module` 时自动导入路由模块 ([#1100](https://github.com/ng-alain/delon/issues/1100)) ([da46d3c](https://github.com/ng-alain/delon/commit/da46d3c496cc13adc8430ed9bea2829a435d4b68))
+* **form:textarea:** 新增 `change`, `focus`, `blur` 事件 ([#1096](https://github.com/ng-alain/delon/issues/1096)) ([8ae609c](https://github.com/ng-alain/delon/commit/8ae609c8459cce3db0d9973a63f3e1e35547ec98))
+* **module:theme:** 新增法语 ([#1094](https://github.com/ng-alain/delon/issues/1094)) ([b20259a](https://github.com/ng-alain/delon/commit/b20259a787ca76671e9578ada060737ce32a6a92))
+* **sf:** 新增小部件属性的 `setVisible` 方法，用于控制显示与隐藏 ([#1098](https://github.com/ng-alain/delon/issues/1098)) ([fb46405](https://github.com/ng-alain/delon/commit/fb464050607effa595bae9f679c5097131039003))
+* **sf:select:** 新增 `searchDebounceTime` 属性 ([#1097](https://github.com/ng-alain/delon/issues/1097)) ([0fa1e70](https://github.com/ng-alain/delon/commit/0fa1e70a88a6cc400ff036b92556ebf3a67e33db))
+* **theme** 新增 `layout-default`、`layout-blank`、`setting-drawer`、`theme-btn` 主题组件 ([#1101](https://github.com/ng-alain/delon/issues/1101)) ([9703641](https://github.com/ng-alain/delon/commit/9703641147cb49b9853b1cb175241793177a5bff))
+* **abc:pdf:** 新增 `pdf` 组件 ([#1086](https://github.com/ng-alain/delon/issues/1086)) ([2882a52](https://github.com/ng-alain/delon/commit/2882a5283ebc869afb33db476de9167e8def5de0))
+* **abc:xlsx:** 新增支持 utf8 文件格式 ([#1088](https://github.com/ng-alain/delon/issues/1088)) ([59ff03b](https://github.com/ng-alain/delon/commit/59ff03bf8474d311a6d196bf993e7679fbb29ebf))
 
-### BREAKING CHANGES
+## 旧版本
 
-* **module:st:** 移除所有 `checkboxChange`、`radioChange`、`sortChange` 等过期事件，使用 `change` 替代 ([#281](https://github.com/ng-alain/delon/pull/281))
-
-
-## 2.0.0-rc.3
-
-`2018-11-09`
-
-### Scaffold
-
-* 修复命名错误 `GLOBAL_THIRD_MDOULES` 变更为 `GLOBAL_THIRD_MODULES` ([#762](https://github.com/ng-alain/ng-alain/pull/762))
-
-### Bug Fixes
-
-* **module:sf:checkbox:** 修复丢失 title 问题 ([#259](https://github.com/ng-alain/delon/issues/259)) ([b78f38a](https://github.com/ng-alain/delon/commit/b78f38a)), closes [#258](https://github.com/ng-alain/delon/issues/258)
-* **module:sf:tree-select:** 修复异步展示会重复渲染子项 ([#260](https://github.com/ng-alain/delon/issues/260)) ([2bfd75f](https://github.com/ng-alain/delon/commit/2bfd75f))
-* **module:st:** 修复 icon 无法触发 pop 问题 ([#256](https://github.com/ng-alain/delon/issues/256)) ([598f9ab](https://github.com/ng-alain/delon/commit/598f9ab))
-* **module:theme:menu:** 修复快捷菜单项污染原始菜单数据，导致重复高亮 ([#265](https://github.com/ng-alain/delon/issues/265)) ([a255fe0](https://github.com/ng-alain/delon/commit/a255fe0))
-
-### Features
-
-* **module:sidebar-nav:** 新增所有 icon 组件的属性 ([#263](https://github.com/ng-alain/delon/issues/263)) ([5b696f5](https://github.com/ng-alain/delon/commit/5b696f5))
-* **module:st:** 新增行号 `no` 类型 ([#261](https://github.com/ng-alain/delon/issues/261)) ([8fc29ce](https://github.com/ng-alain/delon/commit/8fc29ce))
-* **module:st:** 新增 `removeRow` 移除行方法 ([#255](https://github.com/ng-alain/delon/issues/255)) ([13a3a21](https://github.com/ng-alain/delon/commit/13a3a21))
-* **module:st:** 新增 `rowClassName` 组件属性 ([#268](https://github.com/ng-alain/delon/issues/268)) ([0af1484](https://github.com/ng-alain/delon/commit/0af1484))
-* **module:st:** 新增按钮允许 icon & text 并存 ([#256](https://github.com/ng-alain/delon/issues/256)) ([598f9ab](https://github.com/ng-alain/delon/commit/598f9ab))
-* **module:theme:** 新增 `.scrollbar` 美化 div 滚动条样式 ([#267](https://github.com/ng-alain/delon/issues/267)) ([161d328](https://github.com/ng-alain/delon/commit/161d328))
-* **module:theme:** 新增安全 URL `| url` 管道 ([#254](https://github.com/ng-alain/delon/issues/254)) ([62724a0](https://github.com/ng-alain/delon/commit/62724a0))
-* **schematics:** 新增运行 `ng` 命令时优先执行 color less 生成 ([#253](https://github.com/ng-alain/delon/issues/253)) ([145e4a9](https://github.com/ng-alain/delon/commit/145e4a9))
-
-
-## 2.0.0-rc.2
-
-`2018-11-01`
-
-### Bug Fixes
-
-* **module:sf:** 修复 `attempt to use a destroyed` 异常 ([#248](https://github.com/ng-alain/delon/issues/248)) ([3e470e7](https://github.com/ng-alain/delon/commit/3e470e7))
-* **module:sf:** 修复按钮 `spanLabelFixed` 为 `0` 时无效问题 ([#242](https://github.com/ng-alain/delon/issues/242)) ([1f601e2](https://github.com/ng-alain/delon/commit/1f601e2))
-* **module:theme:** 修复错误的灰色系代码 ([#249](https://github.com/ng-alain/delon/issues/249)) ([6234538](https://github.com/ng-alain/delon/commit/6234538))
-* **module:theme:** 修复 `ng-invalid` 样式风格 ([#243](https://github.com/ng-alain/delon/issues/243)) ([fe6d104](https://github.com/ng-alain/delon/commit/fe6d104))
-* **schematics:** 修复 `-t` 重复别名导致无效问题 ([#247](https://github.com/ng-alain/delon/issues/247)) ([4f744fa](https://github.com/ng-alain/delon/commit/4f744fa))
-
-### Features
-
-* **module:mock:** QueryString 支持数组类型 ([#246](https://github.com/ng-alain/delon/issues/246)) ([f0135ce](https://github.com/ng-alain/delon/commit/f0135ce))
-* **module:st:** 增加按钮 Icon ([#240](https://github.com/ng-alain/delon/issues/240)) ([1145d47](https://github.com/ng-alain/delon/commit/1145d47))
-* **module:theme:MenuService** 增加向上查找能力 ([#244](https://github.com/ng-alain/delon/issues/244)) ([c391d3a](https://github.com/ng-alain/delon/commit/c391d3a))
-* **module:theme:html:** 安全HTML，增加 `| html` 管道 ([#239](https://github.com/ng-alain/delon/issues/239)) ([0298665](https://github.com/ng-alain/delon/commit/0298665))
-* **module:theme:i18n:** 增加 `| i18n` 管道 ([#238](https://github.com/ng-alain/delon/issues/238)) ([423c9c3](https://github.com/ng-alain/delon/commit/423c9c3))
-
-
-## 2.0.0-rc.1
-
-`2018-10-25`
-
-### Bug Fixes
-
-* **form:** 修复重复调用变更检测 ([#224](https://github.com/ng-alain/delon/issues/224)) ([a9f2db6](https://github.com/ng-alain/delon/commit/a9f2db6))
-* **form:checkbox:** 修复 Checkbox 小部件错位 ([#226](https://github.com/ng-alain/delon/issues/226)) ([d75600e](https://github.com/ng-alain/delon/commit/d75600e))
-* **form:date:** 修复范围日期小部件 `nzShowTime` 丢失 ([#223](https://github.com/ng-alain/delon/issues/223)) ([a40bc13](https://github.com/ng-alain/delon/commit/a40bc13))
-* **st:** 修复标题错位 ([#229](https://github.com/ng-alain/delon/issues/229)) ([0d70d26](https://github.com/ng-alain/delon/commit/0d70d26))
-* **schematics:** 修复 `tpl` 自定义模板无法使用 `-t` 参数 ([#231](https://github.com/ng-alain/delon/issues/231)) ([829f11e](https://github.com/ng-alain/delon/commit/829f11e))
-* **schematics:** 修复 `edit` 模板包含无效 `msgSrv` 属性 ([#225](https://github.com/ng-alain/delon/issues/225)) ([e3270e4](https://github.com/ng-alain/delon/commit/e3270e4))
-* **schematics:** 修复 `ng add` 非I18N包含相关代码 ([#230](https://github.com/ng-alain/delon/issues/230)) ([93163a9](https://github.com/ng-alain/delon/commit/93163a9))
-
-### Features
-
-* **schematics:** 新增 `-t` 参数支持子目录 ([#231](https://github.com/ng-alain/delon/issues/231)) ([829f11e](https://github.com/ng-alain/delon/commit/829f11e))
-* **schematics:** 新增 `ng udpate` 将 1.x 升级至 2.0 [文档](https://ng-alain.com/docs/upgrade-v2#ng-update)
-* **schematics:plugin:** 新增 `icon` 图标插件，自动分析并生成图标引导文件 [文档](https://ng-alain.com/cli/plugin#icon)
-* 同步 ng-zorro-antd 1.7.1 ([#228](https://github.com/ng-alain/delon/issues/228)) ([9a62ea3](https://github.com/ng-alain/delon/commit/9a62ea3))
-
-### BREAKING CHANGES
-
-* **module:theme:** 使用 `NzDropdownService` 替代 `ContextMenuService` ([#234](https://github.com/ng-alain/delon/pull/234))
-
-
-## 2.0.0-beta.5
-
-`2018-10-15`
-
-### Bug Fixes
-
-* **form:** 修复 `readOnly` 无法呈现 ([#212](https://github.com/ng-alain/delon/issues/212)) ([6a68def](https://github.com/ng-alain/delon/commit/6a68def))
-* **scaffold:** 使用 `zh` 替代 `zh-Hans` ([6972e58](https://github.com/ng-alain/ng-alain/commit/6972e58))
-
-### Features
-
-* **code-style:** 升级 husky 配置 ([#208](https://github.com/ng-alain/delon/issues/208)) ([61c6214](https://github.com/ng-alain/delon/commit/61c6214))
-  - 脚手架变更 ([dd1cc90](https://github.com/ng-alain/ng-alain/commit/dd1cc90))
-* **abc.st:** 增加 `total` 国际化 ([#203](https://github.com/ng-alain/delon/issues/203)) ([ec0b0df](https://github.com/ng-alain/delon/commit/ec0b0df))
-* **theme:** 增加 `page-loading` 加载状态容器样式 ([#207](https://github.com/ng-alain/delon/issues/207)) ([ad43622](https://github.com/ng-alain/delon/commit/ad43622))
-  - 脚手架变更：优化国际化切换风格 ([8b6f318](https://github.com/ng-alain/ng-alain/commit/8b6f318))
-
-### BREAKING CHANGES
-
-* **theme:** ([6b8168f](https://github.com/ng-alain/ng-alain/commit/6b8168f))
-  + `layout-fixed` was changed to `alain-default__fixed`
-  + `layout-boxed` was changed to `alain-default__boxed`
-  + `aside-collapsed` was changed to `alain-default__collapsed`
-
-
-## 2.0.0-beta.4
-
-`2018-10-07`
-
-### Bug Fixes
-
-* **form:date:** 修复扁平模式下无效初始值 ([#187](https://github.com/ng-alain/delon/issues/187)) ([d2c89ca](https://github.com/ng-alain/delon/commit/d2c89ca))
-* **theme:styles** 移除重复空白间距代码 ([#193](https://github.com/ng-alain/delon/issues/193)) ([1545178](https://github.com/ng-alain/delon/commit/1545178))
-* **theme:drawer** 应导入至 `forChild` ([1545178](https://github.com/ng-alain/delon/commit/09516ea))
-
-
-### Features
-
-* **abc:page-header:** 增加 loading & wide 属性 ([#194](https://github.com/ng-alain/delon/issues/194)) ([299e877](https://github.com/ng-alain/delon/commit/299e877))
-* **form:number:** 增加 prefix & unit 属性 ([#189](https://github.com/ng-alain/delon/issues/189)) ([4121b90](https://github.com/ng-alain/delon/commit/4121b90))
-* **schematice:** 增加 color-less.js 颜色脚本 ([#196](https://github.com/ng-alain/delon/issues/196)) ([d7f7da6](https://github.com/ng-alain/delon/commit/d7f7da6))
-* **theme:context-menu:** 增加右击菜单辅助类 ([#191](https://github.com/ng-alain/delon/issues/191)) ([f0e96f6](https://github.com/ng-alain/delon/commit/f0e96f6))
-
-### BREAKING CHANGES
-
-* **abc:** 所有输入属性都必须指定属性值 ([cfd0497](https://github.com/ng-alain/delon/commit/cfd0497))
-
-
-## 2.0.0-beta.3
-
-`2018-9-29`
-
-- @delon/theme
-  - 新增 [DrawerHelper](https://ng-alain.com/theme/drawer/zh) 辅助类
-  - 修复 `_HttpClient` 对象 `param` 参数解析不标准，[#694](https://github.com/ng-alain/ng-alain/issues/694)
-  - 移除一些已过期样式，[#commit](https://github.com/ng-alain/ng-alain/pull/691)
-    - 使用 `nzBlock` 替代 `.ant-btn__block`
-    - 使用 `nzCover` 替代 `.ant-card__img`
-    - 移除多余 `.ant-card__title-img`，antd 已修复
-    - 移除 `.nz-carousel__dot-{color}` 由手工自定义
-    - 移除 `.box-placeholder` 由手工自定义
-- @delon/abc
-  - 新增 `st` 按钮类型 `drawer` 打开一个抽屉目标组件
-  - 修复 `_HttpClient` 对象 `param` 参数解析不标准，[#694](https://github.com/ng-alain/ng-alain/issues/694)
-- @delon/form
-  - 修复 `cascader` 小部件不支持 `showSearch` 参数，[#695](https://github.com/ng-alain/ng-alain/issues/695)
-  - 修复 `g2-custom` 默认应该块模型
-- @delon/util
-  - 修复 `getTimeDistance` 参数 `-today` 应是昨天至今天，[#696](https://github.com/ng-alain/ng-alain/issues/696)
-- cli
-  - 增加[自定义业务页模板](https://ng-alain.com/cli/generate/zh#%E8%87%AA%E5%AE%9A%E4%B9%89%E9%A1%B5)功能
-
-## 2.0.0-beta.2
-
-`2018-9-22`
-
-- 同步 `ng-zorro-antd` 至 `1.6.0`
-  - 新增 skeleton 组件
-- @delon/abc
-  - 重构 `st` 组件Http请求使用 `_HttpClient`，[#685](https://github.com/ng-alain/ng-alain/issues/685)
-  - 新增 `global-footer` 支持自定义组件
-- @delon/form
-  - 修复固定标签宽度时布局被挤兑
-  - 修复文本框在 Safari 浏览器下会重复录入，[#651](https://github.com/ng-alain/ng-alain/issues/651)
-  - 修复单多选框组 `readOnly` 无效问题，[#167](https://github.com/ng-alain/delon/issues/167)
-- @delon/theme
-  - 增加 `setLayout` 支持对象替换
-
-## 2.0.0-beta.1
-
-`2018-9-16`
-
-- 重构使用 ng-packagr 打包，支持 `@delon/abc`、`@delon/chart` 次级导入
-- 增加 `DelonLocaleModule` 支持所有 `@delon/*` 模块的[国际化](https://ng-alain.com/theme/locale)
-- 脚手架
-  - 增加[默认语言](https://ng-alain.com/docs/i18n#默认语言)示例代码，[commit](https://github.com/ng-alain/ng-alain/pull/683)
-  - 增加个人中心、设置示例页，[commit](https://github.com/ng-alain/ng-alain/pull/682)
-- @delon/chart
-  - **BREAKING CHANGES** 重命名 `g2-chart` 为 `g2-custom`
-  - 修复部分未导出模块，[#162](https://github.com/ng-alain/delon/issues/162)
-- @delon/theme
-  - 增加 `.ant-tag__plus` 样式
-- @delon/form
-  - 修复 select 小部件在 Search 模式下不支持 `width` 问题
-  - 修复 select 小部件若存在初始值则无法清空，[#674](https://github.com/ng-alain/ng-alain/issues/674)
-  - 修复 number 类型若存在初始值则无法清空，[#675](https://github.com/ng-alain/ng-alain/issues/675)
-- cli
-  - 修复 `view` 插件使用过期组件
-
-## 2.0.0-beta.0
-
-`2018-9-9`
-
-[升级指南](/docs/upgrade-v2)
-
-### 1.x
-
-1.x 历史变更日志请至[1.x-doc站](https://ng-alain.github.io/1.x-doc/docs/changelog)。
+旧版本的更新记录可以在 [Github](https://github.com/ng-alain/ng-alain/releases) 查看

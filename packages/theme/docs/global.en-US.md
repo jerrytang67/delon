@@ -30,7 +30,7 @@ title: Global Parameters
 | `@h4-font-size` | `16px` | h4 font size |
 | `@h5-font-size` | `14px` | h5 font size |
 | `@h6-font-size` | `12px` | h6 font size |
-| `@enable-all-colors` | `true` | Turn on background, text color<br>eg: `.bg-teal`、`.text-teal` |
+| `@enable-all-colors` | `false` | Turn on background, text color<br>eg: `.bg-teal`、`.text-teal` |
 | `@modal-sm` | `300px` | Small modal |
 | `@modal-md` | `500px` | Medium modal |
 | `@modal-lg` | `900px` | Large modal |
@@ -51,6 +51,7 @@ title: Global Parameters
 | `@scrollbar-track-color` | `rgba(0, 0, 0, 0.3)` | Scrollbar track color |
 | `@scrollbar-thumb-color` | `#6e6e6e` | Scrollbar thumb color |
 | `@scrollbar-table-enabled` | `false` | Enable landscaping scrollbars of nz-table |
+| `@rtl-enabled` | `false` | Wheter support RTL |
 
 ## Ng patch
 
@@ -61,6 +62,7 @@ title: Global Parameters
 | `@preserve-white-spaces-enabled` | `true` | Fixed between buttons spacing when enabled [preserveWhitespaces](https://angular.io/api/core/Component#preserveWhitespaces) is true |
 | `@preserve-sf-and-st-spaces` | `16px` | Spacing between `sf` and `st` |
 | `@preserve-buttons-spaces` | Spacing between `button` and `button`(incluldes: `button`,`button-group`,`popconfirm`) |
+| `@router-animation-enabled` | `false` | Whether to enable animation when route changing |
 | `@router-animation-duration` | `antFadeIn` | Route switching animation name |
 | `@router-animation-duration` | `1s` | Animation duration |
 
@@ -109,5 +111,4 @@ By `nz-table`。
 | `@abs-enabled` | `true` | Whether abs element|
 | `@masonry-enabled` | `true` | Whether css masonry |
 | `@setting-drawer-enabled` | `true` | Whether setting drawer css |
-| `@search-form-enabled` | `true` | Simple style search form, [DEMO](https://ng-alain.github.io/ng-alain/) |
-| `@search__form-enabled` | `true` | Pro style search form, [DEMO](https://ng-alain.github.io/ng-alain/) |
+| `@search__form-enabled` | `true` | Pro style search form, [DEMO](https://ng-alain.surge.sh/) |

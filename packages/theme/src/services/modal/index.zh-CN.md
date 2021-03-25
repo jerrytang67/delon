@@ -8,7 +8,6 @@ type: Service
 基于 `NzModalService` 封装，它解决一些已知问题：
 
 - 更友好的处理回调
-- 自动管理 `z-index` 值
 
 ## 用法
 
@@ -32,7 +31,7 @@ this.subject.destroy();
 
 ```html
 <div class="modal-header">
-    <div class="modal-title">Title</div>
+  <div class="modal-title">Title</div>
 </div>
 
 Your body content
@@ -54,4 +53,4 @@ Your body content
 | `size` | 指定对话框大小 | `sm,md,lg,xl,number` | `lg` |
 | `exact` | 是否精准（默认：`true`），若返回值非空值（`null`或`undefined`）视为成功，否则视为错误 | `boolean` | `true` |
 | `includeTabs` | 是否包裹标签页 | `boolean` | `false` |
-| `modalOptions` | nz-modal 对话框原始参数 [ModalOptionsForService](https://github.com/NG-ZORRO/ng-zorro-antd/blob/master/components/modal/nz-modal.type.ts) | `ModalOptionsForService` | - |
+| `modalOptions` | 对话框 [ModalOptions](https://github.com/NG-ZORRO/ng-zorro-antd/blob/master/components/modal/modal-types.ts) 参数 | `ModalOptions` | - |

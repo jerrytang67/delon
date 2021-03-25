@@ -28,19 +28,6 @@ ng g ng-alain:plugin [plugin name] -t=[add | remove]
 
 ## 插件列表
 
-### g2
-
-G2 图表。
-
-```bash
-# add
-ng g ng-alain:plugin g2
-# remove
-ng g ng-alain:plugin g2 -t=remove
-```
-
-> 更多请参考G2[开发文档](/chart)。
-
 ### codeStyle
 
 代码风格，有几个规则：
@@ -48,7 +35,7 @@ ng g ng-alain:plugin g2 -t=remove
 - 使用 [tslint](https://github.com/palantir/tslint) 校验 typescript 部分
 - 使用 [stylelint](https://github.com/stylelint/stylelint) 校验 less 部分
 - 使用 [prettier](https://github.com/prettier/prettier) 代码格式化
-- 使用 [husky](https://github.com/typicode/husky) 和 [lint-staged](https://github.com/okonet/lint-staged) 在你提交代码时进行代码校验和格式化
+- 使用 [husky](https://github.com/typicode/husky) 和 [pretty-quick](https://github.com/azz/pretty-quick) 在你提交代码时进行代码校验和格式化
 
 ng-alain 默认提供了一部分的代码风格配置方案，你可以在项目的根目录下找到这些配置信息，依照你自己的风格进行修饰。
 
@@ -59,22 +46,18 @@ ng g ng-alain:plugin codeStyle
 ng g ng-alain:plugin codeStyle -t=remove
 ```
 
-### hmr
+### ie
 
-支持 HMR 热替换。
+IE 浏览器只能在 ES5 下使用，有关更多细节请参考[支持IE11](/docs/ie11)。
 
 ```bash
 # add
-ng g ng-alain:plugin hmr
+ng g ng-alain:plugin ie
 # remove
-ng g ng-alain:plugin hmr -t=remove
+ng g ng-alain:plugin ie -t=remove
 ```
 
-安装后可使用启用 HMR 模式进入开发环境：
-
-```bash
-npm run hmr
-```
+安装后可使用 `npm run ie:start` 进入IE11的开发环境。
 
 ### docker
 
@@ -102,13 +85,19 @@ ng g ng-alain:plugin defaultLanguage --defaultLanguage=zh-tw
 
 #### 支持语言列表
 
-| 名称     | 语言包名称                  | 对应 [Angular](https://github.com/angular/angular/tree/master/packages/common/locales) 语言包         | 对应 [Zorro](http://ng.ant.design/docs/i18n/zh#%E6%94%AF%E6%8C%81%E8%AF%AD%E8%A8%80) 语言包 | 对应 [Delon](/theme/locale) 语言包 |
-| -------- | --------------------------- | --------------------------- | ----------------- | ----------------- |
-| 简体中文 | zh-Hans,zh-cn,zh-Hans-CN,zh | zh-Hans,zh-cn,zh-Hans-CN,zh | zh_CN             | zh_CN             |
-| 繁体中文 | zh-Hant,zh-tw,zh-Hant-TW    | zh-Hant,zh-tw,zh-Hant-TW    | zh_TW             | zh_TW             |
-| 英语（美式）    | en        | en           | en_US             | en_US        |
-| 土耳其语       | tr     | tr        | tr_TR            | tr_TR       |
-| 波兰语    | pl     | pl        | pl_PL            | pl_PL       |
+| 名称 | 语言包名称 | 对应 [Angular](https://github.com/angular/angular/tree/master/packages/common/locales) 语言包 | 对应 [Zorro](http://ng.ant.design/docs/i18n/zh#%E6%94%AF%E6%8C%81%E8%AF%AD%E8%A8%80) 语言包 | 对应 [Delon](/theme/locale) 语言包 |
+|----|-------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|-------------------------------|
+| 简体中文 | zh-Hans,zh-cn,zh-Hans-CN,zh | zh-Hans,zh-cn,zh-Hans-CN,zh | zh_CN | zh_CN |
+| 繁体中文 | zh-Hant,zh-tw,zh-Hant-TW | zh-Hant,zh-tw,zh-Hant-TW | zh_TW | zh_TW |
+| 英语（美式） | en | en | en_US | en_US |
+| 土耳其语 | tr | tr | tr_TR | tr_TR |
+| 波兰语 | pl | pl | pl_PL | pl_PL |
+| 希腊语 | el | el | el_GR | el_GR |
+| 朝鲜语 | ko | ko | ko_KR | ko_KR |
+| 克罗地亚 | hr | hr | hr_HR | hr_HR |
+| 斯洛文尼亚文 | sl | sl | sl_SI | sl_SI |
+| 法文 | fr | fr | fr_FR | fr_FR |
+| 西班牙语 | es | es | es_ES | es_ES |
 
 ### networkEnv
 
@@ -123,6 +112,17 @@ ng g ng-alain:plugin networkEnv --packageManager=yarn
 ng g ng-alain:plugin networkEnv --packageManager=npm -t=remove
 # remove yarn
 ng g ng-alain:plugin networkEnv --packageManager=yarn -t=remove
+```
+
+### sts
+
+[ng-alain-sts](https://github.com/ng-alain/sts) 插件，构建 Swagger API 转换为列表、编辑页，更多有趣的玩法请自行想象。
+
+```bash
+# add
+ng g ng-alain:plugin sts
+# remove
+ng g ng-alain:plugin sts -t=remove
 ```
 
 ### icon
@@ -159,10 +159,21 @@ export class StartupService {
 <i class="anticon anticon-question-circle-o"></i>
 <i class="anticon anticon-spin anticon-loading"></i>
 <i nz-icon class="anticon anticon-user"></i>
-<i nz-icon type="align-{{type ? 'left' : 'right'}}"></i>
+<i nz-icon nzType="align-{{type ? 'left' : 'right'}}"></i>
 <i nz-icon [type]="type ? 'menu-fold' : 'menu-unfold'" [theme]="theme ? 'outline' : 'fill'"></i>
 <i nz-icon [type]="type ? 'fullscreen' : 'fullscreen-exit'"></i>
-<i nz-icon type="{{ type ? 'arrow-left' : 'arrow-right' }}"></i>
-<i nz-icon type="filter" theme="outline"></i>
+<i nz-icon [nzType]="d.status === 'NORMAL' ? 'close1' : 'close2'"></i>
+<i nz-icon nzType="{{ type ? 'arrow-left' : 'arrow-right' }}"></i>
+<i nz-icon nzType="filter" theme="outline"></i>
 <nz-input-group [nzAddOnBeforeIcon]="focus ? 'anticon anticon-arrow-down' : 'anticon anticon-search'"></nz-input-group>
 ```
+
+### rtl
+
+支持 RTL 插件，即文本方向设置为“从右向左”。
+
+```bash
+ng g ng-alain:plugin rtl
+```
+
+> 该插件不支持移除功能，需要自行手动移除相关代码。

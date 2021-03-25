@@ -8,60 +8,66 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  ViewEncapsulation,
 } from '@angular/core';
-import { DelonLocaleService } from '@delon/theme';
-import { InputBoolean, InputNumber } from '@delon/util';
+import { DelonLocaleService, LocaleData } from '@delon/theme';
+import { BooleanInput, InputBoolean, InputNumber, NumberInput } from '@delon/util/decorator';
 import { Subscription } from 'rxjs';
-
 import { NoticeIconSelect, NoticeItem } from './notice-icon.types';
 
 @Component({
   selector: 'notice-icon',
+  exportAs: 'noticeIcon',
   templateUrl: './notice-icon.component.html',
   host: { '[class.notice-icon__btn]': 'true' },
+  preserveWhitespaces: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class NoticeIconComponent implements OnInit, OnChanges, OnDestroy {
+  static ngAcceptInputType_count: NumberInput;
+  static ngAcceptInputType_loading: BooleanInput;
+  static ngAcceptInputType_popoverVisible: BooleanInput;
+
   private i18n$: Subscription;
-  // tslint:disable-next-line:no-any
-  locale: any = {};
+  locale: LocaleData = {};
 
   @Input() data: NoticeItem[] = [];
   @Input() @InputNumber() count: number;
   @Input() @InputBoolean() loading = false;
   @Input() @InputBoolean() popoverVisible = false;
-  @Input() btnClass = '';
-  @Input() btnIconClass = '';
+  @Input() btnClass?: string | string[] | Set<string> | { [klass: string]: any };
+  @Input() btnIconClass?: string | string[] | Set<string> | { [klass: string]: any };
   @Output() readonly select = new EventEmitter<NoticeIconSelect>();
   @Output() readonly clear = new EventEmitter<string>();
   @Output() readonly popoverVisibleChange = new EventEmitter<boolean>();
 
   constructor(private i18n: DelonLocaleService, private cdr: ChangeDetectorRef) {}
 
-  onVisibleChange(result: boolean) {
+  onVisibleChange(result: boolean): void {
     this.popoverVisibleChange.emit(result);
   }
 
-  onSelect(i: NoticeIconSelect) {
+  onSelect(i: NoticeIconSelect): void {
     this.select.emit(i);
   }
 
-  onClear(title: string) {
+  onClear(title: string): void {
     this.clear.emit(title);
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.i18n$ = this.i18n.change.subscribe(() => {
       this.locale = this.i18n.getData('noticeIcon');
       this.cdr.markForCheck();
     });
   }
 
-  ngOnChanges() {
+  ngOnChanges(): void {
     this.cdr.markForCheck();
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.i18n$.unsubscribe();
   }
 }

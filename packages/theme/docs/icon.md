@@ -1,6 +1,6 @@
 ---
-type: Theme
-order: 3
+type: Documents
+order: 20
 title: Icon
 ---
 
@@ -48,11 +48,11 @@ export class StartupService {
 <i class="anticon anticon-question-circle-o"></i>
 <i class="anticon anticon-spin anticon-loading"></i>
 <i nz-icon class="anticon anticon-user"></i>
-<i nz-icon type="align-{{type ? 'left' : 'right'}}"></i>
+<i nz-icon nzType="align-{{type ? 'left' : 'right'}}"></i>
 <i nz-icon [type]="type ? 'menu-fold' : 'menu-unfold'" [theme]="theme ? 'outline' : 'fill'"></i>
 <i nz-icon [type]="type ? 'fullscreen' : 'fullscreen-exit'"></i>
-<i nz-icon type="{{ type ? 'arrow-left' : 'arrow-right' }}"></i>
-<i nz-icon type="filter" theme="outline"></i>
+<i nz-icon nzType="{{ type ? 'arrow-left' : 'arrow-right' }}"></i>
+<i nz-icon nzType="filter" theme="outline"></i>
 <nz-input-group [nzAddOnBeforeIcon]="focus ? 'anticon anticon-arrow-down' : 'anticon anticon-search'"></nz-input-group>
 ```
 
@@ -89,7 +89,7 @@ export class StartupService {
 ],
 ```
 
-如果非cnd还需要将相应的 icon 图标文件复制到 `assets` 目录下，同时修改 `iconfont.css` 中 `@font-face` 对应的 url 路径。
+如果非cdn还需要将相应的 icon 图标文件复制到 `assets` 目录下，同时修改 `iconfont.css` 中 `@font-face` 对应的 url 路径。
 
 ### @angular/elements
 
@@ -115,7 +115,6 @@ import { createCustomElement } from '@angular/elements';
 
 @NgModule({
   declarations: [],
-  entryComponents: []
 })
 export class AppModule {
   constructor(injector: Injector) {
@@ -138,7 +137,7 @@ export class DemoComponent {
   constructor(private san: DomSanitizer) { }
 
   value = this.san.bypassSecurityTrustHtml(
-    `icon: <nz-icon type="bell"></nz-icon>`,
+    `icon: <nz-icon nzType="bell"></nz-icon>`,
   );
 }
 ```

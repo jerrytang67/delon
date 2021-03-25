@@ -10,22 +10,20 @@
       "name": "debug build",
       "sourceMaps": false,
       "program": "${workspaceFolder}/scripts/build/packing.js",
-      "args": [
-        "chart"
-      ]
+      "args": ["chart"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "site generate",
-      "runtimeArgs": ["-r", "ts-node/register"],
-      "cwd": "${workspaceRoot}",
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "protocol": "inspector",
       "internalConsoleOptions": "openOnSessionStart",
-      "args": [
-        "${workspaceFolder}/scripts/site/generate.ts",
-        "table"
-      ]
+      "args": ["${workspaceFolder}/scripts/site/generate.ts", "getting-started"],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/scripts/site/tsconfig.json",
+        "TS_NODE_TRANSPILE_ONLY": "true"
+      }
     },
     {
       "type": "node",
@@ -36,9 +34,10 @@
       "protocol": "inspector",
       "sourceMaps": true,
       "internalConsoleOptions": "openOnSessionStart",
-      "args": [
-        "${workspaceFolder}/packages/schematics/test.ts"
-      ]
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/schematics/tsconfig.json"
+      },
+      "args": ["${workspaceFolder}/packages/schematics/test.ts"]
     }
   ]
 }

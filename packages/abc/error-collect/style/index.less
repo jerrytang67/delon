@@ -1,6 +1,13 @@
-@import '../../../theme/styles/default.less';
-.error-collect {
-  color: #f5222d;
+@import '../../../theme/theme-default.less';
+@error-collect-prefix: ~'.error-collect';
+
+@{error-collect-prefix} {
   padding-right: 24px;
+  color: @error-collect-color;
   cursor: pointer;
+  &__count {
+    padding-left: 8px;
+  }
 }
+
+@import './rtl.less';

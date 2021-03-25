@@ -28,17 +28,6 @@ The `[plugin name]` is plugin name, `-t` supports two values `add` (default) and
 
 ## List of plugins
 
-### g2
-
-```bash
-# add
-ng g ng-alain:plugin g2
-# remove
-ng g ng-alain:plugin g2 -t=remove
-```
-
-> For more details, please refer to G2 [Development Documentation](/chart).
-
 ### codeStyle
 
 Code style rules:
@@ -46,7 +35,7 @@ Code style rules:
 - Verify typescript with [tslint](https://github.com/palantir/tslint)
 - Verify less with [stylelint](https://github.com/stylelint/stylelint)
 - Use [prettier](https://github.com/prettier/prettier) code formatting
-- Use [husky](https://github.com/typicode/husky) and [lint-staged](https://github.com/okonet/lint-staged) to code verify and code format when git add
+- Use [husky](https://github.com/typicode/husky) and [pretty-quick](https://github.com/azz/pretty-quick) to code verify and code format when git add
 
 ```bash
 # add
@@ -55,22 +44,18 @@ ng g ng-alain:plugin codeStyle
 ng g ng-alain:plugin codeStyle -t=remove
 ```
 
-### hmr
+### ie
 
-Support HMR.
+IE browser can only be used under ES5. For more details, please refer to [Support IE11](/docs/ie11).
 
 ```bash
 # add
-ng g ng-alain:plugin hmr
+ng g ng-alain:plugin ie
 # remove
-ng g ng-alain:plugin hmr -t=remove
+ng g ng-alain:plugin ie -t=remove
 ```
 
-After installation, you can start HMR in the development environment:
-
-```bash
-npm run hmr
-```
+After installation, you can use `npm run ie: start` to enter IE11 development environment.
 
 ### docker
 
@@ -98,13 +83,19 @@ ng g ng-alain:plugin defaultLanguage --defaultLanguage=zh-tw
 
 #### Supported language list
 
-| Name     | Language pack name                  | [Angular](https://github.com/angular/angular/tree/master/packages/common/locales) pack         | [Zorro](http://ng.ant.design/docs/i18n/zh#%E6%94%AF%E6%8C%81%E8%AF%AD%E8%A8%80) pack | [Delon](/theme/locale) pack |
-| -------- | --------------------------- | --------------------------- | ----------------- | ----------------- |
-| Simplified Chinese | zh-Hans,zh-cn,zh-Hans-CN,zh | zh-Hans,zh-cn,zh-Hans-CN,zh | zh_CN   | zh_CN  |
-| Traditional Chinese | zh-Hant,zh-tw,zh-Hant-TW    | zh-Hant,zh-tw,zh-Hant-TW    | zh_TW  | zh_TW  |
-| English (American) | en        | en           | en_US             | en_US        |
-| Turkish    | tr     | tr        | tr_TR            | tr_TR       |
-| Polish    | pl     | pl        | pl_PL            | pl_PL       |
+| Name | Language pack name | [Angular](https://github.com/angular/angular/tree/master/packages/common/locales) pack | [Zorro](http://ng.ant.design/docs/i18n/zh#%E6%94%AF%E6%8C%81%E8%AF%AD%E8%A8%80) pack | [Delon](/theme/locale) pack |
+|------|--------------------|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-----------------------------|
+| Simplified Chinese | zh-Hans,zh-cn,zh-Hans-CN,zh | zh-Hans,zh-cn,zh-Hans-CN,zh | zh_CN | zh_CN |
+| Traditional Chinese | zh-Hant,zh-tw,zh-Hant-TW | zh-Hant,zh-tw,zh-Hant-TW | zh_TW | zh_TW |
+| English (American) | en | en | en_US | en_US |
+| Turkish | tr | tr | tr_TR | tr_TR |
+| Polish | pl | pl | pl_PL | pl_PL |
+| Greek | el | el | el_GR | el_GR |
+| Korean | ko | ko | ko_KR | ko_KR |
+| Croatian | hr | hr | hr_HR | hr_HR |
+| Slovenian | sl | sl | sl_SI | sl_SI |
+| French | fr | fr | fr_FR | fr_FR |
+| Spanish | es | es | es_ES | es_ES |
 
 ### networkEnv
 
@@ -119,6 +110,17 @@ ng g ng-alain:plugin networkEnv --packageManager=yarn
 ng g ng-alain:plugin networkEnv --packageManager=npm -t=remove
 # remove yarn
 ng g ng-alain:plugin networkEnv --packageManager=yarn -t=remove
+```
+
+### sts
+
+[ng-alain-sts](https://github.com/ng-alain/sts) Plugins, Build Swagger APIs to list, edit pages, You can finish some interesting things.
+
+```bash
+# add
+ng g ng-alain:plugin sts
+# remove
+ng g ng-alain:plugin sts -t=remove
 ```
 
 ### icon
@@ -155,10 +157,21 @@ export class StartupService {
 <i class="anticon anticon-question-circle-o"></i>
 <i class="anticon anticon-spin anticon-loading"></i>
 <i nz-icon class="anticon anticon-user"></i>
-<i nz-icon type="align-{{type ? 'left' : 'right'}}"></i>
+<i nz-icon nzType="align-{{type ? 'left' : 'right'}}"></i>
 <i nz-icon [type]="type ? 'menu-fold' : 'menu-unfold'" [theme]="theme ? 'outline' : 'fill'"></i>
 <i nz-icon [type]="type ? 'fullscreen' : 'fullscreen-exit'"></i>
-<i nz-icon type="{{ type ? 'arrow-left' : 'arrow-right' }}"></i>
-<i nz-icon type="filter" theme="outline"></i>
+<i nz-icon [nzType]="d.status === 'NORMAL' ? 'close1' : 'close2'"></i>
+<i nz-icon nzType="{{ type ? 'arrow-left' : 'arrow-right' }}"></i>
+<i nz-icon nzType="filter" theme="outline"></i>
 <nz-input-group [nzAddOnBeforeIcon]="focus ? 'anticon anticon-arrow-down' : 'anticon anticon-search'"></nz-input-group>
 ```
+
+### rtl
+
+Support RTL plug-in, the text direction is set to "from right to left".
+
+```bash
+ng g ng-alain:plugin rtl
+```
+
+> The plug-in does not support hot swap, if you need to remove it, please handle it manually.

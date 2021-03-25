@@ -1,23 +1,19 @@
-import { Component, DebugElement, ViewChild } from '@angular/core';
-import { fakeAsync, tick, ComponentFixture, TestBed } from '@angular/core/testing';
-import { configureTestSuite, createTestContext } from '@delon/testing';
+import { Component, ViewChild } from '@angular/core';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { createTestContext } from '@delon/testing';
 import { G2CustomComponent } from './custom.component';
 import { G2CustomModule } from './custom.module';
 
 describe('chart: custom', () => {
   let fixture: ComponentFixture<TestComponent>;
-  let dl: DebugElement;
   let context: TestComponent;
 
-  configureTestSuite(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [G2CustomModule],
       declarations: [TestComponent],
     });
-  });
-
-  beforeEach(() => {
-    ({ fixture, dl, context } = createTestContext(TestComponent));
+    ({ fixture, context } = createTestContext(TestComponent));
 
     spyOn(context, 'render');
     spyOn(context, 'resize');
@@ -25,30 +21,31 @@ describe('chart: custom', () => {
 
   afterEach(() => context.comp.ngOnDestroy());
 
-  it('should be working', () => {
+  it('should be working', fakeAsync(() => {
     expect(context.render).not.toHaveBeenCalled();
     fixture.detectChanges();
+    tick(1);
     expect(context.render).toHaveBeenCalled();
-  });
+  }));
 
   it('should be resize', fakeAsync(() => {
     expect(context.resize).not.toHaveBeenCalled();
-    context.resizeTime = 200;
+    context.resizeTime = 1;
+    fixture.detectChanges();
+    tick();
     fixture.detectChanges();
     window.dispatchEvent(new Event('resize'));
-    tick(201);
+    tick(2);
     expect(context.resize).toHaveBeenCalled();
   }));
 });
 
 @Component({
-  template: `
-    <g2-custom #comp [resizeTime]="resizeTime" (resize)="resize()" (render)="render()"></g2-custom>
-  `,
+  template: ` <g2-custom #comp [resizeTime]="resizeTime" (resize)="resize()" (render)="render()"></g2-custom> `,
 })
 class TestComponent {
-  @ViewChild('comp') comp: G2CustomComponent;
+  @ViewChild('comp', { static: true }) comp: G2CustomComponent;
   resizeTime = 0;
-  render() {}
-  resize() {}
+  render(): void {}
+  resize(): void {}
 }

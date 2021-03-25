@@ -1,8 +1,8 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component, DebugElement, TemplateRef, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { configureTestSuite, createTestContext } from '@delon/testing';
-
+import { createTestContext } from '@delon/testing';
 import { ResultComponent } from './result.component';
 import { ResultModule } from './result.module';
 
@@ -11,24 +11,21 @@ describe('abc: result', () => {
   let dl: DebugElement;
   let context: TestComponent;
 
-  configureTestSuite(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [ResultModule],
+      imports: [ResultModule, HttpClientTestingModule],
       declarations: [TestComponent],
     });
-  });
-
-  beforeEach(() => {
     ({ fixture, dl, context } = createTestContext(TestComponent));
     fixture.detectChanges();
   });
 
-  function isText(cls: string, value: any) {
+  function isText(cls: string, value: any): void {
     const el = dl.query(By.css(cls)).nativeElement as HTMLElement;
     expect(el ? el.innerText.trim() : '').toBe(value);
   }
 
-  function isExists(cls: string, stauts: boolean = true) {
+  function isExists(cls: string, stauts: boolean = true): void {
     const res = dl.query(By.css(cls));
     if (stauts) {
       expect(res).not.toBeNull();
@@ -37,21 +34,25 @@ describe('abc: result', () => {
     }
   }
 
+  function isIcon(value: string): void {
+    expect(context.comp._icon).toBe(value);
+  }
+
   describe('#type', () => {
-    it('width success', () => {
+    it('with success', () => {
       context.type = 'success';
       fixture.detectChanges();
-      isExists('.anticon-check-circle');
+      isIcon('check-circle');
     });
-    it('width error', () => {
+    it('with error', () => {
       context.type = 'error';
       fixture.detectChanges();
-      isExists('.anticon-close-circle');
+      isIcon('close-circle');
     });
-    it('width custom', () => {
-      context.type = 'custom';
+    it('with check', () => {
+      context.type = 'check';
       fixture.detectChanges();
-      isExists('.anticon-custom');
+      isIcon('check');
     });
   });
 
@@ -91,27 +92,21 @@ describe('abc: result', () => {
 
 @Component({
   template: `
-    <result
-      #comp
-      [type]="type"
-      [title]="title"
-      [description]="description"
-      [extra]="extra"
-    ></result>
+    <result #comp [type]="type" [title]="title" [description]="description" [extra]="extra"></result>
     <ng-template #titleTpl><p id="titleTpl">titleTpl</p></ng-template>
     <ng-template #descriptionTpl><p id="descriptionTpl">descriptionTpl</p></ng-template>
     <ng-template #extraTpl><p id="extraTpl">extraTpl</p></ng-template>
   `,
 })
 class TestComponent {
-  @ViewChild('comp')
+  @ViewChild('comp', { static: true })
   comp: ResultComponent;
   type = 'custom';
-  @ViewChild('titleTpl')
+  @ViewChild('titleTpl', { static: true })
   titleTpl: TemplateRef<void>;
-  @ViewChild('descriptionTpl')
+  @ViewChild('descriptionTpl', { static: true })
   descriptionTpl: TemplateRef<void>;
-  @ViewChild('extraTpl')
+  @ViewChild('extraTpl', { static: true })
   extraTpl: TemplateRef<void>;
   title: string | TemplateRef<void> = 'title';
   description: string | TemplateRef<void> = 'description';
